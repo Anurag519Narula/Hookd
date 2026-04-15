@@ -1,3 +1,6 @@
+# Kiro IDE workspace files
+.kiro/
+
 # Dependencies
 node_modules/
 client/node_modules/
