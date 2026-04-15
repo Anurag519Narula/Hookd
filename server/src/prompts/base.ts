@@ -1,0 +1,1 @@
+export const BASE_INSTRUCTIONS = `Extract the most interesting, specific, and non-obvious ideas from the source material. Avoid summarizing. Write as if you are the creator — opinionated, direct, and aware of your audience. Never start with filler phrases. Never use corporate language.`;
