@@ -101,51 +101,121 @@ function extractHashtagsFromYouTube(results: YouTubeResult[]): string[] {
   return Array.from(hashtagSet).slice(0, 20);
 }
 
-// ── Instagram public hashtag data (no API key required) ───────────────────────
+// ── RapidAPI Instagram hashtag functions ──────────────────────────────────────
 
-async function fetchInstagramHashtagPostCount(
-  hashtag: string
-): Promise<{ hashtag: string; postCount: number } | null> {
-  const tag = hashtag.replace(/^#/, "").toLowerCase();
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY ?? "";
+
+/**
+ * instagram-hashtags API — given a keyword, returns related hashtags with post counts.
+ * Used per-topic in fetchHashtagIntelligence. Cached 7 days.
+ */
+export async function fetchTopInstagramHashtags(keyword: string): Promise<
+  Array<{ hashtag: string; postCount: number; tier: "high" | "mid" | "niche" | "micro" }>
+> {
+  const normalised = keyword.toLowerCase().trim().replace(/\s+/g, "");
+  const cached = await getCached<Array<{ hashtag: string; postCount: number; tier: "high" | "mid" | "niche" | "micro" }>>(
+    "rapidapi_instagram_hashtags",
+    { keyword: normalised }
+  );
+  if (cached) return cached;
+
+  if (!RAPIDAPI_KEY) return [];
+
   try {
-    const url = `https://www.instagram.com/explore/tags/${encodeURIComponent(tag)}/`;
+    const url = `https://instagram-hashtags.p.rapidapi.com/?keyword=${encodeURIComponent(normalised)}`;
     const res = await fetch(url, {
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml",
-        "Accept-Language": "en-US,en;q=0.9",
+        "x-rapidapi-key": RAPIDAPI_KEY,
+        "x-rapidapi-host": "instagram-hashtags.p.rapidapi.com",
+        "Content-Type": "application/json",
       },
     });
-    if (!res.ok) return null;
-    const html = await res.text();
-    const countMatch = html.match(/"edge_hashtag_to_media":\{"count":(\d+)/);
-    if (countMatch) return { hashtag: `#${tag}`, postCount: parseInt(countMatch[1]) };
-    const altMatch = html.match(/"media_count":(\d+)/);
-    if (altMatch) return { hashtag: `#${tag}`, postCount: parseInt(altMatch[1]) };
-    return null;
-  } catch {
-    return null;
+    if (!res.ok) return [];
+
+    const data = (await res.json()) as any;
+
+    // Response is typically an array of hashtag objects or a wrapper
+    const items: any[] = Array.isArray(data) ? data : (data?.hashtags ?? data?.data ?? []);
+
+    const result = items
+      .slice(0, 20)
+      .map((item: any) => {
+        const name: string = (item.name ?? item.hashtag ?? item.tag ?? "").replace(/^#/, "");
+        const count: number = parseInt(item.media_count ?? item.post_count ?? item.count ?? "0") || 0;
+        if (!name) return null;
+        const tier =
+          count >= 3_000_000 ? "high" :
+          count >= 500_000 ? "mid" :
+          count >= 50_000 ? "niche" : "micro";
+        return { hashtag: `#${name.toLowerCase()}`, postCount: count, tier } as const;
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+
+    await setCached("rapidapi_instagram_hashtags", { keyword: normalised }, result);
+    return result;
+  } catch (err) {
+    console.error("RapidAPI instagram-hashtags error:", err);
+    return [];
+  }
+}
+
+/**
+ * top-instagram-hashtag API — returns currently top-performing hashtags globally.
+ * Used for the trending widget. Cached 2 days.
+ */
+export async function fetchTopInstagramHashtagsGlobal(page = 0): Promise<
+  Array<{ hashtag: string; postCount: number; category?: string }>
+> {
+  const TTL_2_DAYS = 2 * 24 * 60 * 60 * 1000;
+  const cached = await getCached<Array<{ hashtag: string; postCount: number; category?: string }>>(
+    "rapidapi_top_hashtags_global",
+    { page }
+  );
+  if (cached) return cached;
+
+  if (!RAPIDAPI_KEY) return [];
+
+  try {
+    const url = `https://top-instagram-hashtag.p.rapidapi.com/new-hashtags?page=${page}`;
+    const res = await fetch(url, {
+      headers: {
+        "x-rapidapi-key": RAPIDAPI_KEY,
+        "x-rapidapi-host": "top-instagram-hashtag.p.rapidapi.com",
+        "Content-Type": "application/json",
+      },
+    });
+    if (!res.ok) return [];
+
+    const data = (await res.json()) as any;
+    const items: any[] = Array.isArray(data) ? data : (data?.hashtags ?? data?.data ?? data?.result ?? []);
+
+    const result = items
+      .slice(0, 30)
+      .map((item: any) => {
+        const name: string = (item.name ?? item.hashtag ?? item.tag ?? "").replace(/^#/, "");
+        const count: number = parseInt(item.media_count ?? item.post_count ?? item.count ?? "0") || 0;
+        const category: string | undefined = item.category ?? item.type ?? undefined;
+        if (!name) return null;
+        return { hashtag: `#${name.toLowerCase()}`, postCount: count, category };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+
+    await setCached("rapidapi_top_hashtags_global", { page }, result, TTL_2_DAYS);
+    return result;
+  } catch (err) {
+    console.error("RapidAPI top-instagram-hashtag error:", err);
+    return [];
   }
 }
 
 export async function fetchInstagramHashtagData(
   hashtags: string[]
 ): Promise<Array<{ hashtag: string; postCount: number; tier: "high" | "mid" | "niche" | "micro" }>> {
-  const candidates = hashtags.slice(0, 8);
-  const results = await Promise.allSettled(candidates.map((h) => fetchInstagramHashtagPostCount(h)));
-  const validated: Array<{ hashtag: string; postCount: number; tier: "high" | "mid" | "niche" | "micro" }> = [];
-  for (const result of results) {
-    if (result.status === "fulfilled" && result.value) {
-      const { hashtag, postCount } = result.value;
-      const tier =
-        postCount >= 3_000_000 ? "high" :
-        postCount >= 500_000 ? "mid" :
-        postCount >= 50_000 ? "niche" : "micro";
-      validated.push({ hashtag, postCount, tier });
-    }
-  }
-  return validated.sort((a, b) => b.postCount - a.postCount);
+  // Use the keyword-based API for the first hashtag as a proxy for validation
+  // (the old web scraper is unreliable — RapidAPI is the source of truth now)
+  if (!hashtags.length) return [];
+  const keyword = hashtags[0].replace(/^#/, "");
+  return fetchTopInstagramHashtags(keyword);
 }
 
 // ── YouTube Data API ───────────────────────────────────────────────────────────
@@ -344,8 +414,9 @@ export async function fetchHashtagIntelligence(params: {
   const hasYouTubeData = youtubeResults.length > 0;
 
   const needsInstagram = platforms.some((p) => p === "instagram" || p === "reels");
+  // Use the keyword-based RapidAPI for topic-specific Instagram hashtags
   const instagramValidated = needsInstagram
-    ? await fetchInstagramHashtagData(youtubeHashtags.slice(0, 8))
+    ? await fetchTopInstagramHashtags(topic)
     : [];
 
   const groqHashtags = await synthesizeHashtagsWithGroq({

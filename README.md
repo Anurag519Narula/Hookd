@@ -1,30 +1,40 @@
-# Hookd
+# Hookd — Creator OS
 
-AI-powered content creation tool for creators. Takes a raw idea and turns it into platform-native posts across Instagram, LinkedIn, Reels, and YouTube Shorts — in under 30 seconds.
+AI-powered content creation platform for short-form creators. Three main pillars: **Amplify** (conversational caption generation), **Script Studio** (idea validation + hook generation), **Idea Vault** (idea capture and management).
 
 ---
 
 ## What it does
 
-Four tools, one workflow:
-
 | Tool | What it does |
 |---|---|
-| **Content Amplifier** (`/amplify`) | Paste a YouTube URL or long-form text → get 4 platform-ready posts instantly |
-| **Hook Engine** (`/develop`) | Type a rough idea → get 5 scroll-stopping hooks (each on a different psychological trigger) → pick one → get captions for all 4 platforms |
-| **Idea Vault** (`/vault`) | Capture raw ideas → AI auto-tags, scores potential, and suggests format type → filter/sort/develop later |
-| **Insight Engine** (`/insights/:ideaId`) | YouTube API + Groq analysis → trend direction, competition level, untapped angles, hook suggestions |
+| **Amplify** | Chat interface for caption generation. Multi-turn sessions, platform-native captions for Instagram, LinkedIn, Reels, and YouTube Shorts, real-time hashtag intelligence (YouTube + RapidAPI). Conversations persisted server-side. |
+| **Script Studio** | Validates your idea against real YouTube data before you film. Returns an opportunity score, trend direction, competitor insights, content blueprint, and 3 hook variants each built on a different psychological trigger. Hook-first flow — pick a hook, then generate the full script body. |
+| **Idea Vault** | Capture raw ideas. AI auto-tags, scores potential, and flags whether it's worth developing. Filter, sort, and develop ideas later. |
+| **Settings** | Creator profile — niche, sub-niche, language, platform priority. Stored server-side, used to personalise every Groq prompt. |
+
+**Onboarding:** New users complete a 4-step wizard (name → niche → sub-niche → platforms) before accessing Amplify and Studio.
 
 ---
 
 ## Tech stack
 
 ```
-client/   React 18 + Vite + TypeScript, React Router v7, inline styles + CSS variables
-server/   Node.js + Express + TypeScript, ts-node + nodemon
-database  PostgreSQL via Supabase (connection pooler)
-AI        Groq API — llama-3.3-70b-versatile
-auth      JWT (bcryptjs + jsonwebtoken)
+client/    React 18 + Vite + TypeScript
+           React Router v7
+           Inline styles + CSS variables (no CSS framework)
+
+server/    Node.js + Express + TypeScript
+           ts-node + nodemon
+
+database   PostgreSQL via Supabase (connection pooler)
+
+AI         Groq API — llama-3.3-70b-versatile
+
+auth       JWT (bcryptjs + jsonwebtoken)
+
+APIs       YouTube Data API v3
+           RapidAPI — instagram-hashtags, top-instagram-hashtag
 ```
 
 ---
@@ -32,49 +42,53 @@ auth      JWT (bcryptjs + jsonwebtoken)
 ## Project structure
 
 ```
-/
-├── client/                   # React frontend
-│   └── src/
-│       ├── screens/          # One file per route/page
-│       ├── components/       # Shared UI components
-│       ├── hooks/            # useVault, useDevelop, useGenerate, useSettings
-│       ├── api/              # Typed fetch wrappers for every endpoint
-│       ├── context/          # AuthContext (JWT storage + user state)
-│       └── types/            # Shared TypeScript types
+hookd/
+├── client/
+│   ├── src/
+│   │   ├── api/            # Typed fetch wrappers for every server endpoint
+│   │   ├── components/     # Shared UI components
+│   │   ├── context/        # AuthContext
+│   │   ├── hooks/          # Custom React hooks (useAmplify, useStudio, useVault, …)
+│   │   ├── screens/        # One file per route
+│   │   └── types/          # Shared TypeScript types
+│   └── vite.config.ts
 │
-└── server/                   # Express backend
+└── server/
     └── src/
-        ├── routes/           # One file per resource (ideas, hooks, captions, etc.)
-        ├── prompts/          # Groq prompt builders (ideaTagging, hooks, captionWithHook, insightSynthesis)
-        ├── services/         # generator.ts, transcript.ts, insights.ts
-        ├── middleware/       # requireAuth (JWT verification)
-        └── db/               # pg Pool + initDb() (CREATE TABLE IF NOT EXISTS migrations)
+        ├── db/             # Pool + initDb (schema migrations)
+        ├── middleware/     # requireAuth JWT middleware
+        ├── prompts/        # Groq prompt builders (one file per feature)
+        ├── routes/         # Express routers (one file per resource)
+        ├── services/       # cache.ts, dbCache.ts, generator.ts, insights.ts, transcript.ts
+        └── types/          # Shared server-side types
 ```
 
 ---
 
 ## Routes
 
-| Path | Screen | Auth |
-|---|---|---|
-| `/` | HomeScreen — editorial landing | ✓ |
-| `/amplify` | RepurposeScreen — paste text or YouTube URL | ✓ |
-| `/generating` | LoadingScreen — live progress while generating | ✓ |
-| `/results` | ResultsScreen — 4 platform cards with copy/regenerate | ✓ |
-| `/vault` | VaultScreen — idea capture, AI tagging, filter/sort | ✓ |
-| `/develop` | DevelopScreen — idea → hooks → captions | ✓ |
-| `/develop/:ideaId` | DevelopScreen — loaded from vault idea | ✓ |
-| `/insights/:ideaId` | InsightScreen — YouTube + Groq trend analysis | ✓ |
-
-All routes are protected. Unauthenticated users see `AuthScreen` (login/signup).
+| Path | Screen | Auth required | Notes |
+|---|---|---|---|
+| `/` | HomeScreen | ✓ | Landing page with trending hashtags widget |
+| `/onboarding` | OnboardingScreen | ✓ | 4-step wizard; redirects away if already complete |
+| `/amplify` | AmplifyScreen | ✓ + onboarding | Conversational caption generation |
+| `/studio` | StudioScreen | ✓ + onboarding | Idea validation + hook + script generation |
+| `/vault` | VaultScreen | ✓ | Idea capture and management |
+| `/settings` | SettingsScreen | ✓ | Creator profile |
+| `/develop/:ideaId` | DevelopScreen | ✓ | Legacy hook engine (kept for vault ideas) |
+| `/insights/:ideaId` | InsightScreen | ✓ | Legacy insight view |
 
 ---
 
 ## API endpoints
 
 ```
-POST   /api/auth/register
+POST   /api/auth/signup
 POST   /api/auth/login
+
+GET    /api/users/me
+PATCH  /api/users/me
+DELETE /api/users/me
 
 GET    /api/ideas
 POST   /api/ideas
@@ -86,136 +100,167 @@ POST   /api/hooks
 POST   /api/captions
 POST   /api/captions/regenerate
 
-POST   /api/generate          # Amplifier — all 4 platforms at once
-POST   /api/regenerate        # Regenerate single platform card
+POST   /api/generate
+POST   /api/regenerate
+GET    /api/transcript
 
-GET    /api/transcript        # Fetch + parse YouTube captions via Innertube API
-GET    /api/insights          # YouTube API + Groq synthesis, cached 24h in ideas.insights
+GET    /api/insights
+
+GET    /api/conversations
+GET    /api/conversations/:id
+POST   /api/conversations
+PATCH  /api/conversations/:id
+DELETE /api/conversations/:id
+
+POST   /api/amplify
+
+POST   /api/studio/hooks
+POST   /api/studio/script
+POST   /api/studio/generate
+POST   /api/studio/regenerate
+
+GET    /api/trending
 ```
+
+`/api/trending` is public (no auth). All other routes require a valid JWT in the `Authorization: Bearer <token>` header.
 
 ---
 
-## Database schema (Supabase / PostgreSQL)
+## Database schema
 
 ```sql
 users (
-  id TEXT PRIMARY KEY,
-  email TEXT UNIQUE,
-  password_hash TEXT,
-  name TEXT,
-  created_at BIGINT
+  id                  TEXT PRIMARY KEY,
+  email               TEXT UNIQUE NOT NULL,
+  password_hash       TEXT NOT NULL,
+  name                TEXT NOT NULL,
+  created_at          BIGINT NOT NULL,
+  niche               TEXT,
+  sub_niche           TEXT,
+  language            TEXT DEFAULT 'English',
+  platform_priority   JSONB DEFAULT '[]',
+  onboarding_complete BOOLEAN DEFAULT FALSE
 )
 
 ideas (
-  id TEXT PRIMARY KEY,
-  user_id TEXT → users(id),
-  raw_text TEXT,
-  created_at BIGINT,
-  tags JSONB,                  -- string[] — AI-generated, null until tagged
-  format_type TEXT,            -- "story" | "talking head" | "listicle" | etc.
-  emotion_angle TEXT,          -- "frustration" | "inspiration" | etc.
-  potential_score TEXT,        -- "low" | "medium" | "high"
-  hooks JSONB,                 -- Hook[] { hook_text, trigger }
-  captions JSONB,              -- Record<platform, string>
-  selected_hook TEXT,
-  status TEXT,                 -- "raw" | "tagged" | "developed" | "used"
-  insights JSONB,              -- cached InsightReport payload
-  insights_cached_at BIGINT    -- unix ms, TTL 24h
+  id                  TEXT PRIMARY KEY,
+  user_id             TEXT REFERENCES users(id) ON DELETE CASCADE,
+  raw_text            TEXT NOT NULL,
+  created_at          BIGINT NOT NULL,
+  tags                JSONB,
+  format_type         TEXT,
+  emotion_angle       TEXT,
+  potential_score     TEXT,
+  hooks               JSONB,
+  captions            JSONB,
+  selected_hook       TEXT,
+  status              TEXT NOT NULL DEFAULT 'raw',
+  insights            JSONB,
+  insights_cached_at  BIGINT
+)
+
+amplify_conversations (
+  id          TEXT PRIMARY KEY,
+  user_id     TEXT REFERENCES users(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  messages    JSONB NOT NULL DEFAULT '[]',
+  created_at  BIGINT NOT NULL,
+  updated_at  BIGINT NOT NULL
+)
+
+api_cache (
+  cache_key   TEXT PRIMARY KEY,   -- SHA-256 hash of request params
+  namespace   TEXT NOT NULL,
+  payload     JSONB NOT NULL,
+  created_at  BIGINT NOT NULL,
+  expires_at  BIGINT NOT NULL     -- Unix ms; 7-day TTL by default
 )
 ```
+
+Schema is managed via `initDb()` in `server/src/db/index.ts` using `CREATE TABLE IF NOT EXISTS` + `ALTER TABLE … ADD COLUMN IF NOT EXISTS` migrations that run on every server start.
+
+---
+
+## Caching
+
+All expensive API calls are cached in the `api_cache` table with a 7-day TTL. Cache keys are SHA-256 hashes of the request parameters.
+
+| Namespace | What's cached |
+|---|---|
+| `youtube_search` | YouTube Data API search results |
+| `hashtag_intelligence` | Per-platform hashtag strategy (YouTube + RapidAPI + Groq synthesis) |
+| `studio_hooks` | Hook variants for a given idea + profile |
+| `studio_script` | Script body for a given hook |
+| `studio_generate` | Legacy studio generation |
+| `studio_regenerate` | Legacy studio regeneration |
+| `insights` | Full idea validation report |
+| `rapidapi_instagram_hashtags` | RapidAPI instagram-hashtags results |
+| `rapidapi_top_hashtags_global` | RapidAPI top-instagram-hashtag results |
+
+Expired rows are purged on server startup and every 6 hours via `setInterval`.
 
 ---
 
 ## AI prompt architecture
 
-| Prompt file | Purpose | Output |
+| File | Purpose | Output type |
 |---|---|---|
-| `ideaTagging.ts` | Tags a raw idea on save | `{ tags, format_type, emotion_angle, potential_score }` |
-| `hooks.ts` | Generates 5 hooks with distinct psychological triggers | `Hook[]` |
-| `captionWithHook.ts` | Generates or regenerates a platform caption anchored to a hook | `string` |
-| `insightSynthesis.ts` | Synthesises YouTube + Trends data into a structured report | `InsightReport` |
-| `base.ts` + platform files | Amplifier prompts — one per platform | `string` |
+| `amplify.ts` | Platform-explicit caption generation with hashtag intelligence | `CaptionResult` |
+| `studio.ts` | Hook-only generation + script-from-hook generation | `HookVariant[]` / `ScriptBody` |
+| `insightSynthesis.ts` | Full idea validation report with YouTube data | `InsightReport` (13 sections) |
+| `hooks.ts` | Legacy hook generation for DevelopScreen | `Hook[]` |
+| `captionWithHook.ts` | Legacy caption generation | `string` |
+| `ideaTagging.ts` | Auto-tags ideas on save | `{ tags, format_type, emotion_angle, potential_score }` |
 
-All prompts target Indian creator ecosystem by default. Hooks use 6 defined triggers: Curiosity Gap, Identity Threat, Controversy, Surprising Stat, Personal Story Angle, Pattern Interrupt.
-
----
-
-## Key frontend patterns
-
-- **Polling** — `useVault` polls `GET /api/ideas/:id` every 2s (max 30s) for ideas where `tags === null`, waiting for async AI tagging to complete
-- **Optimistic UI** — ideas appear instantly on capture; shimmer chips show while tagging runs in background
-- **Context** — `GenerationContext` shares live generation state across `/generating` and `/results` routes
-- **Settings** — `useSettings` persists niche, sub-niche, language, platform priority to `localStorage`; used to personalise every Groq prompt
-- **Theme** — dark/light toggle via `data-theme` attribute on `<html>`, persisted to `localStorage`
-
----
-
-## Design system
-
-- Dark-first. Background `#080808` in dark mode.
-- Accent: teal `#14b8a6` (`--accent`)
-- CSS variables for all colours, radii, shadows, transitions
-- Font: Inter, tight letter-spacing (`-0.03em` to `-0.05em`) on headings
-- Cosmos.so-inspired editorial layout — full-width sections, thin dividers, no floating cards on homepage
-- Shimmer skeleton loading via `.shimmer-line` CSS class
+All prompts receive the creator profile (niche, sub-niche, language, platform priority) when available.
 
 ---
 
 ## Setup
 
 ### Prerequisites
+
 - Node.js 18+
-- Supabase project (PostgreSQL)
+- PostgreSQL database (Supabase recommended)
 - Groq API key
 - YouTube Data API v3 key
+- RapidAPI key with access to `instagram-hashtags` and `top-instagram-hashtag`
 
-### Server
-
-```bash
-cd server
-npm install
-```
+### Environment variables
 
 Create `server/.env`:
+
 ```env
 GROQ_API_KEY=...
-DATABASE_URL=postgresql://...  # Supabase connection pooler URL
+DATABASE_URL=postgresql://...
 JWT_SECRET=...
 YOUTUBE_API_KEY=...
+RAPIDAPI_KEY=...
 PORT=3001
 ```
 
+### Install and run
+
 ```bash
-npm run dev   # nodemon + ts-node, auto-restarts on changes
+# Install dependencies
+cd client && npm install
+cd ../server && npm install
+
+# Start server (port 3001)
+cd server && npm run dev
+
+# Start client (port 5173)
+cd client && npm run dev
 ```
 
-The server runs `initDb()` on startup — creates tables if they don't exist, runs `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` migrations automatically.
+The server runs `initDb()` on startup, creating all tables and running any pending column migrations automatically.
 
-### Client
-
-```bash
-cd client
-npm install
-npm run dev   # Vite dev server on http://localhost:5173
-```
-
-Vite proxies `/api/*` to `http://localhost:3001` in dev.
-
-### Tests
+### Run tests
 
 ```bash
-cd server && npm test
+# Client
 cd client && npm test
+
+# Server
+cd server && npm test
 ```
-
----
-
-## Known limitations
-
-- YouTube transcript fetch requires the video to have captions enabled
-- Google Trends is disabled server-side (blocks server requests) — `fetchGoogleTrends` always returns `null`
-- Insights are cached per-idea for 24h in the `ideas.insights` JSONB column
-- One orphaned idea with `user_id = NULL` may exist from before the migration — safe to delete:
-  ```sql
-  DELETE FROM public.ideas WHERE user_id IS NULL;
-  ```

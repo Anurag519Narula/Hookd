@@ -96,13 +96,25 @@ export function StudioScreen() {
     setSelectedHookIndex(null);
     setInsights(null);
     setInsightsFetched(false);
-    await generateHookVariants(
+    setInsightsOpen(false);
+    // Auto-fetch insights in parallel with hook generation
+    void generateHookVariants(
       idea,
       format,
       profile?.niche ?? undefined,
       profile?.sub_niche ?? undefined,
       profile?.language ?? undefined
     );
+    // Start fetching insights immediately — don't wait for hooks
+    setInsightsLoading(true);
+    fetchInsights(idea, profile?.niche ?? "", ideaId ?? undefined)
+      .then((result) => {
+        setInsights(result.report);
+        setInsightsFetched(true);
+        setInsightsOpen(true); // auto-open when ready
+      })
+      .catch(() => {})
+      .finally(() => setInsightsLoading(false));
   }
 
   async function handleSelectHook(hook: HookVariant, index: number) {
@@ -162,7 +174,8 @@ export function StudioScreen() {
   const canGenerate = idea.trim().length > 0 && !isGeneratingHooks && !isGeneratingScript;
   const showHooks = isGeneratingHooks || hookVariants.length > 0;
   const showScript = phase === "script_ready" && script !== null;
-  const showInsightsArea = (showHooks || showScript) && !isGeneratingHooks;
+  // Show validation report as soon as generation starts
+  const showValidationReport = insightsLoading || insightsFetched;
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", position: "relative", overflow: "hidden" }}>
@@ -202,20 +215,20 @@ export function StudioScreen() {
             letterSpacing: "-0.04em", color: "var(--text)", margin: "0 0 12px",
             lineHeight: 1.1,
           }}>
-            Turn your idea into a{" "}
+            Validate your idea,{" "}
             <span style={{
               background: "linear-gradient(135deg, var(--accent), #6366f1)",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
               backgroundClip: "text",
             }}>
-              ready-to-film script
+              plan your content
             </span>
           </h1>
           <p style={{
             fontSize: 15, color: "var(--text-3)", margin: 0,
             lineHeight: 1.65, maxWidth: 520, marginLeft: "auto", marginRight: "auto",
           }}>
-            Describe your idea, pick a format, choose your hook — then get a full 45–60 second script.
+            Get a data-driven validation report, content blueprint, and hook variants — before you film a single second.
           </p>
         </div>
 
@@ -443,50 +456,15 @@ export function StudioScreen() {
           />
         )}
 
-        {/* ── Market Research Panel ── */}
-        {showInsightsArea && (
-          <div>
-            {!insightsOpen && !insightsFetched && (
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-                <button
-                  onClick={handleInsightsToggle}
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 7,
-                    padding: "10px 20px", fontSize: 13, fontWeight: 600,
-                    borderRadius: "var(--radius-md)", border: "1px solid var(--border)",
-                    background: "var(--bg-card)", color: "var(--text-2)",
-                    cursor: "pointer", transition: "all var(--transition)", boxShadow: "var(--shadow-sm)",
-                  }}
-                  onMouseEnter={(e) => {
-                    const b = e.currentTarget as HTMLButtonElement;
-                    b.style.borderColor = "var(--accent)";
-                    b.style.color = "var(--accent-text)";
-                    b.style.background = "var(--accent-subtle)";
-                  }}
-                  onMouseLeave={(e) => {
-                    const b = e.currentTarget as HTMLButtonElement;
-                    b.style.borderColor = "var(--border)";
-                    b.style.color = "var(--text-2)";
-                    b.style.background = "var(--bg-card)";
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="20" x2="18" y2="10" />
-                    <line x1="12" y1="20" x2="12" y2="4" />
-                    <line x1="6" y1="20" x2="6" y2="14" />
-                  </svg>
-                  Get insights
-                </button>
-              </div>
-            )}
-            <MarketResearchPanel
-              topic={idea.slice(0, 80)}
-              isOpen={insightsOpen}
-              onToggle={handleInsightsToggle}
-              insights={insights}
-              isLoading={insightsLoading}
-            />
-          </div>
+        {/* ── Idea Validation Report — shown as soon as generation starts ── */}
+        {showValidationReport && (
+          <MarketResearchPanel
+            topic={idea.slice(0, 80)}
+            isOpen={insightsOpen}
+            onToggle={handleInsightsToggle}
+            insights={insights}
+            isLoading={insightsLoading}
+          />
         )}
       </div>
 

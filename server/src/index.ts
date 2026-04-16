@@ -28,6 +28,7 @@ import usersRouter from "./routes/users";
 import conversationsRouter from "./routes/conversations";
 import amplifyRouter from "./routes/amplify";
 import studioRouter from "./routes/studio";
+import trendingRouter from "./routes/trending";
 
 const app = express();
 
@@ -60,6 +61,7 @@ initDb()
     app.use("/api/conversations", requireAuth, conversationsRouter);
     app.use("/api/amplify", amplifyRouter);
     app.use("/api/studio", studioRouter);
+    app.use("/api/trending", trendingRouter); // public — no auth
 
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);

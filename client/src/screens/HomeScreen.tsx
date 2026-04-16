@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
+import { TrendingHashtagsBar } from "../components/TrendingHashtagsBar";
 
 // ── Icons ──────────────────────────────────────────────────────────────────────
 const ArrowRight = () => (
@@ -141,8 +142,7 @@ export function HomeScreen() {
               maxWidth: 440, margin: "0 0 36px", fontWeight: 400,
               letterSpacing: "-0.01em",
             }}>
-              Most posts flop not because the idea was bad —
-              but because the hook was wrong and the caption was generic.
+              Validate it against real data, generate platform-native captions with live hashtag intelligence, and capture every idea before it disappears.
             </p>
 
             <div className="fade-up" style={{
@@ -150,7 +150,7 @@ export function HomeScreen() {
               display: "flex", gap: 10, flexWrap: "wrap",
             }}>
               <button
-                onClick={() => navigate("/develop")}
+                onClick={() => navigate("/amplify")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 8,
                   padding: "11px 24px", fontSize: 13, fontWeight: 600,
@@ -196,10 +196,10 @@ export function HomeScreen() {
             overflow: "hidden",
           }}>
             {[
-              { value: "5×", label: "Hook angles per idea" },
+              { value: "3×", label: "Hooks per idea" },
               { value: "4", label: "Platforms at once" },
-              { value: "30s", label: "From idea to caption" },
-              { value: "0", label: "Generic posts. Ever." },
+              { value: "Live", label: "Real-time hashtag data" },
+              { value: "7d", label: "Insight cache TTL" },
             ].map((stat, i, arr) => (
               <div key={stat.label} style={{
                 padding: "14px 20px",
@@ -222,6 +222,18 @@ export function HomeScreen() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* ── DIVIDER ── */}
+      <div style={{ borderTop: "1px solid var(--border)", position: "relative", zIndex: 1 }} />
+
+      {/* ── TRENDING HASHTAGS ── */}
+      <section style={{
+        maxWidth: 1100, margin: "0 auto",
+        padding: "32px 40px",
+        position: "relative", zIndex: 1,
+      }}>
+        <TrendingHashtagsBar limit={20} />
       </section>
 
       {/* ── DIVIDER ── */}
@@ -261,18 +273,18 @@ export function HomeScreen() {
             />
             <FeatureRow
               num="02"
-              title="Hook Engine"
-              body="The first line is everything. Get 5 scroll-stopping hooks for any idea — each built on a different psychological trigger that makes people stop and watch."
+              title="Amplify"
+              body="Describe your idea in plain language. Get platform-native captions for Instagram, LinkedIn, Reels, and YouTube Shorts — with real-time trending hashtags. Conversations are saved so you can pick up where you left off."
             />
             <FeatureRow
               num="03"
-              title="Caption Studio"
-              body="Pick your hook, get captions for all four platforms instantly. Each one written the way that platform's audience actually reads — not copy-pasted."
+              title="Script Studio"
+              body="Validate your idea against real YouTube data before you film. Get an opportunity score, competitor analysis, content blueprint, and 3 hook variants — each built on a different psychological trigger."
             />
             <FeatureRow
               num="04"
-              title="Content Amplifier"
-              body="Already made a video or wrote a post? Turn it into a week of content across every platform. One piece of work, maximum reach."
+              title="Creator Profile"
+              body="Set your niche, sub-niche, and platform priorities once. Every caption and script is personalised to your audience from the first generation."
             />
           </div>
         </div>
@@ -338,12 +350,12 @@ export function HomeScreen() {
           </div>
         </div>
 
-        <CompareRow left="Writes about a topic, not your idea" right="Builds from your specific idea and perspective" />
-        <CompareRow left="One output — no angles, no choice" right="5 hook angles — you pick what fits your voice" />
-        <CompareRow left="Sounds the same on every platform" right="Native captions for each platform's culture" />
-        <CompareRow left="Forgets everything after the chat" right="Vault remembers every idea you've ever had" />
-        <CompareRow left="No hook psychology, just paragraphs" right="Hook psychology baked in — curiosity, controversy, story" />
-        <CompareRow left="You still have to figure out what to post" right="You post with confidence, not guesswork" />
+        <CompareRow left="Writes about a topic, not your idea" right="Builds from your specific idea and niche profile" />
+        <CompareRow left="One output — no angles, no choice" right="3 hook variants with named psychological triggers" />
+        <CompareRow left="Sounds the same on every platform" right="Platform-native captions with real Instagram hashtag data" />
+        <CompareRow left="Forgets everything after the chat" right="Conversation history saved — pick up any session" />
+        <CompareRow left="No idea validation, just guesswork" right="Validates your idea against real YouTube trend data before you film" />
+        <CompareRow left="You still have to figure out what to cover" right="Content blueprint tells you exactly what to cover and how" />
         </div>
       </section>
 
@@ -371,10 +383,10 @@ export function HomeScreen() {
           gap: 0, borderLeft: "1px solid var(--border)",
         }} className="steps-grid">
           {[
-            { num: "01", title: "Dump the idea", body: "Type whatever's in your head. A half-formed thought, something you saw, a rant. Save it before it disappears." },
-            { num: "02", title: "Pick a hook", body: "AI gives you 5 angles — curiosity, controversy, personal story, surprising stat. Pick the one that feels right." },
-            { num: "03", title: "Get captions", body: "YouTube Short, Instagram, LinkedIn, Reels — all generated from your hook. Each one sounds native." },
-            { num: "04", title: "Post it.", body: "Copy, paste, post. Come back when the next idea hits. That's the whole thing." },
+            { num: "01", title: "Capture the idea", body: "Drop it in the Vault before it disappears. AI scores it and tells you if it's worth developing." },
+            { num: "02", title: "Validate it", body: "Script Studio checks your idea against real YouTube data. See the opportunity score, competition level, and what angles are untapped." },
+            { num: "03", title: "Generate content", body: "Amplify turns your idea into platform-native captions with trending hashtags. Studio gives you hooks and a content blueprint." },
+            { num: "04", title: "Post it.", body: "Copy, paste, post. Your conversation history and vault are always there when the next idea hits." },
           ].map((step) => (
             <div key={step.num} style={{
               padding: "24px 24px 28px",
@@ -401,7 +413,7 @@ export function HomeScreen() {
 
         <div style={{ marginTop: 40 }}>
           <button
-            onClick={() => navigate("/develop")}
+            onClick={() => navigate("/amplify")}
             style={{
               display: "inline-flex", alignItems: "center", gap: 8,
               padding: "13px 28px", fontSize: 14, fontWeight: 600,
@@ -462,7 +474,7 @@ export function HomeScreen() {
               </p>
               {[
                 { label: "Amplify", path: "/amplify" },
-                { label: "Develop", path: "/develop" },
+                { label: "Studio", path: "/studio" },
                 { label: "Vault", path: "/vault" },
               ].map(({ label, path }) => (
                 <a key={label} href={path} style={{

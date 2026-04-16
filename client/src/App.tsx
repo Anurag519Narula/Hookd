@@ -10,26 +10,12 @@ import { AuthScreen } from "./screens/AuthScreen";
 import { OnboardingScreen } from "./screens/OnboardingScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { StudioScreen } from "./screens/StudioScreen";
-import type { GenerationState, Platform } from "./types";
 
 // ── Theme context ──────────────────────────────────────────────────────────────
 export const ThemeContext = createContext<{ dark: boolean; toggle: () => void }>({
   dark: false, toggle: () => {},
 });
 export function useTheme() { return useContext(ThemeContext); }
-
-// ── Generation context — shared across routes ──────────────────────────────────
-export const GenerationContext = createContext<{
-  generation: GenerationState;
-  selectedPlatforms: Platform[];
-  regenerate: (platform: Platform) => Promise<void>;
-  reset: () => void;
-} | null>(null);
-export function useGenerationCtx() {
-  const ctx = useContext(GenerationContext);
-  if (!ctx) throw new Error("useGenerationCtx must be used inside GenerationContext");
-  return ctx;
-}
 
 // ── Protected Route ────────────────────────────────────────────────────────────
 function ProtectedRoute({

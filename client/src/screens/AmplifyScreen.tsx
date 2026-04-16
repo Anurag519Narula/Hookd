@@ -5,6 +5,7 @@ import { ChatMessage } from "../components/ChatMessage";
 import { TypingIndicator } from "../components/TypingIndicator";
 import { PlatformToggle } from "../components/PlatformToggle";
 import { LengthSelector } from "../components/LengthSelector";
+import { TrendingHashtagsBar } from "../components/TrendingHashtagsBar";
 import { useAmplify } from "../hooks/useAmplify";
 import { useConversations } from "../hooks/useConversations";
 import { useCreatorProfile } from "../hooks/useCreatorProfile";
@@ -257,6 +258,15 @@ export function AmplifyScreen() {
                     Describe your idea, story, or topic below. Select your platforms and let Amplify
                     craft platform-native captions for you.
                   </p>
+                </div>
+                {/* Trending hashtags — click to pre-fill the input */}
+                <div style={{ maxWidth: 560, width: "100%", textAlign: "left" }}>
+                  <TrendingHashtagsBar
+                    limit={12}
+                    onSelect={(tag) => {
+                      setPrompt((prev) => prev ? `${prev} ${tag}` : tag);
+                    }}
+                  />
                 </div>
               </div>
               )
