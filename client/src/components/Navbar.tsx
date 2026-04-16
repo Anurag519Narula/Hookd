@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../App";
 import { useAuth } from "../context/AuthContext";
 
@@ -58,6 +58,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
   const { dark, toggle } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -79,9 +80,18 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
   }
 
   // Get user initials for avatar
+  const displayName = user?.name || user?.email || "";
   const initials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : user?.email
+    ? user.email[0].toUpperCase()
     : "?";
+
+  // Active link helper — exact match for "/" to avoid matching everything
+  function isActive(path: string) {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname === path || location.pathname.startsWith(path + "/");
+  }
 
   const navLinkStyle: React.CSSProperties = {
     fontSize: 14,
@@ -96,6 +106,17 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
     textDecoration: "none",
     display: "inline-block",
   };
+
+  function activeLinkStyle(path: string): React.CSSProperties {
+    const active = isActive(path);
+    return {
+      ...navLinkStyle,
+      color: active ? "var(--accent)" : "var(--text-2)",
+      borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",
+      borderRadius: 0,
+      paddingBottom: 2,
+    };
+  }
 
   return (
     <nav style={{
@@ -133,26 +154,34 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
         {/* Desktop nav links */}
         <div className="nav-links-desktop" style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <Link
+            to="/"
+            style={activeLinkStyle("/")}
+            onMouseEnter={(e) => { if (!isActive("/")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; } }}
+            onMouseLeave={(e) => { if (!isActive("/")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; (e.currentTarget as HTMLAnchorElement).style.background = "none"; } }}
+          >
+            Home
+          </Link>
+          <Link
             to="/amplify"
-            style={navLinkStyle}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
+            style={activeLinkStyle("/amplify")}
+            onMouseEnter={(e) => { if (!isActive("/amplify")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; } }}
+            onMouseLeave={(e) => { if (!isActive("/amplify")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; (e.currentTarget as HTMLAnchorElement).style.background = "none"; } }}
           >
             Amplify
           </Link>
           <Link
-            to="/develop"
-            style={navLinkStyle}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
+            to="/studio"
+            style={activeLinkStyle("/studio")}
+            onMouseEnter={(e) => { if (!isActive("/studio")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; } }}
+            onMouseLeave={(e) => { if (!isActive("/studio")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; (e.currentTarget as HTMLAnchorElement).style.background = "none"; } }}
           >
-            Develop
+            Studio
           </Link>
           <Link
             to="/vault"
-            style={navLinkStyle}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
+            style={activeLinkStyle("/vault")}
+            onMouseEnter={(e) => { if (!isActive("/vault")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; } }}
+            onMouseLeave={(e) => { if (!isActive("/vault")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; (e.currentTarget as HTMLAnchorElement).style.background = "none"; } }}
           >
             Vault
           </Link>
@@ -202,7 +231,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
               <button
                 id="nav-user-avatar"
                 onClick={() => setDropdownOpen((o) => !o)}
-                title={user.name}
+                title={displayName}
                 style={{
                   width: 34, height: 34, borderRadius: "50%",
                   background: "linear-gradient(135deg, var(--accent), #6366f1)",
@@ -253,19 +282,50 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
                           fontSize: 13, fontWeight: 600, color: "var(--text)",
                           margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         }}>
-                          {user.name}
+                          {displayName}
                         </p>
-                        <p style={{
-                          fontSize: 11, color: "var(--text-3)",
-                          margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        }}>
-                          {user.email}
-                        </p>
+                        {user.name && (
+                          <p style={{
+                            fontSize: 11, color: "var(--text-3)",
+                            margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          }}>
+                            {user.email}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Logout */}
+                  {/* Settings */}
+                  <Link
+                    to="/settings"
+                    onClick={() => setDropdownOpen(false)}
+                    style={{
+                      width: "100%", padding: "11px 16px",
+                      display: "flex", alignItems: "center", gap: 8,
+                      color: "var(--text-2)", fontSize: 13, fontWeight: 500,
+                      textDecoration: "none", transition: "all var(--transition)",
+                      borderBottom: "1px solid var(--border)",
+                    }}
+                    onMouseEnter={(e) => {
+                      const a = e.currentTarget as HTMLAnchorElement;
+                      a.style.background = "var(--bg-subtle)";
+                      a.style.color = "var(--text)";
+                    }}
+                    onMouseLeave={(e) => {
+                      const a = e.currentTarget as HTMLAnchorElement;
+                      a.style.background = "none";
+                      a.style.color = "var(--text-2)";
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3"/>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    Settings
+                  </Link>
+
+                  {/* Sign out */}
                   <button
                     id="nav-logout"
                     onClick={handleLogout}
@@ -307,47 +367,83 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
           }}
         >
           <Link
-            to="/amplify"
+            to="/"
             onClick={() => setMenuOpen(false)}
             style={{
-              fontSize: 15, fontWeight: 500, color: "var(--text-2)",
+              fontSize: 15, fontWeight: 500,
+              color: isActive("/") ? "var(--accent)" : "var(--text-2)",
               padding: "10px 12px", borderRadius: 8,
               transition: "all var(--transition)",
               textDecoration: "none",
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
+          >
+            Home
+          </Link>
+          <Link
+            to="/amplify"
+            onClick={() => setMenuOpen(false)}
+            style={{
+              fontSize: 15, fontWeight: 500,
+              color: isActive("/amplify") ? "var(--accent)" : "var(--text-2)",
+              padding: "10px 12px", borderRadius: 8,
+              transition: "all var(--transition)",
+              textDecoration: "none",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
           >
             Amplify
           </Link>
           <Link
-            to="/develop"
+            to="/studio"
             onClick={() => setMenuOpen(false)}
             style={{
-              fontSize: 15, fontWeight: 500, color: "var(--text-2)",
+              fontSize: 15, fontWeight: 500,
+              color: isActive("/studio") ? "var(--accent)" : "var(--text-2)",
               padding: "10px 12px", borderRadius: 8,
               transition: "all var(--transition)",
               textDecoration: "none",
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
           >
-            Develop
+            Studio
           </Link>
           <Link
             to="/vault"
             onClick={() => setMenuOpen(false)}
             style={{
-              fontSize: 15, fontWeight: 500, color: "var(--text-2)",
+              fontSize: 15, fontWeight: 500,
+              color: isActive("/vault") ? "var(--accent)" : "var(--text-2)",
               padding: "10px 12px", borderRadius: 8,
               transition: "all var(--transition)",
               textDecoration: "none",
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
           >
             Vault
           </Link>
+          {/* Mobile settings */}
+          {user && (
+            <Link
+              to="/settings"
+              onClick={() => setMenuOpen(false)}
+              style={{
+                fontSize: 15, fontWeight: 500,
+                color: isActive("/settings") ? "var(--accent)" : "var(--text-2)",
+                padding: "10px 12px", borderRadius: 8,
+                transition: "all var(--transition)",
+                textDecoration: "none",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
+            >
+              Settings
+            </Link>
+          )}
           {/* Mobile sign out */}
           {user && (
             <button

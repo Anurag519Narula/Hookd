@@ -1,15 +1,15 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { useGenerate } from "./hooks/useGenerate";
 import { HomeScreen } from "./screens/HomeScreen";
-import { RepurposeScreen } from "./screens/RepurposeScreen";
-import { LoadingScreen } from "./screens/LoadingScreen";
-import { ResultsScreen } from "./screens/ResultsScreen";
+import { AmplifyScreen } from "./screens/AmplifyScreen";
 import { VaultScreen } from "./screens/VaultScreen";
 import { DevelopScreen } from "./screens/DevelopScreen";
 import { InsightScreen } from "./screens/InsightScreen";
 import { AuthScreen } from "./screens/AuthScreen";
+import { OnboardingScreen } from "./screens/OnboardingScreen";
+import { SettingsScreen } from "./screens/SettingsScreen";
+import { StudioScreen } from "./screens/StudioScreen";
 import type { GenerationState, Platform } from "./types";
 
 // ── Theme context ──────────────────────────────────────────────────────────────
@@ -30,8 +30,15 @@ export function useGenerationCtx() {
   if (!ctx) throw new Error("useGenerationCtx must be used inside GenerationContext");
   return ctx;
 }
+
 // ── Protected Route ────────────────────────────────────────────────────────────
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({
+  children,
+  requireOnboarding,
+}: {
+  children: React.ReactNode;
+  requireOnboarding?: boolean;
+}) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -60,103 +67,135 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return <AuthScreen />;
+
+  // Onboarding guard: route requires onboarding complete but user hasn't done it
+  if (requireOnboarding && !user.onboarding_complete) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// ── Onboarding Route — redirects away if already complete ─────────────────────
+function OnboardingRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: "100vh", display: "flex", alignItems: "center",
+        justifyContent: "center", background: "var(--bg)",
+      }}>
+        <p style={{ fontSize: 13, color: "var(--text-3)" }}>Loading…</p>
+      </div>
+    );
+  }
+
+  if (!user) return <AuthScreen />;
+
+  // Already onboarded — send to home
+  if (user.onboarding_complete) {
+    return <Navigate to="/" replace />;
+  }
+
   return <>{children}</>;
 }
 
 // ── Inner App (inside AuthProvider) ───────────────────────────────────────────
 function AppInner() {
-  const navigate = useNavigate();
-  const { generation, rawContent, setRawContent, selectedPlatforms, setSelectedPlatforms, generate, regenerate, reset } = useGenerate();
-
-  const handleGenerateRepurpose = async () => {
-    navigate("/generating");
-    await generate();
-    navigate("/results");
-  };
-
-  const handleStartOver = () => {
-    reset();
-    navigate("/amplify");
-  };
-
   return (
-    <GenerationContext.Provider value={{ generation, selectedPlatforms, regenerate, reset }}>
-      <Routes>
-        {/* All routes are protected — show AuthScreen if not logged in */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <HomeScreen />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/amplify"
-          element={
-            <ProtectedRoute>
-              <RepurposeScreen
-                value={rawContent}
-                onChange={setRawContent}
-                selectedPlatforms={selectedPlatforms}
-                onPlatformsChange={setSelectedPlatforms}
-                onGenerate={handleGenerateRepurpose}
-              />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/generating"
-          element={
-            <ProtectedRoute>
-              <LoadingScreen />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/results"
-          element={
-            <ProtectedRoute>
-              <ResultsScreen onStartOver={handleStartOver} />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/vault"
-          element={
-            <ProtectedRoute>
-              <VaultScreen />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/develop"
-          element={
-            <ProtectedRoute>
-              <DevelopScreen />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/develop/:ideaId"
-          element={
-            <ProtectedRoute>
-              <DevelopScreen />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/insights/:ideaId"
-          element={
-            <ProtectedRoute>
-              <InsightScreen />
-            </ProtectedRoute>
-          }
-        />
-        {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </GenerationContext.Provider>
+    <Routes>
+      {/* Home */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <HomeScreen />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Onboarding — auth required, redirect away if already complete */}
+      <Route
+        path="/onboarding"
+        element={
+          <OnboardingRoute>
+            <OnboardingScreen />
+          </OnboardingRoute>
+        }
+      />
+
+      {/* Amplify — requires onboarding complete */}
+      <Route
+        path="/amplify"
+        element={
+          <ProtectedRoute requireOnboarding>
+            <AmplifyScreen />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Studio — requires onboarding complete */}
+      <Route
+        path="/studio"
+        element={
+          <ProtectedRoute requireOnboarding>
+            <StudioScreen />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Vault */}
+      <Route
+        path="/vault"
+        element={
+          <ProtectedRoute>
+            <VaultScreen />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Settings */}
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsScreen />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Develop */}
+      <Route
+        path="/develop"
+        element={
+          <ProtectedRoute>
+            <DevelopScreen />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/develop/:ideaId"
+        element={
+          <ProtectedRoute>
+            <DevelopScreen />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Insights */}
+      <Route
+        path="/insights/:ideaId"
+        element={
+          <ProtectedRoute>
+            <InsightScreen />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Catch-all */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 

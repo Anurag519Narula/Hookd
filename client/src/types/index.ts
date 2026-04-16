@@ -1,4 +1,13 @@
 export type Platform = "instagram" | "linkedin" | "reels" | "youtube_shorts";
+export type CaptionLength = "short" | "medium" | "long";
+export type ScriptFormat = "reels" | "youtube_shorts";
+export type PsychologicalTrigger =
+  | "Curiosity Gap"
+  | "Identity Threat"
+  | "Controversy"
+  | "Surprising Stat"
+  | "Personal Story Angle"
+  | "Pattern Interrupt";
 
 export type CardState =
   | { status: "idle" }
@@ -53,6 +62,57 @@ export interface User {
   email: string;
   name: string;
   created_at: number;
+  niche: string | null;
+  sub_niche: string | null;
+  language: string;
+  platform_priority: Platform[];
+  onboarding_complete: boolean;
+}
+
+export interface ConversationMessage {
+  role: "user" | "assistant";
+  content: string;
+  timestamp: number;
+}
+
+export interface ConversationSession {
+  id: string;
+  title: string;
+  created_at: number;
+  updated_at: number;
+  messages?: ConversationMessage[];
+}
+
+export interface CaptionResult {
+  captions: Partial<Record<Platform, { text: string; hashtags: string[] }>>;
+  market_research?: string;
+  real_time_data_available: boolean;
+}
+
+export interface HookVariant {
+  hook_text: string;
+  trigger: PsychologicalTrigger;
+}
+
+export interface ScriptBeat {
+  timestamp: string;
+  text: string;
+}
+
+export interface Script {
+  format: ScriptFormat;
+  selected_hook: HookVariant;
+  hook_variants: HookVariant[];
+  beats: ScriptBeat[];
+  cta: string;
+  word_count: number;
+}
+
+export interface AmplifyRequest {
+  prompt: string;
+  conversation_id: string | null;
+  platforms: Platform[];
+  caption_length?: CaptionLength;
 }
 
 export interface AuthResponse {

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { User } from "../types/index";
-import { login as apiLogin, signup as apiSignup, fetchMe, setToken, clearToken, getToken } from "../api/auth";
+import { login as apiLogin, signup as apiSignup, setToken, clearToken, getToken } from "../api/auth";
+import { getMe } from "../api/users";
 
 interface AuthContextValue {
   user: User | null;
@@ -8,6 +9,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -23,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       return;
     }
-    fetchMe()
+    getMe()
       .then((u) => setUser(u))
       .catch(() => clearToken())
       .finally(() => setLoading(false));
@@ -46,8 +48,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const refreshProfile = useCallback(async () => {
+    const u = await getMe();
+    setUser(u);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

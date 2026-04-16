@@ -1,4 +1,13 @@
 export type Platform = "instagram" | "linkedin" | "reels" | "youtube_shorts";
+export type CaptionLength = "short" | "medium" | "long";
+export type ScriptFormat = "reels" | "youtube_shorts";
+export type PsychologicalTrigger =
+  | "Curiosity Gap"
+  | "Identity Threat"
+  | "Controversy"
+  | "Surprising Stat"
+  | "Personal Story Angle"
+  | "Pattern Interrupt";
 
 export type CardState =
   | { status: "idle" }
@@ -45,4 +54,39 @@ export interface CreatorSettings {
   sub_niche: string;
   language: string;
   platform_priority: Platform[];
+}
+
+export interface HookVariant {
+  hook_text: string;
+  trigger: PsychologicalTrigger;
+}
+
+export interface AmplifyRequest {
+  prompt: string;
+  conversation_id: string | null;
+  platforms: Platform[];
+  caption_length?: CaptionLength;
+}
+
+export interface CaptionResult {
+  captions: Partial<Record<Platform, { text: string; hashtags: string[] }>>;
+  market_research?: string;
+  real_time_data_available: boolean;
+}
+
+export interface StudioGenerateRequest {
+  idea: string;
+  format: ScriptFormat;
+  niche?: string;
+  sub_niche?: string;
+  language?: string;
+}
+
+export interface StudioRegenerateRequest {
+  idea: string;
+  format: ScriptFormat;
+  current_hooks: HookVariant[];
+  selected_hook?: HookVariant;
+  feedback?: string;
+  regenerate_target: "hook" | "script";
 }

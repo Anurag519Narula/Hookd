@@ -32,6 +32,10 @@ function loadSettings(): CreatorSettings {
   }
 }
 
+/**
+ * @deprecated Use `useCreatorProfile` from `./useCreatorProfile` instead.
+ * This hook persists settings only in localStorage and is not synced with the server.
+ */
 export function useSettings(): [CreatorSettings, (settings: CreatorSettings) => void] {
   const [settings, setSettingsState] = useState<CreatorSettings>(loadSettings);
 

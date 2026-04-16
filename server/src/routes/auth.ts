@@ -42,7 +42,7 @@ router.post("/signup", async (req: Request, res: Response) => {
     const user = result.rows[0];
     const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: "30d" });
 
-    res.status(201).json({ token, user });
+    res.status(201).json({ token, user: { ...user, onboarding_complete: false } });
   } catch (err) {
     console.error("POST /api/auth/signup error:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -59,7 +59,7 @@ router.post("/login", async (req: Request, res: Response) => {
 
   try {
     const result = await pool.query(
-      "SELECT id, email, name, password_hash, created_at FROM users WHERE email = $1",
+      "SELECT id, email, name, password_hash, created_at, onboarding_complete FROM users WHERE email = $1",
       [email.toLowerCase()]
     );
 

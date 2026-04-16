@@ -41,6 +41,46 @@ export async function initDb(): Promise<void> {
     ADD COLUMN IF NOT EXISTS insights JSONB,
     ADD COLUMN IF NOT EXISTS insights_cached_at BIGINT
   `);
+
+  // Migrate existing users table — add creator profile columns if missing
+  await pool.query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS niche               TEXT,
+    ADD COLUMN IF NOT EXISTS sub_niche           TEXT,
+    ADD COLUMN IF NOT EXISTS language            TEXT DEFAULT 'English',
+    ADD COLUMN IF NOT EXISTS platform_priority   JSONB DEFAULT '[]',
+    ADD COLUMN IF NOT EXISTS onboarding_complete BOOLEAN DEFAULT FALSE
+  `);
+
+  // Amplify conversations table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS amplify_conversations (
+      id          TEXT PRIMARY KEY,
+      user_id     TEXT REFERENCES users(id) ON DELETE CASCADE,
+      title       TEXT NOT NULL,
+      messages    JSONB NOT NULL DEFAULT '[]',
+      created_at  BIGINT NOT NULL,
+      updated_at  BIGINT NOT NULL
+    )
+  `);
+
+  // Generic API response cache — stores expensive Groq/YouTube results
+  // cache_key is a SHA-256 hash of the request params
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS api_cache (
+      cache_key   TEXT PRIMARY KEY,
+      namespace   TEXT NOT NULL,
+      payload     JSONB NOT NULL,
+      created_at  BIGINT NOT NULL,
+      expires_at  BIGINT NOT NULL
+    )
+  `);
+
+  // Index for fast namespace-scoped lookups and TTL cleanup
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS api_cache_namespace_idx ON api_cache (namespace);
+    CREATE INDEX IF NOT EXISTS api_cache_expires_idx ON api_cache (expires_at);
+  `);
 }
 
 export default pool;

@@ -15,6 +15,7 @@ import express from "express";
 import cors from "cors";
 import { initDb } from "./db";
 import { requireAuth } from "./middleware/auth";
+import { purgeExpired } from "./services/dbCache";
 import authRouter from "./routes/auth";
 import generateRouter from "./routes/generate";
 import regenerateRouter from "./routes/regenerate";
@@ -23,6 +24,10 @@ import ideasRouter from "./routes/ideas";
 import hooksRouter from "./routes/hooks";
 import captionsRouter from "./routes/captions";
 import insightsRouter from "./routes/insights";
+import usersRouter from "./routes/users";
+import conversationsRouter from "./routes/conversations";
+import amplifyRouter from "./routes/amplify";
+import studioRouter from "./routes/studio";
 
 const app = express();
 
@@ -34,6 +39,12 @@ const port = typeof PORT === "string" ? parseInt(PORT, 10) : PORT;
 
 initDb()
   .then(() => {
+    // Purge expired cache rows on startup, then every 6 hours
+    void purgeExpired().then((n) => n > 0 && console.log(`[cache] purged ${n} expired rows`));
+    setInterval(() => {
+      void purgeExpired().then((n) => n > 0 && console.log(`[cache] purged ${n} expired rows`));
+    }, 6 * 60 * 60 * 1000);
+
     // Public routes
     app.use("/api/auth", authRouter);
 
@@ -45,6 +56,10 @@ initDb()
     app.use("/api/hooks", requireAuth, hooksRouter);
     app.use("/api/captions", requireAuth, captionsRouter);
     app.use("/api/insights", requireAuth, insightsRouter);
+    app.use("/api/users", requireAuth, usersRouter);
+    app.use("/api/conversations", requireAuth, conversationsRouter);
+    app.use("/api/amplify", amplifyRouter);
+    app.use("/api/studio", studioRouter);
 
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);

@@ -449,7 +449,14 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
               Insights
             </button>
             <button
-              onClick={() => navigate(`/develop/${idea.id}`, { state: { idea } })}
+              onClick={() => {
+                const isScript = idea.format_type === "reels" || idea.format_type === "youtube_shorts";
+                if (isScript) {
+                  navigate(`/studio?ideaId=${idea.id}`);
+                } else {
+                  navigate(`/develop/${idea.id}`, { state: { idea } });
+                }
+              }}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 4,
                 padding: "7px 14px", fontSize: 13, fontWeight: 500,

@@ -42,7 +42,7 @@ export async function login(email: string, password: string): Promise<AuthRespon
 }
 
 export async function fetchMe(): Promise<User> {
-  const res = await fetch("/api/auth/me", {
+  const res = await fetch("/api/users/me", {
     headers: { ...authHeaders() },
   });
   if (!res.ok) throw new Error("Session expired");
