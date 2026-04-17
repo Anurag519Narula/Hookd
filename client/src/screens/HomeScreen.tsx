@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
-import { TrendingHashtagsBar } from "../components/TrendingHashtagsBar";
 
 // ── Icons ──────────────────────────────────────────────────────────────────────
 const ArrowRight = () => (
@@ -21,33 +20,6 @@ function Label({ children }: { children: React.ReactNode }) {
     }}>
       {children}
     </p>
-  );
-}
-
-// ── Feature row item ───────────────────────────────────────────────────────────
-function FeatureRow({ num, title, body }: { num: string; title: string; body: string }) {
-  return (
-    <div style={{
-      display: "grid", gridTemplateColumns: "40px 1fr",
-      gap: 20, paddingBottom: 28,
-      borderBottom: "1px solid var(--border)",
-      marginBottom: 28,
-    }}>
-      <span style={{
-        fontSize: 11, fontWeight: 500, color: "var(--text-4)",
-        letterSpacing: "0.04em", paddingTop: 3,
-      }}>
-        {num}
-      </span>
-      <div>
-        <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", margin: "0 0 6px", letterSpacing: "-0.02em" }}>
-          {title}
-        </p>
-        <p style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.7, margin: 0 }}>
-          {body}
-        </p>
-      </div>
-    </div>
   );
 }
 
@@ -199,7 +171,7 @@ export function HomeScreen() {
               { value: "3×", label: "Hooks per idea" },
               { value: "4", label: "Platforms at once" },
               { value: "Live", label: "Real-time hashtag data" },
-              { value: "7d", label: "Insight cache TTL" },
+              { value: "<1min", label: "Generation time" },
             ].map((stat, i, arr) => (
               <div key={stat.label} style={{
                 padding: "14px 20px",
@@ -227,66 +199,190 @@ export function HomeScreen() {
       {/* ── DIVIDER ── */}
       <div style={{ borderTop: "1px solid var(--border)", position: "relative", zIndex: 1 }} />
 
-      {/* ── TRENDING HASHTAGS ── */}
-      <section style={{
-        maxWidth: 1100, margin: "0 auto",
-        padding: "32px 40px",
-        position: "relative", zIndex: 1,
-      }}>
-        <TrendingHashtagsBar limit={20} />
-      </section>
-
-      {/* ── DIVIDER ── */}
-      <div style={{ borderTop: "1px solid var(--border)", position: "relative", zIndex: 1 }} />
-
-      {/* ── FEATURES ── */}
+      {/* ── HOW IT WORKS ── */}
       <section style={{
         maxWidth: 1100, margin: "0 auto",
         padding: "64px 40px",
         position: "relative", zIndex: 1,
       }}>
-        <div style={{
-          display: "grid", gridTemplateColumns: "1fr 2fr",
-          gap: 64, alignItems: "start",
-        }} className="features-two-col">
-          {/* Left sticky label */}
-          <div style={{ position: "sticky", top: 100 }}>
-            <Label>What's inside</Label>
-            <h2 style={{
-              fontSize: "clamp(22px, 2.5vw, 32px)",
-              fontWeight: 800, letterSpacing: "-0.03em",
-              lineHeight: 1.15, color: "var(--text)", margin: "0 0 16px",
-            }}>
-              Four tools.<br />One workflow.
-            </h2>
-            <p style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.75, margin: 0 }}>
-              Everything you need to go from raw thought to published post — without switching apps.
-            </p>
-          </div>
+        <Label>The workflow</Label>
+        <h2 style={{
+          fontSize: "clamp(24px, 3.5vw, 44px)",
+          fontWeight: 800, letterSpacing: "-0.04em",
+          lineHeight: 1.1, color: "var(--text)",
+          margin: "0 0 48px", maxWidth: 500,
+        }}>
+          From random thought to viral post.
+        </h2>
 
-          {/* Right — feature rows */}
-          <div>
-            <FeatureRow
-              num="01"
-              title="Idea Vault"
-              body="That random thought at 2am? Save it. The AI scores it, tags it, and tells you if it's worth posting — before you waste time on it."
-            />
-            <FeatureRow
-              num="02"
-              title="Amplify"
-              body="Describe your idea in plain language. Get platform-native captions for Instagram, LinkedIn, Reels, and YouTube Shorts — with real-time trending hashtags. Conversations are saved so you can pick up where you left off."
-            />
-            <FeatureRow
-              num="03"
-              title="Script Studio"
-              body="Validate your idea against real YouTube data before you film. Get an opportunity score, competitor analysis, content blueprint, and 3 hook variants — each built on a different psychological trigger."
-            />
-            <FeatureRow
-              num="04"
-              title="Creator Profile"
-              body="Set your niche, sub-niche, and platform priorities once. Every caption and script is personalised to your audience from the first generation."
-            />
-          </div>
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(5, 1fr)",
+          gap: 0, borderLeft: "1px solid var(--border)",
+        }} className="steps-grid">
+          {[
+            { num: "01", title: "Capture", body: "Drop any idea into the Vault the moment it hits. Type, speak, or paste. AI scores and tags it instantly." },
+            { num: "02", title: "Validate", body: "Open it in Studio. Check it against real YouTube data — opportunity score, trend direction, competition, untapped angles." },
+            { num: "03", title: "Plan the script", body: "Go to Develop. Pick from 3 hook variants built on psychological triggers. A full script with beats and timestamps is built around your choice." },
+            { num: "04", title: "Generate captions", body: "Hit Amplify. Platform-native captions for Instagram, LinkedIn, Reels, and YouTube Shorts — with trending hashtags — in under a minute." },
+            { num: "05", title: "Post it.", body: "Copy, paste, post. Your vault and conversation history are always there when the next idea hits." },
+          ].map((step) => (
+            <div key={step.num} style={{
+              padding: "24px 24px 28px",
+              borderRight: "1px solid var(--border)",
+            }}>
+              <p style={{
+                fontSize: 11, fontWeight: 500, letterSpacing: "0.1em",
+                color: "var(--text-4)", margin: "0 0 14px",
+              }}>
+                {step.num}
+              </p>
+              <p style={{
+                fontSize: 14, fontWeight: 700, color: "var(--text)",
+                margin: "0 0 8px", letterSpacing: "-0.02em",
+              }}>
+                {step.title}
+              </p>
+              <p style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.7, margin: 0 }}>
+                {step.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── DIVIDER ── */}
+      <div style={{ borderTop: "1px solid var(--border)", position: "relative", zIndex: 1 }} />
+
+      {/* ── USE CASES ── */}
+      <section style={{
+        maxWidth: 1100, margin: "0 auto",
+        padding: "64px 40px",
+        position: "relative", zIndex: 1,
+      }}>
+        <Label>Built for every creator</Label>
+        <h2 style={{
+          fontSize: "clamp(24px, 3.5vw, 44px)",
+          fontWeight: 800, letterSpacing: "-0.04em",
+          lineHeight: 1.1, color: "var(--text)",
+          margin: "0 0 48px", maxWidth: 560,
+        }}>
+          Whatever your niche, the workflow is the same.
+        </h2>
+
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 16,
+        }} className="usecases-grid">
+          {[
+            {
+              emoji: "🤖",
+              niche: "Tech & AI",
+              idea: "Weekly AI news roundup — biggest stories this week in artificial intelligence",
+              result: "Validated against 2,400+ YouTube videos. Opportunity score 85. Hook: \"This week in AI changed everything — here's what you actually need to know.\"",
+            },
+            {
+              emoji: "✈️",
+              niche: "Travel",
+              idea: "Hidden waterfalls in Bali that tourists completely miss",
+              result: "Top video: 2.4M views. Untapped angle found: sunrise-only access spots nobody is filming. Content blueprint ready in 40 seconds.",
+            },
+            {
+              emoji: "💪",
+              niche: "Fitness",
+              idea: "Why most people never see results from the gym despite going consistently",
+              result: "Rising trend. High audience fit for 25-34 year olds. 3 hooks generated — identity threat variant outperforms in this niche.",
+            },
+            {
+              emoji: "💼",
+              niche: "Business",
+              idea: "I quit my 9-5 six months ago — here's what my bank account actually looks like",
+              result: "Strong opportunity. Competitor gap: everyone shows success, nobody shows the real numbers. Captions ready for LinkedIn + Reels.",
+            },
+            {
+              emoji: "🍳",
+              niche: "Food",
+              idea: "The one ingredient that makes restaurant-quality pasta at home",
+              result: "Avg top 5 videos: 800K views. Best posting time: Sunday 6-9pm. Caption generated with trending hashtags in under a minute.",
+            },
+            {
+              emoji: "🎮",
+              niche: "Gaming",
+              idea: "This obscure mechanic in Elden Ring that 99% of players never discover",
+              result: "Curiosity gap hook scored highest. YouTube data shows 1.2M top video. Script built around the reveal moment for maximum retention.",
+            },
+          ].map((card) => (
+            <div
+              key={card.niche}
+              style={{
+                background: "var(--bg-card)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius-lg)",
+                padding: "24px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+                transition: "all var(--transition)",
+                cursor: "default",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLDivElement;
+                el.style.borderColor = "var(--accent)";
+                el.style.boxShadow = "0 4px 24px rgba(20,184,166,0.1)";
+                el.style.transform = "translateY(-2px)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLDivElement;
+                el.style.borderColor = "var(--border)";
+                el.style.boxShadow = "none";
+                el.style.transform = "translateY(0)";
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 22 }}>{card.emoji}</span>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
+                  textTransform: "uppercase", color: "var(--text-3)",
+                }}>
+                  {card.niche}
+                </span>
+              </div>
+
+              {/* Idea */}
+              <div style={{
+                padding: "12px 14px",
+                background: "var(--bg-subtle)",
+                borderRadius: "var(--radius-sm)",
+                border: "1px solid var(--border)",
+                borderLeft: "3px solid var(--accent)",
+              }}>
+                <p style={{
+                  fontSize: 11, fontWeight: 600, color: "var(--text-3)",
+                  textTransform: "uppercase", letterSpacing: "0.06em",
+                  margin: "0 0 6px",
+                }}>
+                  The idea
+                </p>
+                <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.6, margin: 0, fontStyle: "italic" }}>
+                  "{card.idea}"
+                </p>
+              </div>
+
+              {/* Result */}
+              <div>
+                <p style={{
+                  fontSize: 11, fontWeight: 600, color: "var(--accent)",
+                  textTransform: "uppercase", letterSpacing: "0.06em",
+                  margin: "0 0 6px",
+                }}>
+                  What Hookd found
+                </p>
+                <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.65, margin: 0 }}>
+                  {card.result}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -359,77 +455,6 @@ export function HomeScreen() {
         </div>
       </section>
 
-      {/* ── DIVIDER ── */}
-      <div style={{ borderTop: "1px solid var(--border)", position: "relative", zIndex: 1 }} />
-
-      {/* ── HOW IT WORKS ── */}
-      <section style={{
-        maxWidth: 1100, margin: "0 auto",
-        padding: "64px 40px",
-        position: "relative", zIndex: 1,
-      }}>
-        <Label>The workflow</Label>
-        <h2 style={{
-          fontSize: "clamp(24px, 3.5vw, 44px)",
-          fontWeight: 800, letterSpacing: "-0.04em",
-          lineHeight: 1.1, color: "var(--text)",
-          margin: "0 0 48px", maxWidth: 500,
-        }}>
-          From random thought to viral post.
-        </h2>
-
-        <div style={{
-          display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 0, borderLeft: "1px solid var(--border)",
-        }} className="steps-grid">
-          {[
-            { num: "01", title: "Capture the idea", body: "Drop it in the Vault before it disappears. AI scores it and tells you if it's worth developing." },
-            { num: "02", title: "Validate it", body: "Script Studio checks your idea against real YouTube data. See the opportunity score, competition level, and what angles are untapped." },
-            { num: "03", title: "Generate content", body: "Amplify turns your idea into platform-native captions with trending hashtags. Studio gives you hooks and a content blueprint." },
-            { num: "04", title: "Post it.", body: "Copy, paste, post. Your conversation history and vault are always there when the next idea hits." },
-          ].map((step) => (
-            <div key={step.num} style={{
-              padding: "24px 24px 28px",
-              borderRight: "1px solid var(--border)",
-            }}>
-              <p style={{
-                fontSize: 11, fontWeight: 500, letterSpacing: "0.1em",
-                color: "var(--text-4)", margin: "0 0 14px",
-              }}>
-                {step.num}
-              </p>
-              <p style={{
-                fontSize: 14, fontWeight: 700, color: "var(--text)",
-                margin: "0 0 8px", letterSpacing: "-0.02em",
-              }}>
-                {step.title}
-              </p>
-              <p style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.7, margin: 0 }}>
-                {step.body}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ marginTop: 40 }}>
-          <button
-            onClick={() => navigate("/amplify")}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              padding: "13px 28px", fontSize: 14, fontWeight: 600,
-              borderRadius: 99, border: "none",
-              background: "var(--text)", color: "var(--bg)",
-              cursor: "pointer", transition: "opacity var(--transition)",
-              letterSpacing: "-0.01em",
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.8"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
-          >
-            Try it now <ArrowRight />
-          </button>
-        </div>
-      </section>
-
       {/* ── FOOTER ── */}
       <footer style={{
         borderTop: "1px solid var(--border)",
@@ -475,6 +500,7 @@ export function HomeScreen() {
               {[
                 { label: "Amplify", path: "/amplify" },
                 { label: "Studio", path: "/studio" },
+                { label: "Develop", path: "/develop" },
                 { label: "Vault", path: "/vault" },
               ].map(({ label, path }) => (
                 <a key={label} href={path} style={{
@@ -525,12 +551,18 @@ export function HomeScreen() {
           .stats-grid {
             grid-template-columns: 1fr 1fr !important;
           }
+          .usecases-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
         }
         @media (max-width: 600px) {
           .steps-grid {
             grid-template-columns: 1fr !important;
           }
           .compare-row {
+            grid-template-columns: 1fr !important;
+          }
+          .usecases-grid {
             grid-template-columns: 1fr !important;
           }
         }

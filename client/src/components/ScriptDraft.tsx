@@ -5,8 +5,9 @@ import { useClipboard } from "../hooks/useClipboard";
 interface ScriptDraftProps {
   script: Script;
   onRegenerateWithFeedback: (feedback: string) => Promise<void>;
-  onSaveToVault: () => Promise<void>;
+  onSaveToVault: (insights?: object | null) => Promise<void>;
   isRegenerating: boolean;
+  insights?: object | null;
 }
 
 const ClipboardIcon = () => (
@@ -54,6 +55,7 @@ export function ScriptDraft({
   onRegenerateWithFeedback,
   onSaveToVault,
   isRegenerating,
+  insights,
 }: ScriptDraftProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -92,7 +94,7 @@ export function ScriptDraft({
     setSaveLoading(true);
     setSaveError(null);
     try {
-      await onSaveToVault();
+      await onSaveToVault(insights);
       setSaveDone(true);
       setTimeout(() => setSaveDone(false), 2000);
     } catch (err) {

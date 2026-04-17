@@ -42,6 +42,7 @@ export function HookCard({
   onSelect,
   onTryAnother,
 }: HookCardProps) {
+  const [isHovered, setIsHovered] = React.useState(false);
   const triggerStyle = TRIGGER_COLORS[hook.trigger] ?? DEFAULT_TRIGGER_STYLE;
 
   const cardStyle: React.CSSProperties = {
@@ -58,12 +59,14 @@ export function HookCard({
     flexDirection: "column",
     gap: 12,
     opacity: isLoading ? 0.7 : 1,
+    cursor: isLoading ? "default" : "pointer",
+    position: "relative",
   };
 
   // Loading skeleton state
   if (isLoading) {
     return (
-      <div style={cardStyle}>
+      <div style={{ ...cardStyle, cursor: "default" }}>
         {/* Trigger badge skeleton */}
         <ShimmerBlock width="100px" height={22} />
         {/* Hook text skeleton */}
@@ -72,9 +75,8 @@ export function HookCard({
           <ShimmerBlock width="80%" height={16} />
           <ShimmerBlock width="60%" height={16} />
         </div>
-        {/* Buttons skeleton */}
+        {/* Button skeleton */}
         <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-          <ShimmerBlock width="100px" height={34} />
           <ShimmerBlock width="110px" height={34} />
         </div>
       </div>
@@ -83,22 +85,57 @@ export function HookCard({
 
   return (
     <div
+      onClick={onSelect}
       style={cardStyle}
       onMouseEnter={(e) => {
+        setIsHovered(true);
         const el = e.currentTarget as HTMLDivElement;
+        if (!isSelected) {
+          el.style.borderColor = "var(--accent)";
+          el.style.borderLeftWidth = "4px";
+          el.style.background = "rgba(20, 184, 166, 0.03)";
+        }
         el.style.boxShadow = isSelected
           ? "0 8px 30px rgba(20, 184, 166, 0.25)"
-          : "var(--shadow-md)";
+          : "0 6px 24px rgba(20, 184, 166, 0.12)";
         el.style.transform = "translateY(-2px)";
       }}
       onMouseLeave={(e) => {
+        setIsHovered(false);
         const el = e.currentTarget as HTMLDivElement;
+        if (!isSelected) {
+          el.style.borderColor = "var(--border)";
+          el.style.borderLeftWidth = "1px";
+          el.style.background = "var(--bg-card)";
+        }
         el.style.boxShadow = isSelected
           ? "0 4px 20px rgba(20, 184, 166, 0.15)"
           : "var(--shadow-sm)";
         el.style.transform = "translateY(0)";
       }}
     >
+      {/* Selected indicator */}
+      {isSelected && (
+        <div style={{
+          position: "absolute",
+          top: 12,
+          right: 12,
+          width: 24,
+          height: 24,
+          borderRadius: "50%",
+          background: "var(--accent)",
+          color: "#fff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 14,
+          fontWeight: 700,
+          boxShadow: "0 2px 8px rgba(20, 184, 166, 0.3)",
+        }}>
+          ✓
+        </div>
+      )}
+
       {/* Trigger badge */}
       <span
         style={{
@@ -127,6 +164,7 @@ export function HookCard({
           color: "var(--text)",
           margin: 0,
           fontWeight: isSelected ? 500 : 400,
+          paddingRight: isSelected ? 32 : 0,
         }}
       >
         {hook.hook_text}
@@ -149,48 +187,13 @@ export function HookCard({
         </p>
       )}
 
-      {/* Action buttons */}
+      {/* Try another button */}
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
-        {/* Select button */}
         <button
-          onClick={onSelect}
-          style={{
-            padding: "8px 16px",
-            fontSize: 13,
-            fontWeight: 600,
-            borderRadius: "var(--radius-sm)",
-            border: isSelected ? "1.5px solid var(--accent)" : "1px solid var(--border)",
-            background: isSelected ? "var(--accent)" : "var(--bg-subtle)",
-            color: isSelected ? "#fff" : "var(--text-2)",
-            cursor: "pointer",
-            transition: "all var(--transition)",
-            whiteSpace: "nowrap",
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent card click
+            onTryAnother();
           }}
-          onMouseEnter={(e) => {
-            const el = e.currentTarget as HTMLButtonElement;
-            if (isSelected) {
-              el.style.background = "var(--accent-hover)";
-            } else {
-              el.style.background = "var(--bg-hover)";
-              el.style.color = "var(--text)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            const el = e.currentTarget as HTMLButtonElement;
-            if (isSelected) {
-              el.style.background = "var(--accent)";
-            } else {
-              el.style.background = "var(--bg-subtle)";
-              el.style.color = "var(--text-2)";
-            }
-          }}
-        >
-          {isSelected ? "✓ Selected" : "Select"}
-        </button>
-
-        {/* Try another button */}
-        <button
-          onClick={onTryAnother}
           style={{
             padding: "8px 14px",
             fontSize: 13,
@@ -207,16 +210,33 @@ export function HookCard({
             const el = e.currentTarget as HTMLButtonElement;
             el.style.borderColor = "var(--border-strong)";
             el.style.color = "var(--text)";
+            el.style.background = "var(--bg-subtle)";
           }}
           onMouseLeave={(e) => {
             const el = e.currentTarget as HTMLButtonElement;
             el.style.borderColor = "var(--border)";
             el.style.color = "var(--text-3)";
+            el.style.background = "transparent";
           }}
         >
           ↻ Try another
         </button>
       </div>
+
+      {/* Click to select hint (only show when not selected and hovered) */}
+      {!isSelected && isHovered && (
+        <div style={{
+          position: "absolute",
+          bottom: 12,
+          right: 12,
+          fontSize: 11,
+          color: "var(--accent)",
+          fontWeight: 600,
+          pointerEvents: "none",
+        }}>
+          Click to select
+        </div>
+      )}
     </div>
   );
 }

@@ -34,7 +34,7 @@ router.post("/", async (req: AuthenticatedRequest, res: Response) => {
         const tagging = await tagIdea(raw_text);
         await pool.query(
           "UPDATE ideas SET tags = $1, format_type = $2, emotion_angle = $3, potential_score = $4, status = 'tagged' WHERE id = $5",
-          [tagging.tags, tagging.format_type, tagging.emotion_angle, tagging.potential_score, id]
+          [JSON.stringify(tagging.tags), tagging.format_type, tagging.emotion_angle, tagging.potential_score, id]
         );
       } catch (err) {
         console.error("Async tagging failed for idea", id, err);
@@ -115,6 +115,7 @@ router.patch("/:id", async (req: AuthenticatedRequest, res: Response) => {
     "captions",
     "selected_hook",
     "status",
+    "insights",
   ];
 
   const setClauses: string[] = [];
@@ -124,7 +125,13 @@ router.patch("/:id", async (req: AuthenticatedRequest, res: Response) => {
   for (const field of allowedFields) {
     if (field in body) {
       setClauses.push(field + " = $" + idx++);
-      values.push(body[field]);
+      // JSON-encode array and object fields
+      const value = body[field];
+      if (["tags", "hooks", "captions", "insights"].includes(field) && (Array.isArray(value) || typeof value === "object")) {
+        values.push(JSON.stringify(value));
+      } else {
+        values.push(value);
+      }
     }
   }
 

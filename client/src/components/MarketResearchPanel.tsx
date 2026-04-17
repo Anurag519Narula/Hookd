@@ -62,6 +62,58 @@ function potentialColor(p: "low" | "medium" | "high"): string {
   return p === "high" ? "#4ade80" : p === "medium" ? "#fbbf24" : "#f87171";
 }
 
+// ── Circular Progress Component ──────────────────────────────────────────────
+function CircularProgress({ score, size = 100, strokeWidth = 8 }: { score: number; size?: number; strokeWidth?: number }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (score / 100) * circumference;
+  const color = scoreColor(score);
+
+  return (
+    <div style={{ position: "relative", width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        {/* Background circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="var(--border)"
+          strokeWidth={strokeWidth}
+        />
+        {/* Progress circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 1s ease-in-out" }}
+        />
+      </svg>
+      {/* Score text */}
+      <div style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        textAlign: "center",
+      }}>
+        <div style={{ fontSize: size * 0.28, fontWeight: 800, color, letterSpacing: "-0.03em" }}>
+          {score}
+        </div>
+        <div style={{ fontSize: size * 0.12, color: "var(--text-3)", fontWeight: 600 }}>
+          /100
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function Chip({ label, color, bg }: { label: string; color?: string; bg?: string }) {
@@ -109,26 +161,6 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
       ...style,
     }}>
       {children}
-    </div>
-  );
-}
-
-function ScoreBar({ score, color }: { score: number; color: string }) {
-  return (
-    <div style={{
-      height: 4,
-      borderRadius: 99,
-      background: "var(--border)",
-      overflow: "hidden",
-      marginTop: 6,
-    }}>
-      <div style={{
-        height: "100%",
-        width: `${Math.min(100, Math.max(0, score))}%`,
-        background: color,
-        borderRadius: 99,
-        transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)",
-      }} />
     </div>
   );
 }
@@ -358,55 +390,60 @@ function ReportBody({ insights }: { insights: InsightReport }) {
         </p>
       </div>
 
-      {/* 2. Score row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+      {/* 2. Score row with circular progress */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
         {/* Opportunity Score */}
-        <Card>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
+        <Card style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 16px" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 16 }}>
             Opportunity
           </div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: scoreColor(insights.opportunityScore), letterSpacing: "-0.03em" }}>
-            {insights.opportunityScore}
+          <CircularProgress score={insights.opportunityScore} size={110} strokeWidth={10} />
+          <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 12, textAlign: "center", lineHeight: 1.5 }}>
+            {insights.opportunityScore >= 75 ? "Excellent potential" : insights.opportunityScore >= 50 ? "Good potential" : insights.opportunityScore >= 30 ? "Moderate potential" : "Low potential"}
           </div>
-          <div style={{ fontSize: 10, color: "var(--text-3)", marginBottom: 4 }}>/100</div>
-          <ScoreBar score={insights.opportunityScore} color={scoreColor(insights.opportunityScore)} />
         </Card>
 
         {/* Trend Score */}
-        <Card>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
+        <Card style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 16px" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 16 }}>
             Trend
           </div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={{ fontSize: 24, fontWeight: 800, color: scoreColor(insights.trendScore), letterSpacing: "-0.03em" }}>
-              {insights.trendScore}
-            </span>
-            <span style={{
-              fontSize: 16,
+          <div style={{ position: "relative" }}>
+            <CircularProgress score={insights.trendScore} size={110} strokeWidth={10} />
+            <div style={{
+              position: "absolute",
+              top: -8,
+              right: -8,
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              background: insights.trendDirection === "rising" ? "#4ade80" : insights.trendDirection === "declining" ? "#f87171" : "var(--text-3)",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 18,
               fontWeight: 700,
-              color: insights.trendDirection === "rising" ? "#4ade80"
-                : insights.trendDirection === "declining" ? "#f87171"
-                : "var(--text-3)",
+              border: "3px solid var(--bg-card)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             }}>
               {trendIcon(insights.trendDirection)}
-            </span>
+            </div>
           </div>
-          <div style={{ fontSize: 10, color: "var(--text-3)", marginBottom: 4 }}>
+          <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 12, textAlign: "center", fontWeight: 600 }}>
             {insights.trendVelocity}
           </div>
-          <ScoreBar score={insights.trendScore} color={scoreColor(insights.trendScore)} />
         </Card>
 
         {/* Audience Fit */}
-        <Card>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
+        <Card style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 16px" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 16 }}>
             Audience Fit
           </div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: scoreColor(insights.audienceFit.score), letterSpacing: "-0.03em" }}>
-            {insights.audienceFit.score}
+          <CircularProgress score={insights.audienceFit.score} size={110} strokeWidth={10} />
+          <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 12, textAlign: "center", lineHeight: 1.4, fontWeight: 500 }}>
+            {insights.audienceFit.primaryAudience}
           </div>
-          <div style={{ fontSize: 10, color: "var(--text-3)", marginBottom: 4 }}>/100</div>
-          <ScoreBar score={insights.audienceFit.score} color={scoreColor(insights.audienceFit.score)} />
         </Card>
       </div>
 
@@ -433,373 +470,473 @@ function ReportBody({ insights }: { insights: InsightReport }) {
         </div>
       </Card>
 
-      {/* 4. YouTube Data */}
+      {/* 4. YouTube Data - Enhanced */}
       {insights.youtubeData && (
         <div>
           <SectionTitle>▶️ YouTube Data</SectionTitle>
-          <Card>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16, marginBottom: 16 }}>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Top Video
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
+            {/* Stats grid */}
+            <Card>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div style={{
+                  padding: "16px",
+                  background: "linear-gradient(135deg, rgba(255,0,0,0.08), rgba(255,0,0,0.02))",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid rgba(255,0,0,0.15)",
+                }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "#ff0000", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+                    🔥 Top Video
+                  </div>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.03em" }}>
+                    {formatViews(insights.youtubeData.topVideoViews)}
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 500 }}>views</div>
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em" }}>
-                  {formatViews(insights.youtubeData.topVideoViews)}
-                </div>
-                <div style={{ fontSize: 10, color: "var(--text-3)" }}>views</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Avg Top 5
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em" }}>
-                  {formatViews(insights.youtubeData.avgTopVideoViews)}
-                </div>
-                <div style={{ fontSize: 10, color: "var(--text-3)" }}>views</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Videos Found
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em" }}>
-                  {insights.youtubeData.totalVideosFound.toLocaleString()}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Views Range
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
-                  {insights.youtubeData.viewsRange}
-                </div>
-              </div>
-            </div>
-            {insights.youtubeData.topChannels.length > 0 && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-3)", marginBottom: 6 }}>
-                  Top Channels
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {insights.youtubeData.topChannels.map(ch => (
-                    <Chip key={ch} label={ch} color="var(--accent)" bg="rgba(20,184,166,0.08)" />
-                  ))}
-                </div>
-              </div>
-            )}
-            {insights.youtubeData.commonTitles.length > 0 && (
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-3)", marginBottom: 6 }}>
-                  Title Patterns
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  {insights.youtubeData.commonTitles.map((t, i) => (
-                    <div key={i} style={{
-                      fontSize: 12,
-                      color: "var(--text-2)",
-                      padding: "4px 10px",
-                      background: "var(--bg-subtle)",
-                      borderRadius: "var(--radius-sm)",
-                      border: "1px solid var(--border)",
-                    }}>
-                      "{t}"
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </Card>
-        </div>
-      )}
-
-      {/* 5. Content Blueprint */}
-      <div>
-        <SectionTitle>🎬 Content Blueprint</SectionTitle>
-        <Card>
-          {/* Opening hook */}
-          <div style={{
-            padding: "12px 14px",
-            borderRadius: "var(--radius-sm)",
-            background: "rgba(20,184,166,0.08)",
-            border: "1px solid rgba(20,184,166,0.2)",
-            marginBottom: 16,
-          }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>
-              ⚡ Opening Hook (first 3 seconds)
-            </div>
-            <p style={{ fontSize: 13, color: "var(--text)", fontWeight: 500, lineHeight: 1.6 }}>
-              {insights.contentBlueprint.openingHook}
-            </p>
-          </div>
-
-          {/* Core message */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
-              Core Message
-            </div>
-            <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6 }}>
-              {insights.contentBlueprint.coreMessage}
-            </p>
-          </div>
-
-          {/* Key points */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 10 }}>
-              Key Points
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {insights.contentBlueprint.keyPoints.map((kp, i) => (
-                <div key={i} style={{
-                  padding: "12px 14px",
+                <div style={{
+                  padding: "16px",
                   background: "var(--bg-subtle)",
-                  borderRadius: "var(--radius-sm)",
+                  borderRadius: "var(--radius-md)",
                   border: "1px solid var(--border)",
                 }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+                    📊 Avg Top 5
+                  </div>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.03em" }}>
+                    {formatViews(insights.youtubeData.avgTopVideoViews)}
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 500 }}>views</div>
+                </div>
+                <div style={{
+                  padding: "16px",
+                  background: "var(--bg-subtle)",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border)",
+                }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+                    📹 Videos Found
+                  </div>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.03em" }}>
+                    {insights.youtubeData.totalVideosFound.toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 500 }}>videos</div>
+                </div>
+                <div style={{
+                  padding: "16px",
+                  background: "var(--bg-subtle)",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border)",
+                }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+                    📈 Views Range
+                  </div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text)", marginTop: 8 }}>
+                    {insights.youtubeData.viewsRange}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Top channels */}
+            {insights.youtubeData.topChannels.length > 0 && (
+              <Card>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-3)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  Top Channels
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {insights.youtubeData.topChannels.slice(0, 5).map((ch, i) => (
+                    <div key={ch} style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "6px 10px",
+                      background: i === 0 ? "rgba(20,184,166,0.08)" : "var(--bg-subtle)",
+                      borderRadius: "var(--radius-sm)",
+                      border: `1px solid ${i === 0 ? "rgba(20,184,166,0.2)" : "var(--border)"}`,
+                    }}>
                       <span style={{
                         width: 20,
                         height: 20,
                         borderRadius: "50%",
-                        background: "var(--accent)",
-                        color: "#fff",
+                        background: i === 0 ? "var(--accent)" : "var(--bg-hover)",
+                        color: i === 0 ? "#fff" : "var(--text-3)",
                         fontSize: 10,
-                        fontWeight: 800,
-                        display: "inline-flex",
+                        fontWeight: 700,
+                        display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         flexShrink: 0,
                       }}>
                         {i + 1}
                       </span>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>
-                        {kp.point}
+                      <span style={{
+                        fontSize: 12,
+                        fontWeight: i === 0 ? 600 : 500,
+                        color: i === 0 ? "var(--accent-text)" : "var(--text-2)",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}>
+                        {ch}
                       </span>
                     </div>
-                    <span style={{
-                      padding: "1px 7px",
-                      borderRadius: 99,
-                      fontSize: 10,
-                      fontWeight: 600,
-                      background: "var(--bg-card)",
-                      color: "var(--text-3)",
-                      border: "1px solid var(--border)",
-                      flexShrink: 0,
-                    }}>
-                      {kp.timestamp}
-                    </span>
-                  </div>
-                  <div style={{ paddingLeft: 28 }}>
-                    <p style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 4, lineHeight: 1.5 }}>
-                      <span style={{ fontWeight: 600, color: "var(--text-3)" }}>Why: </span>
-                      {kp.why}
-                    </p>
-                    <p style={{ fontSize: 12, color: "var(--accent)", lineHeight: 1.5 }}>
-                      <span style={{ fontWeight: 600 }}>💡 Tip: </span>
-                      {kp.deliveryTip}
-                    </p>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </Card>
+            )}
           </div>
 
-          {/* Closing CTA */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
-              Closing CTA
-            </div>
-            <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6 }}>
-              {insights.contentBlueprint.closingCTA}
-            </p>
-          </div>
-
-          {/* Visual + Audio notes */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div style={{
-              padding: "10px 12px",
-              background: "var(--bg-subtle)",
-              borderRadius: "var(--radius-sm)",
-              border: "1px solid var(--border)",
-            }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 4 }}>
-                🎥 Visual Notes
+          {/* Title patterns */}
+          {insights.youtubeData.commonTitles.length > 0 && (
+            <Card style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-3)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                💡 Common Title Patterns
               </div>
-              <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.5 }}>
-                {insights.contentBlueprint.visualNotes}
-              </p>
-            </div>
-            <div style={{
-              padding: "10px 12px",
-              background: "var(--bg-subtle)",
-              borderRadius: "var(--radius-sm)",
-              border: "1px solid var(--border)",
-            }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 4 }}>
-                🎵 Audio Notes
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {insights.youtubeData.commonTitles.map((t, i) => (
+                  <div key={i} style={{
+                    fontSize: 12,
+                    color: "var(--text-2)",
+                    padding: "8px 12px",
+                    background: "var(--bg-subtle)",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid var(--border)",
+                    borderLeft: "3px solid var(--accent)",
+                    lineHeight: 1.5,
+                  }}>
+                    "{t}"
+                  </div>
+                ))}
               </div>
-              <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.5 }}>
-                {insights.contentBlueprint.audioNotes}
-              </p>
-            </div>
-          </div>
+            </Card>
+          )}
+        </div>
+      )}
 
-          {/* Duration target */}
-          <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 11, color: "var(--text-3)" }}>⏱ Target duration:</span>
-            <span style={{
-              padding: "2px 10px",
-              borderRadius: 99,
-              fontSize: 11,
-              fontWeight: 700,
-              background: "rgba(20,184,166,0.1)",
-              color: "var(--accent)",
-              border: "1px solid rgba(20,184,166,0.2)",
-            }}>
-              {insights.contentBlueprint.durationTarget}
-            </span>
-          </div>
-        </Card>
-      </div>
-
-      {/* 6. Platform Analysis */}
+      {/* 5. Platform Analysis - Enhanced with visual indicators */}
       {insights.platformAnalysis.length > 0 && (
         <div>
           <SectionTitle>📱 Platform Analysis</SectionTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
-            {insights.platformAnalysis.map((p, i) => (
-              <Card key={i}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
-                    {p.platform}
-                  </span>
-                  <span style={{
-                    padding: "2px 8px",
-                    borderRadius: 99,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    background: `${potentialColor(p.potential)}18`,
-                    color: potentialColor(p.potential),
-                    border: `1px solid ${potentialColor(p.potential)}33`,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                  }}>
-                    {p.potential}
-                  </span>
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 4 }}>
-                  <span style={{ fontWeight: 600 }}>Avg views: </span>
-                  <span style={{ color: "var(--text-2)" }}>{p.avgViewsForTopic}</span>
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-2)", marginBottom: 8, lineHeight: 1.5 }}>
-                  {p.contentStyle}
-                </div>
-                <div style={{
-                  fontSize: 11,
-                  color: "var(--text-3)",
-                  padding: "6px 8px",
-                  background: "var(--bg-subtle)",
-                  borderRadius: "var(--radius-sm)",
-                  border: "1px solid var(--border)",
-                  lineHeight: 1.5,
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 14 }}>
+            {insights.platformAnalysis.map((p, i) => {
+              const potentialScore = p.potential === "high" ? 85 : p.potential === "medium" ? 60 : 35;
+              return (
+                <Card key={i} style={{
+                  background: `linear-gradient(135deg, ${potentialColor(p.potential)}08 0%, var(--bg-card) 100%)`,
+                  borderLeft: `3px solid ${potentialColor(p.potential)}`,
                 }}>
-                  # {p.hashtagStrategy}
-                </div>
-              </Card>
-            ))}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>
+                      {p.platform}
+                    </span>
+                    <div style={{ position: "relative", width: 48, height: 48 }}>
+                      <svg width="48" height="48" style={{ transform: "rotate(-90deg)" }}>
+                        <circle cx="24" cy="24" r="20" fill="none" stroke="var(--border)" strokeWidth="4" />
+                        <circle
+                          cx="24" cy="24" r="20" fill="none"
+                          stroke={potentialColor(p.potential)}
+                          strokeWidth="4"
+                          strokeDasharray={`${(potentialScore / 100) * 125.6} 125.6`}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <div style={{
+                        position: "absolute", top: "50%", left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        fontSize: 10, fontWeight: 800,
+                        color: potentialColor(p.potential),
+                      }}>
+                        {p.potential === "high" ? "H" : p.potential === "medium" ? "M" : "L"}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{
+                    fontSize: 11,
+                    color: "var(--text-3)",
+                    marginBottom: 8,
+                    padding: "6px 10px",
+                    background: "var(--bg-subtle)",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid var(--border)",
+                  }}>
+                    <span style={{ fontWeight: 600 }}>📊 Avg views: </span>
+                    <span style={{ color: "var(--text)", fontWeight: 700 }}>{p.avgViewsForTopic}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 10, lineHeight: 1.6 }}>
+                    {p.contentStyle}
+                  </div>
+                  <div style={{
+                    fontSize: 11,
+                    color: "var(--accent)",
+                    padding: "8px 10px",
+                    background: "rgba(20,184,166,0.06)",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid rgba(20,184,166,0.15)",
+                    lineHeight: 1.5,
+                    fontWeight: 500,
+                  }}>
+                    # {p.hashtagStrategy}
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* 7. Top Angles */}
+      {/* 7. Top Angles - Enhanced with visual metrics */}
       {insights.topAngles.length > 0 && (
         <div>
           <SectionTitle>🎯 Top Angles</SectionTitle>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {insights.topAngles.map((a, i) => (
-              <Card key={i}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", flex: 1 }}>
-                    {a.angle}
-                  </span>
-                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                    <span style={{
-                      padding: "2px 8px",
-                      borderRadius: 99,
-                      fontSize: 10,
-                      fontWeight: 700,
-                      background: `${reachColor(a.estimatedReach)}18`,
-                      color: reachColor(a.estimatedReach),
-                      border: `1px solid ${reachColor(a.estimatedReach)}33`,
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {insights.topAngles.map((a, i) => {
+              const reachScore = a.estimatedReach === "high" ? 90 : a.estimatedReach === "medium" ? 60 : 30;
+              const difficultyScore = a.difficulty === "easy" ? 90 : a.difficulty === "medium" ? 60 : 30;
+              return (
+                <Card key={i} style={{
+                  background: i === 0 ? "linear-gradient(135deg, rgba(20,184,166,0.05) 0%, var(--bg-card) 100%)" : "var(--bg-card)",
+                  borderLeft: i === 0 ? "3px solid var(--accent)" : "1px solid var(--border)",
+                }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                    {/* Rank badge */}
+                    <div style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      background: i === 0 ? "var(--accent)" : "var(--bg-subtle)",
+                      color: i === 0 ? "#fff" : "var(--text-3)",
+                      fontSize: 16,
+                      fontWeight: 800,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      border: i === 0 ? "none" : "1px solid var(--border)",
                     }}>
-                      {a.estimatedReach} reach
-                    </span>
-                    <span style={{
-                      padding: "2px 8px",
-                      borderRadius: 99,
-                      fontSize: 10,
-                      fontWeight: 700,
-                      background: `${difficultyColor(a.difficulty)}18`,
-                      color: difficultyColor(a.difficulty),
-                      border: `1px solid ${difficultyColor(a.difficulty)}33`,
-                    }}>
-                      {a.difficulty}
-                    </span>
+                      {i + 1}
+                    </div>
+                    
+                    {/* Content */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 8, lineHeight: 1.4 }}>
+                        {a.angle}
+                      </div>
+                      <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6, marginBottom: 12 }}>
+                        {a.why}
+                      </p>
+                      
+                      {/* Metrics bars */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                            <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                              Reach Potential
+                            </span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: reachColor(a.estimatedReach) }}>
+                              {a.estimatedReach}
+                            </span>
+                          </div>
+                          <div style={{
+                            height: 6,
+                            borderRadius: 99,
+                            background: "var(--border)",
+                            overflow: "hidden",
+                          }}>
+                            <div style={{
+                              height: "100%",
+                              width: `${reachScore}%`,
+                              background: `linear-gradient(90deg, ${reachColor(a.estimatedReach)}, ${reachColor(a.estimatedReach)}dd)`,
+                              borderRadius: 99,
+                              transition: "width 0.8s cubic-bezier(0.4,0,0.2,1)",
+                            }} />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                            <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                              Difficulty
+                            </span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: difficultyColor(a.difficulty) }}>
+                              {a.difficulty}
+                            </span>
+                          </div>
+                          <div style={{
+                            height: 6,
+                            borderRadius: 99,
+                            background: "var(--border)",
+                            overflow: "hidden",
+                          }}>
+                            <div style={{
+                              height: "100%",
+                              width: `${difficultyScore}%`,
+                              background: `linear-gradient(90deg, ${difficultyColor(a.difficulty)}, ${difficultyColor(a.difficulty)}dd)`,
+                              borderRadius: 99,
+                              transition: "width 0.8s cubic-bezier(0.4,0,0.2,1)",
+                            }} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6 }}>
-                  {a.why}
-                </p>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* 8. Untapped Angles */}
+      {/* 8. Untapped Angles - Enhanced with opportunity indicators */}
       {insights.untappedAngles.length > 0 && (
         <div>
           <SectionTitle>💎 Untapped Angles</SectionTitle>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
             {insights.untappedAngles.map((a, i) => (
-              <Card key={i} style={{ borderLeft: "3px solid #4ade80" }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
-                  {a.angle}
+              <Card key={i} style={{
+                background: "linear-gradient(135deg, rgba(74,222,128,0.05) 0%, var(--bg-card) 100%)",
+                borderLeft: "3px solid #4ade80",
+                position: "relative",
+                overflow: "hidden",
+              }}>
+                {/* Sparkle decoration */}
+                <div style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  fontSize: 24,
+                  opacity: 0.15,
+                }}>
+                  ✨
                 </div>
-                <p style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 6, lineHeight: 1.6 }}>
-                  <span style={{ fontWeight: 600, color: "#4ade80" }}>Opportunity: </span>
-                  {a.opportunity}
-                </p>
-                <p style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.5 }}>
-                  <span style={{ fontWeight: 600 }}>Why it's open: </span>
-                  {a.whyNobodyIsDoing}
-                </p>
+                
+                <div style={{ position: "relative", zIndex: 1 }}>
+                  <div style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "3px 10px",
+                    borderRadius: 99,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    background: "rgba(74,222,128,0.15)",
+                    color: "#4ade80",
+                    border: "1px solid rgba(74,222,128,0.3)",
+                    marginBottom: 10,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                  }}>
+                    <span>💡</span> Opportunity #{i + 1}
+                  </div>
+                  
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 10, lineHeight: 1.4 }}>
+                    {a.angle}
+                  </div>
+                  
+                  <div style={{
+                    padding: "10px 12px",
+                    background: "rgba(74,222,128,0.08)",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid rgba(74,222,128,0.2)",
+                    marginBottom: 8,
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      Why it's valuable
+                    </div>
+                    <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
+                      {a.opportunity}
+                    </p>
+                  </div>
+                  
+                  <div style={{
+                    padding: "10px 12px",
+                    background: "var(--bg-subtle)",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid var(--border)",
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      Why it's open
+                    </div>
+                    <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
+                      {a.whyNobodyIsDoing}
+                    </p>
+                  </div>
+                </div>
               </Card>
             ))}
           </div>
         </div>
       )}
 
-      {/* 9. Competitor Insights */}
+      {/* 9. Competitor Insights - Enhanced with side-by-side comparison */}
       {insights.competitorInsights.length > 0 && (
         <div>
           <SectionTitle>🔍 Competitor Insights</SectionTitle>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {insights.competitorInsights.map((c, i) => (
-              <Card key={i}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 4 }}>
-                      What they do
+              <Card key={i} style={{ background: "var(--bg-subtle)" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 16, alignItems: "center" }}>
+                  {/* What they do */}
+                  <div style={{
+                    padding: "12px 14px",
+                    background: "var(--bg-card)",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid var(--border)",
+                  }}>
+                    <div style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                      color: "var(--text-3)",
+                      marginBottom: 6,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}>
+                      <span>👥</span> What they do
                     </div>
-                    <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.5 }}>
+                    <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
                       {c.observation}
                     </p>
                   </div>
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>
-                      The gap
+                  
+                  {/* Arrow separator */}
+                  <div style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    background: "var(--accent)",
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 16,
+                    fontWeight: 700,
+                    flexShrink: 0,
+                  }}>
+                    →
+                  </div>
+                  
+                  {/* The gap */}
+                  <div style={{
+                    padding: "12px 14px",
+                    background: "rgba(20,184,166,0.08)",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid rgba(20,184,166,0.2)",
+                  }}>
+                    <div style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                      color: "var(--accent)",
+                      marginBottom: 6,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}>
+                      <span>💡</span> Your opportunity
                     </div>
-                    <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.5 }}>
+                    <p style={{ fontSize: 12, color: "var(--text)", fontWeight: 500, lineHeight: 1.6, margin: 0 }}>
                       {c.gap}
                     </p>
                   </div>
@@ -810,24 +947,38 @@ function ReportBody({ insights }: { insights: InsightReport }) {
         </div>
       )}
 
-      {/* 10. Risks */}
+      {/* 10. Risks - Enhanced with severity indicators */}
       {insights.risks.length > 0 && (
         <div>
-          <SectionTitle>⚠️ Risks</SectionTitle>
-          <Card>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <SectionTitle>⚠️ Risks to Consider</SectionTitle>
+          <Card style={{ background: "linear-gradient(135deg, rgba(248,113,113,0.04) 0%, var(--bg-card) 100%)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
               {insights.risks.map((r, i) => (
                 <div key={i} style={{
                   display: "flex",
                   alignItems: "flex-start",
-                  gap: 10,
-                  padding: "8px 10px",
+                  gap: 12,
+                  padding: "12px 14px",
                   background: "rgba(248,113,113,0.06)",
                   borderRadius: "var(--radius-sm)",
-                  border: "1px solid rgba(248,113,113,0.15)",
+                  border: "1px solid rgba(248,113,113,0.2)",
                 }}>
-                  <span style={{ color: "#f87171", fontSize: 12, flexShrink: 0, marginTop: 1 }}>●</span>
-                  <span style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>{r}</span>
+                  <div style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: "50%",
+                    background: "#f87171",
+                    color: "#fff",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}>
+                    !
+                  </div>
+                  <span style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, flex: 1 }}>{r}</span>
                 </div>
               ))}
             </div>
@@ -835,39 +986,50 @@ function ReportBody({ insights }: { insights: InsightReport }) {
         </div>
       )}
 
-      {/* 11. Recommendations */}
+      {/* 11. Recommendations - Enhanced with action checklist style */}
       {insights.recommendations.length > 0 && (
         <div>
-          <SectionTitle>✅ Recommendations</SectionTitle>
-          <Card>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <SectionTitle>✅ Action Plan</SectionTitle>
+          <Card style={{ background: "linear-gradient(135deg, rgba(20,184,166,0.04) 0%, var(--bg-card) 100%)" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {insights.recommendations.map((rec, i) => (
                 <div key={i} style={{
                   display: "flex",
                   alignItems: "flex-start",
-                  gap: 10,
-                  padding: "8px 10px",
-                  background: "rgba(20,184,166,0.06)",
+                  gap: 12,
+                  padding: "14px 16px",
+                  background: "var(--bg-card)",
                   borderRadius: "var(--radius-sm)",
-                  border: "1px solid rgba(20,184,166,0.15)",
-                }}>
-                  <span style={{
-                    width: 18,
-                    height: 18,
+                  border: "1px solid var(--border)",
+                  transition: "all 0.2s ease",
+                  cursor: "default",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--accent)";
+                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(20,184,166,0.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--border)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+                >
+                  <div style={{
+                    width: 28,
+                    height: 28,
                     borderRadius: "50%",
                     background: "var(--accent)",
                     color: "#fff",
-                    fontSize: 9,
+                    fontSize: 12,
                     fontWeight: 800,
-                    display: "inline-flex",
+                    display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     flexShrink: 0,
-                    marginTop: 1,
+                    boxShadow: "0 2px 8px rgba(20,184,166,0.3)",
                   }}>
                     {i + 1}
-                  </span>
-                  <span style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>{rec}</span>
+                  </div>
+                  <span style={{ fontSize: 13, color: "var(--text)", fontWeight: 500, lineHeight: 1.7, flex: 1 }}>{rec}</span>
                 </div>
               ))}
             </div>
@@ -875,20 +1037,69 @@ function ReportBody({ insights }: { insights: InsightReport }) {
         </div>
       )}
 
-      {/* 12. Key Insight */}
+      {/* 12. Key Insight - Enhanced with prominent styling */}
       <div style={{
-        padding: "16px 20px",
-        borderRadius: "var(--radius-md)",
-        background: "rgba(20,184,166,0.06)",
-        border: "1px solid rgba(20,184,166,0.2)",
-        borderLeft: "4px solid var(--accent)",
+        padding: "20px 24px",
+        borderRadius: "var(--radius-lg)",
+        background: "linear-gradient(135deg, rgba(20,184,166,0.08) 0%, rgba(99,102,241,0.08) 100%)",
+        border: "2px solid var(--accent)",
+        boxShadow: "0 4px 20px rgba(20,184,166,0.15)",
+        position: "relative",
+        overflow: "hidden",
       }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 8 }}>
-          💡 Key Insight
+        {/* Decorative background */}
+        <div style={{
+          position: "absolute",
+          top: -20,
+          right: -20,
+          width: 100,
+          height: 100,
+          background: "radial-gradient(circle, rgba(20,184,166,0.15) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+        
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 12,
+          }}>
+            <div style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              background: "var(--accent)",
+              color: "#fff",
+              fontSize: 18,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 2px 12px rgba(20,184,166,0.4)",
+            }}>
+              💡
+            </div>
+            <span style={{
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "var(--accent)",
+            }}>
+              Key Insight
+            </span>
+          </div>
+          <p style={{
+            fontSize: 15,
+            color: "var(--text)",
+            fontWeight: 600,
+            lineHeight: 1.75,
+            margin: 0,
+            letterSpacing: "-0.01em",
+          }}>
+            {insights.keyInsight}
+          </p>
         </div>
-        <p style={{ fontSize: 14, color: "var(--text)", fontWeight: 500, lineHeight: 1.7 }}>
-          {insights.keyInsight}
-        </p>
       </div>
 
     </div>

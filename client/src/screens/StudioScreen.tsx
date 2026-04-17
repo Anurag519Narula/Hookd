@@ -1,15 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
-import { HookCard } from "../components/HookCard";
-import { ScriptDraft } from "../components/ScriptDraft";
 import { MarketResearchPanel } from "../components/MarketResearchPanel";
-import { useStudio } from "../hooks/useStudio";
 import { useCreatorProfile } from "../hooks/useCreatorProfile";
 import { getIdea } from "../api/ideas";
-import { fetchInsights } from "../api/insights";
-import type { ScriptFormat, HookVariant } from "../types/index";
-import type { InsightReport } from "../types/insights";
+import { fetchInsights, type InsightResponse } from "../api/insights";
 
 const SparkleIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -17,47 +12,25 @@ const SparkleIcon = () => (
   </svg>
 );
 
-const RefreshIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="23 4 23 10 17 10" />
-    <polyline points="1 20 1 14 7 14" />
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+const ArrowRightIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12"/>
+    <polyline points="12 5 19 12 12 19"/>
   </svg>
 );
 
 export function StudioScreen() {
   const [searchParams] = useSearchParams();
   const ideaId = searchParams.get("ideaId");
+  const navigate = useNavigate();
 
   const [idea, setIdea] = useState("");
-  const [format, setFormat] = useState<ScriptFormat>("reels");
-
-  // selectedHookIndex is purely local UI state — never reset by script updates
-  const [selectedHookIndex, setSelectedHookIndex] = useState<number | null>(null);
-  const [hookErrors, setHookErrors] = useState<Record<number, string | null>>({});
-  const [hookLoading, setHookLoading] = useState<Record<number, boolean>>({});
 
   // Market research state
   const [insightsOpen, setInsightsOpen] = useState(false);
-  const [insights, setInsights] = useState<InsightReport | null>(null);
+  const [insights, setInsights] = useState<InsightResponse | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [insightsFetched, setInsightsFetched] = useState(false);
-
-  const {
-    phase,
-    hookVariants,
-    script,
-    isGeneratingHooks,
-    isGeneratingScript,
-    isRegenerating,
-    error,
-    generateHookVariants,
-    buildScriptFromHook,
-    tryAnotherHook,
-    regenerateWithFeedback,
-    saveToVault,
-    reset,
-  } = useStudio();
 
   const { profile } = useCreatorProfile();
 
@@ -70,9 +43,6 @@ export function StudioScreen() {
         const saved = await getIdea(ideaId!);
         if (cancelled) return;
         setIdea(saved.raw_text);
-        if (saved.format_type === "reels" || saved.format_type === "youtube_shorts") {
-          setFormat(saved.format_type as ScriptFormat);
-        }
       } catch {
         // silently ignore
       }
@@ -81,35 +51,17 @@ export function StudioScreen() {
     return () => { cancelled = true; };
   }, [ideaId]);
 
-  // Reset selection state when hooks change (new generation)
-  useEffect(() => {
-    if (hookVariants.length > 0) {
-      setSelectedHookIndex(null); // no hook pre-selected — user must choose
-      setHookErrors({});
-      setHookLoading({});
-    }
-  }, [hookVariants]);
-
-  async function handleGenerate() {
-    if (!idea.trim() || isGeneratingHooks) return;
-    reset();
-    setSelectedHookIndex(null);
+  async function handleValidate() {
+    if (!idea.trim() || insightsLoading) return;
     setInsights(null);
     setInsightsFetched(false);
     setInsightsOpen(false);
-    // Auto-fetch insights in parallel with hook generation
-    void generateHookVariants(
-      idea,
-      format,
-      profile?.niche ?? undefined,
-      profile?.sub_niche ?? undefined,
-      profile?.language ?? undefined
-    );
-    // Start fetching insights immediately — don't wait for hooks
+    // Fetch insights
     setInsightsLoading(true);
     fetchInsights(idea, profile?.niche ?? "", ideaId ?? undefined)
       .then((result) => {
-        setInsights(result.report);
+        console.log("✅ Insights fetched successfully in Studio", result);
+        setInsights(result);
         setInsightsFetched(true);
         setInsightsOpen(true); // auto-open when ready
       })
@@ -117,44 +69,13 @@ export function StudioScreen() {
       .finally(() => setInsightsLoading(false));
   }
 
-  async function handleSelectHook(hook: HookVariant, index: number) {
-    // Update selection immediately — no async wait
-    setSelectedHookIndex(index);
-    setHookLoading((prev) => ({ ...prev, [index]: true }));
-    setHookErrors((prev) => ({ ...prev, [index]: null }));
-    try {
-      await buildScriptFromHook(hook, index);
-    } catch (err) {
-      setHookErrors((prev) => ({
-        ...prev,
-        [index]: err instanceof Error ? err.message : "Failed to build script",
-      }));
-    } finally {
-      setHookLoading((prev) => ({ ...prev, [index]: false }));
-    }
-  }
-
-  async function handleTryAnother(index: number) {
-    setHookLoading((prev) => ({ ...prev, [index]: true }));
-    setHookErrors((prev) => ({ ...prev, [index]: null }));
-    try {
-      await tryAnotherHook(index);
-    } catch (err) {
-      setHookErrors((prev) => ({
-        ...prev,
-        [index]: err instanceof Error ? err.message : "Failed to regenerate hook",
-      }));
-    } finally {
-      setHookLoading((prev) => ({ ...prev, [index]: false }));
-    }
-  }
-
   const handleGetInsights = useCallback(async () => {
     if (insightsFetched || insightsLoading) return;
     setInsightsLoading(true);
     try {
       const result = await fetchInsights(idea, profile?.niche ?? "", ideaId ?? undefined);
-      setInsights(result.report);
+      console.log("✅ Insights fetched on demand in Studio", result);
+      setInsights(result);
       setInsightsFetched(true);
     } catch {
       // silently fail
@@ -171,11 +92,20 @@ export function StudioScreen() {
     }
   }
 
-  const canGenerate = idea.trim().length > 0 && !isGeneratingHooks && !isGeneratingScript;
-  const showHooks = isGeneratingHooks || hookVariants.length > 0;
-  const showScript = phase === "script_ready" && script !== null;
-  // Show validation report as soon as generation starts
+  function handlePlanScript() {
+    // Navigate to develop page with the idea and insights via state (clean URL)
+    navigate(`/develop`, {
+      state: {
+        idea,
+        ideaId: ideaId ?? undefined,
+        insights: insights?.report ?? null
+      }
+    });
+  }
+
+  const canValidate = idea.trim().length > 0 && !insightsLoading;
   const showValidationReport = insightsLoading || insightsFetched;
+  const canPlanScript = insightsFetched && insights !== null;
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", position: "relative", overflow: "hidden" }}>
@@ -208,27 +138,27 @@ export function StudioScreen() {
             fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
             textTransform: "uppercase", color: "var(--text-3)", margin: "0 0 12px",
           }}>
-            Script Studio
+            Idea Validation Studio
           </p>
           <h1 style={{
             fontSize: "clamp(24px, 4vw, 40px)", fontWeight: 800,
             letterSpacing: "-0.04em", color: "var(--text)", margin: "0 0 12px",
             lineHeight: 1.1,
           }}>
-            Validate your idea,{" "}
+            Validate your idea with{" "}
             <span style={{
               background: "linear-gradient(135deg, var(--accent), #6366f1)",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
               backgroundClip: "text",
             }}>
-              plan your content
+              real data
             </span>
           </h1>
           <p style={{
             fontSize: 15, color: "var(--text-3)", margin: 0,
-            lineHeight: 1.65, maxWidth: 520, marginLeft: "auto", marginRight: "auto",
+            lineHeight: 1.65, maxWidth: 560, marginLeft: "auto", marginRight: "auto",
           }}>
-            Get a data-driven validation report, content blueprint, and hook variants — before you film a single second.
+            Get a comprehensive validation report with YouTube data, trend analysis, competition insights, and content blueprint — before you create anything.
           </p>
         </div>
 
@@ -245,7 +175,7 @@ export function StudioScreen() {
               display: "block", fontSize: 13, fontWeight: 600,
               color: "var(--text-2)", marginBottom: 10, letterSpacing: "-0.01em",
             }}>
-              Your big idea
+              Your content idea
             </label>
             <textarea
               value={idea}
@@ -266,58 +196,25 @@ export function StudioScreen() {
           </div>
 
           <div style={{ padding: "20px 24px 24px" }}>
-            {/* Format toggle */}
-            <div style={{ marginBottom: 20 }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)", margin: "0 0 10px" }}>
-                Format
-              </p>
-              <div style={{
-                display: "inline-flex", background: "var(--bg-subtle)",
-                border: "1px solid var(--border)", borderRadius: "var(--radius-md)",
-                padding: 3, gap: 2,
-              }}>
-                {(["reels", "youtube_shorts"] as ScriptFormat[]).map((f) => {
-                  const label = f === "reels" ? "Reels" : "YouTube Shorts";
-                  const isActive = format === f;
-                  return (
-                    <button
-                      key={f}
-                      onClick={() => setFormat(f)}
-                      style={{
-                        padding: "7px 18px", fontSize: 13,
-                        fontWeight: isActive ? 600 : 500,
-                        borderRadius: "var(--radius-sm)", border: "none",
-                        background: isActive ? "var(--accent)" : "transparent",
-                        color: isActive ? "#fff" : "var(--text-3)",
-                        cursor: "pointer", transition: "all var(--transition)", whiteSpace: "nowrap",
-                      }}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Generate hooks button */}
+            {/* Validate button */}
             <button
-              onClick={() => void handleGenerate()}
-              disabled={!canGenerate}
+              onClick={() => void handleValidate()}
+              disabled={!canValidate}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center",
                 gap: 8, width: "100%", padding: "15px 24px", fontSize: 15,
                 fontWeight: 700, color: "#fff",
-                background: canGenerate
+                background: canValidate
                   ? "linear-gradient(135deg, var(--accent) 0%, #6366f1 100%)"
                   : "var(--text-4)",
                 border: "none", borderRadius: "var(--radius-md)",
-                cursor: canGenerate ? "pointer" : "not-allowed",
+                cursor: canValidate ? "pointer" : "not-allowed",
                 transition: "all var(--transition)",
-                boxShadow: canGenerate ? "0 4px 20px rgba(13,148,136,0.3)" : "none",
+                boxShadow: canValidate ? "0 4px 20px rgba(13,148,136,0.3)" : "none",
                 letterSpacing: "-0.01em",
               }}
               onMouseEnter={(e) => {
-                if (canGenerate) {
+                if (canValidate) {
                   const b = e.currentTarget as HTMLButtonElement;
                   b.style.transform = "translateY(-1px)";
                   b.style.boxShadow = "0 6px 28px rgba(13,148,136,0.4)";
@@ -326,153 +223,77 @@ export function StudioScreen() {
               onMouseLeave={(e) => {
                 const b = e.currentTarget as HTMLButtonElement;
                 b.style.transform = "translateY(0)";
-                b.style.boxShadow = canGenerate ? "0 4px 20px rgba(13,148,136,0.3)" : "none";
+                b.style.boxShadow = canValidate ? "0 4px 20px rgba(13,148,136,0.3)" : "none";
               }}
             >
-              {isGeneratingHooks ? (
+              {insightsLoading ? (
                 <>
                   <span style={{
                     width: 14, height: 14, border: "2px solid rgba(255,255,255,0.4)",
                     borderTopColor: "#fff", borderRadius: "50%",
                     display: "inline-block", animation: "spin 0.7s linear infinite",
                   }} />
-                  Generating hooks…
+                  Validating idea…
                 </>
               ) : (
                 <>
                   <SparkleIcon />
-                  Generate Hooks
+                  Validate Idea
                 </>
               )}
             </button>
-
-            {/* Error */}
-            {error && !isGeneratingHooks && !isGeneratingScript && (
-              <div style={{
-                marginTop: 12, padding: "12px 16px",
-                background: "var(--error-subtle)",
-                border: "1px solid rgba(248, 113, 113, 0.25)",
-                borderRadius: "var(--radius-md)",
-                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-              }}>
-                <p style={{ fontSize: 13, color: "var(--error)", margin: 0, lineHeight: 1.5 }}>
-                  {error}
-                </p>
-                <button
-                  onClick={() => void handleGenerate()}
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                    padding: "6px 12px", fontSize: 12, fontWeight: 600,
-                    borderRadius: "var(--radius-sm)",
-                    border: "1px solid rgba(248, 113, 113, 0.4)",
-                    background: "transparent", color: "var(--error)",
-                    cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
-                    transition: "all var(--transition)",
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(248, 113, 113, 0.1)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
-                >
-                  <RefreshIcon />
-                  Retry
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* ── Hook grid ── */}
-        {showHooks && (
-          <div>
-            <div style={{ marginBottom: 16 }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)", margin: "0 0 4px" }}>
-                {isGeneratingHooks ? "Generating hooks…" : "Choose your hook"}
-              </p>
-              <p style={{ fontSize: 12, color: "var(--text-3)", margin: 0 }}>
-                {isGeneratingHooks
-                  ? "Crafting 3 hook variants with different psychological triggers"
-                  : selectedHookIndex === null
-                  ? "Pick the hook that resonates — the full script will be built around it"
-                  : isGeneratingScript
-                  ? "Building your script around the selected hook…"
-                  : "Script generated. Select a different hook to rebuild, or edit below."}
-              </p>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }} className="hook-grid">
-              {isGeneratingHooks
-                ? [0, 1, 2].map((i) => (
-                    <HookCard
-                      key={i}
-                      hook={{ hook_text: "", trigger: "Curiosity Gap" }}
-                      isSelected={false}
-                      isLoading={true}
-                      error={null}
-                      onSelect={() => {}}
-                      onTryAnother={() => {}}
-                    />
-                  ))
-                : hookVariants.map((hook, i) => (
-                    <HookCard
-                      key={`${hook.hook_text.slice(0, 20)}-${i}`}
-                      hook={hook}
-                      isSelected={selectedHookIndex === i}
-                      isLoading={hookLoading[i] ?? false}
-                      error={hookErrors[i] ?? null}
-                      onSelect={() => void handleSelectHook(hook, i)}
-                      onTryAnother={() => void handleTryAnother(i)}
-                    />
-                  ))}
-            </div>
-
-            {/* Script generating indicator */}
-            {isGeneratingScript && (
-              <div style={{
-                marginTop: 16, padding: "14px 18px",
-                background: "var(--accent-subtle)",
-                border: "1px solid rgba(20,184,166,0.2)",
-                borderRadius: "var(--radius-md)",
-                display: "flex", alignItems: "center", gap: 10,
-              }}>
-                <span style={{
-                  width: 14, height: 14, border: "2px solid rgba(20,184,166,0.3)",
-                  borderTopColor: "var(--accent)", borderRadius: "50%",
-                  display: "inline-block", animation: "spin 0.7s linear infinite", flexShrink: 0,
-                }} />
-                <p style={{ fontSize: 13, color: "var(--accent-text)", margin: 0 }}>
-                  Building your 45–60 second script…
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Script draft ── */}
-        {showScript && (
-          <ScriptDraft
-            script={script!}
-            onRegenerateWithFeedback={regenerateWithFeedback}
-            onSaveToVault={saveToVault}
-            isRegenerating={isRegenerating}
-          />
-        )}
-
-        {/* ── Idea Validation Report — shown as soon as generation starts ── */}
+        {/* ── Idea Validation Report ── */}
         {showValidationReport && (
           <MarketResearchPanel
             topic={idea.slice(0, 80)}
             isOpen={insightsOpen}
             onToggle={handleInsightsToggle}
-            insights={insights}
+            insights={insights?.report ?? null}
             isLoading={insightsLoading}
           />
+        )}
+
+        {/* ── Plan Script Button ── */}
+        {canPlanScript && (
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            paddingTop: 8,
+          }}>
+            <button
+              onClick={handlePlanScript}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "14px 28px", fontSize: 15, fontWeight: 600,
+                borderRadius: 99, border: "none",
+                background: "var(--text)", color: "var(--bg)",
+                cursor: "pointer", transition: "all var(--transition)",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+              }}
+              onMouseEnter={(e) => {
+                const b = e.currentTarget as HTMLButtonElement;
+                b.style.opacity = "0.9";
+                b.style.transform = "translateY(-2px)";
+                b.style.boxShadow = "0 6px 24px rgba(0,0,0,0.15)";
+              }}
+              onMouseLeave={(e) => {
+                const b = e.currentTarget as HTMLButtonElement;
+                b.style.opacity = "1";
+                b.style.transform = "translateY(0)";
+                b.style.boxShadow = "0 4px 16px rgba(0,0,0,0.1)";
+              }}
+            >
+              Plan Your Script <ArrowRightIcon />
+            </button>
+          </div>
         )}
       </div>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 700px) {
-          .hook-grid { grid-template-columns: 1fr !important; }
-        }
       `}</style>
     </div>
   );

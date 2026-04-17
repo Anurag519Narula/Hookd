@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
 import { ConversationSidebar } from "../components/ConversationSidebar";
 import { ChatMessage } from "../components/ChatMessage";
@@ -39,10 +40,15 @@ const SparkleIcon = () => (
 );
 
 export function AmplifyScreen() {
+  const location = useLocation();
   const { profile } = useCreatorProfile();
   const { sessions, loading: sessionsLoading, createSession, deleteSession } = useConversations();
   const { activeSessionId, messages, isLoading, isSessionLoading, error, sendMessage, startNewSession, loadSession } =
     useAmplify();
+
+  // Get idea from navigation state
+  const stateData = (location.state as { idea?: string; ideaId?: string }) ?? {};
+  const ideaFromState = stateData.idea ?? "";
 
   // Input state
   const [prompt, setPrompt] = useState("");
@@ -53,6 +59,8 @@ export function AmplifyScreen() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Scroll-to-bottom ref
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Track the last idea we auto-sent to prevent duplicates
+  const lastAutoSentIdeaRef = useRef<string | null>(null);
 
   // Pre-select platforms from user's platform_priority on mount
   useEffect(() => {
@@ -60,6 +68,42 @@ export function AmplifyScreen() {
       setSelectedPlatforms(profile.platform_priority);
     }
   }, [profile?.platform_priority]);
+
+  // Auto-send idea if it came from Develop page
+  useEffect(() => {
+    if (!ideaFromState) {
+      console.log("🎨 No idea from state, skipping auto-send");
+      return;
+    }
+
+    // Check if we've already sent this exact idea in this session
+    if (lastAutoSentIdeaRef.current === ideaFromState) {
+      console.log("🎨 Already sent this exact idea, skipping");
+      return;
+    }
+
+    console.log("🎨 AmplifyScreen auto-send effect running");
+    console.log("🎨 ideaFromState:", ideaFromState.slice(0, 50));
+    
+    // Mark this idea as sent
+    lastAutoSentIdeaRef.current = ideaFromState;
+    
+    console.log("✅ Auto-sending idea to Amplify");
+    
+    // Use selected platforms or default to Instagram if none selected
+    const platformsToUse = selectedPlatforms.length > 0 
+      ? selectedPlatforms 
+      : ["instagram" as Platform];
+    
+    // Clear the prompt and textarea
+    setPrompt("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+    
+    // Send immediately
+    void sendMessage(ideaFromState, platformsToUse, captionLength);
+  }, [ideaFromState, selectedPlatforms, captionLength, sendMessage]);
 
   // Auto-scroll to bottom when messages change or loading state changes
   useEffect(() => {

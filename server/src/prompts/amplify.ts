@@ -1,9 +1,9 @@
 import type { Platform, CaptionLength } from "../types/index";
 
 const LENGTH_CONSTRAINTS: Record<CaptionLength, string> = {
-  short: "≤150 characters (concise, punchy — ideal for Instagram)",
-  medium: "150–300 characters (balanced — enough context without losing attention)",
-  long: "300+ characters (detailed — for audiences who want depth)",
+  short: "1-2 lines (concise, punchy — ideal for Instagram)",
+  medium: "1 paragraph (balanced — enough context without losing attention)",
+  long: "2 paragraphs (detailed — for audiences who want depth)",
 };
 
 const PLATFORM_DEFAULTS: Record<Platform, CaptionLength> = {
@@ -98,11 +98,13 @@ GENERAL QUALITY RULES:
 - Never write generic motivational content
 - Hook first: the opening line must create immediate curiosity or recognition
 - One core idea per caption — no secondary tangents
+- Include 2-4 relevant emojis naturally throughout the caption to enhance engagement and visual appeal
+- Emojis should match the tone and content, not be random or excessive
 
 LENGTH RULES:
-- short: ≤150 characters total (caption text only, not counting hashtags)
-- medium: 150–300 characters total
-- long: 300+ characters total
+- short: 1-2 lines (caption text only, not counting hashtags)
+- medium: 1 paragraph (caption text only, not counting hashtags)
+- long: 2 paragraphs (caption text only, not counting hashtags)
 Strictly respect the length constraint for each platform listed above.
 ${hashtagSection}${perPlatformSection}
 HASHTAG RULES:

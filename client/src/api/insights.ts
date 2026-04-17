@@ -23,5 +23,11 @@ export async function fetchInsights(idea: string, niche: string, ideaId?: string
     const err = await res.json().catch(() => ({}));
     throw new Error((err as { error?: string }).error ?? "Failed to fetch insights");
   }
-  return res.json() as Promise<InsightResponse>;
+  const data = await res.json() as InsightResponse;
+  if (data.cached) {
+    console.log("💾 Cache hit: Server returned cached insights for idea", ideaId);
+  } else {
+    console.log("🔄 Cache miss: Generated fresh insights for idea", ideaId);
+  }
+  return data;
 }

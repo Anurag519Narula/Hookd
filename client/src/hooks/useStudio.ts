@@ -28,7 +28,7 @@ export interface UseStudioResult {
   buildScriptFromHook: (hook: HookVariant, index: number) => Promise<void>;
   tryAnotherHook: (index: number) => Promise<void>;
   regenerateWithFeedback: (feedback: string) => Promise<void>;
-  saveToVault: () => Promise<void>;
+  saveToVault: (insights?: object | null) => Promise<void>;
   reset: () => void;
 }
 
@@ -125,7 +125,6 @@ export function useStudio(): UseStudioResult {
       setError(null);
 
       try {
-        const existingTriggers = hookVariants.map((h) => h.trigger);
         const result = await regenerateScript({
           idea: currentIdea,
           format: currentFormat,
@@ -199,29 +198,30 @@ export function useStudio(): UseStudioResult {
 
   // ── Save to vault ──────────────────────────────────────────────────────────
 
-  const saveToVault = useCallback(async (): Promise<void> => {
-    if (!script) return;
+  const saveToVault = useCallback(async (insights?: object | null): Promise<void> => {
+    if (!script || !currentIdea) return;
 
-    const rawText = [
-      script.selected_hook.hook_text,
-      ...script.beats.map((b) => `[${b.timestamp}] ${b.text}`),
-      script.cta,
-    ].join("\n\n");
+    if (insights) {
+      console.log("💾 Saving idea to vault with insights", insights);
+    } else {
+      console.log("💾 Saving idea to vault without insights");
+    }
 
     const res = await fetch("/api/ideas", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({
-        raw_text: rawText,
+        raw_text: currentIdea,
         format_type: script.format,
         hooks: script.hook_variants.map((h) => ({ hook_text: h.hook_text, trigger: h.trigger })),
         status: "developed",
+        ...(insights && { insights }),
       }),
     });
 
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error((body as { error?: string }).error ?? "Failed to save to vault");
-  }, [script]);
+  }, [script, currentIdea]);
 
   // ── Reset ──────────────────────────────────────────────────────────────────
 

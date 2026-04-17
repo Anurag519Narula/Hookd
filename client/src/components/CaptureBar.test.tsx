@@ -1,7 +1,6 @@
 // Feature: idea-vault-and-hook-engine, Property 10: CaptureBar Enter Submits, Shift+Enter Inserts Newline
 // Feature: idea-vault-and-hook-engine, Property 11: CaptureBar Rejects Empty Submission
 
-import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, fireEvent, screen } from "@testing-library/react";
 import * as fc from "fast-check";

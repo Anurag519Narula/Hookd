@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { CreatorSettings } from "../types/index";
+import type { CreatorSettings, Platform } from "../types/index";
 
 const STORAGE_KEY = "hookd-settings";
 
@@ -10,7 +10,7 @@ const DEFAULTS: CreatorSettings = {
   platform_priority: ["instagram", "linkedin", "reels", "youtube_shorts"],
 };
 
-const VALID_PLATFORMS = ["instagram", "linkedin", "reels", "youtube_shorts"];
+const VALID_PLATFORMS: Platform[] = ["instagram", "linkedin", "reels", "youtube_shorts"];
 
 function loadSettings(): CreatorSettings {
   try {
@@ -20,7 +20,7 @@ function loadSettings(): CreatorSettings {
 
     // Migrate: remove any invalid platforms (e.g. old "twitter" entries)
     const validPriority = (parsed.platform_priority ?? []).filter(
-      (p) => VALID_PLATFORMS.includes(p)
+      (p): p is Platform => VALID_PLATFORMS.includes(p as Platform)
     );
     // If after filtering we have fewer than 4, fill with missing valid platforms
     const missing = VALID_PLATFORMS.filter((p) => !validPriority.includes(p));

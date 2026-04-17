@@ -48,6 +48,8 @@ export interface Idea {
   captions: Record<string, string> | null;
   selected_hook: string | null;
   status: "raw" | "developed" | "used";
+  insights?: object | null;
+  insights_cached_at?: number | null;
 }
 
 export interface CreatorSettings {

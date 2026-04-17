@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Idea } from "../types/index";
 
@@ -82,15 +82,6 @@ function TagChip({ label }: { label: string }) {
   );
 }
 
-function ShimmerChip() {
-  return (
-    <span
-      className="shimmer-line"
-      style={{ display: "inline-block", width: 60, height: 22, borderRadius: 99 }}
-    />
-  );
-}
-
 export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -150,7 +141,6 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
     setEditMode(false);
   }
 
-  const tagsLoading = idea.tags === null;
   const isUsed = idea.status === "used";
 
   return (
@@ -192,45 +182,30 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
       >
         {/* Score dot + format type */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-          {tagsLoading ? (
-            <>
-              <span
-                className="shimmer-line"
-                style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%" }}
-              />
-              <span
-                className="shimmer-line"
-                style={{ display: "inline-block", width: 72, height: 14, borderRadius: 4 }}
-              />
-            </>
-          ) : (
-            <>
-              <ScoreDot score={idea.potential_score} />
-              {idea.format_type && (
-                <span
-                  style={{
-                    fontSize: 12,
-                    color: "var(--text-3)",
-                    fontWeight: 400,
-                    textTransform: "capitalize",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {idea.format_type}
-                </span>
-              )}
-              {isUsed && (
-                <span style={{
-                  fontSize: 11, fontWeight: 600, color: "var(--text-3)",
-                  background: "var(--bg-hover)", border: "1px solid var(--border)",
-                  borderRadius: 99, padding: "2px 8px", whiteSpace: "nowrap",
-                }}>
-                  Used
-                </span>
-              )}
-            </>
+          <ScoreDot score={idea.potential_score} />
+          {idea.format_type && (
+            <span
+              style={{
+                fontSize: 12,
+                color: "var(--text-3)",
+                fontWeight: 400,
+                textTransform: "capitalize",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {idea.format_type}
+            </span>
+          )}
+          {isUsed && (
+            <span style={{
+              fontSize: 11, fontWeight: 600, color: "var(--text-3)",
+              background: "var(--bg-hover)", border: "1px solid var(--border)",
+              borderRadius: 99, padding: "2px 8px", whiteSpace: "nowrap",
+            }}>
+              Used
+            </span>
           )}
         </div>
 
@@ -366,15 +341,7 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
           alignItems: "center",
         }}
       >
-        {tagsLoading ? (
-          <>
-            <ShimmerChip />
-            <ShimmerChip />
-            <ShimmerChip />
-          </>
-        ) : (
-          idea.tags?.slice(0, 3).map((tag) => <TagChip key={tag} label={tag} />)
-        )}
+        {idea.tags?.slice(0, 3).map((tag) => <TagChip key={tag} label={tag} />)}
       </div>
 
       {/* Footer */}
@@ -426,57 +393,55 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
           </>
         ) : (
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {/* Always show: open in Studio to validate */}
             <button
-              onClick={() => navigate(`/insights/${idea.id}`, { state: { idea } })}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 4,
-                padding: "7px 12px", fontSize: 12, fontWeight: 500,
-                borderRadius: "var(--radius-sm)",
-                border: "1px solid var(--border)",
-                background: "transparent",
-                color: "var(--text-3)",
-                cursor: "pointer", transition: "all var(--transition)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--accent)";
-                (e.currentTarget as HTMLButtonElement).style.color = "var(--accent-text)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
-                (e.currentTarget as HTMLButtonElement).style.color = "var(--text-3)";
-              }}
-            >
-              Insights
-            </button>
-            <button
-              onClick={() => {
-                const isScript = idea.format_type === "reels" || idea.format_type === "youtube_shorts";
-                if (isScript) {
-                  navigate(`/studio?ideaId=${idea.id}`);
-                } else {
-                  navigate(`/develop/${idea.id}`, { state: { idea } });
-                }
-              }}
+              onClick={() => navigate(`/studio?ideaId=${idea.id}`)}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 4,
                 padding: "7px 14px", fontSize: 13, fontWeight: 500,
                 borderRadius: "var(--radius-sm)",
-                border: "1px solid var(--accent)",
-                background: "var(--accent-subtle)",
-                color: "var(--accent-text)",
+                border: "1px solid var(--border)",
+                background: "var(--bg-card)",
+                color: "var(--text-2)",
                 cursor: "pointer", transition: "all var(--transition)",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "var(--accent)";
-                (e.currentTarget as HTMLButtonElement).style.color = "#fff";
+                (e.currentTarget as HTMLButtonElement).style.background = "var(--bg-hover)";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--text)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-subtle)";
-                (e.currentTarget as HTMLButtonElement).style.color = "var(--accent-text)";
+                (e.currentTarget as HTMLButtonElement).style.background = "var(--bg-card)";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--text-2)";
               }}
             >
-              Develop →
+              🔬 Validate
             </button>
+
+            {/* Only show if insights are cached */}
+            {idea.insights && (
+              <button
+                onClick={() => navigate(`/insights/${idea.id}`, { state: { idea } })}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  padding: "7px 14px", fontSize: 13, fontWeight: 500,
+                  borderRadius: "var(--radius-sm)",
+                  border: "1px solid var(--accent)",
+                  background: "var(--accent-subtle)",
+                  color: "var(--accent-text)",
+                  cursor: "pointer", transition: "all var(--transition)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background = "var(--accent)";
+                  (e.currentTarget as HTMLButtonElement).style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background = "var(--accent-subtle)";
+                  (e.currentTarget as HTMLButtonElement).style.color = "var(--accent-text)";
+                }}
+              >
+                Insights →
+              </button>
+            )}
           </div>
         )}
       </div>

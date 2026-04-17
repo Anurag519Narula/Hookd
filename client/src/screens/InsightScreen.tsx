@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
 import { useSettings } from "../hooks/useSettings";
 import { fetchInsights } from "../api/insights";
+import { getIdea } from "../api/ideas";
 import type { InsightReport } from "../types/insights";
 import type { Idea } from "../types/index";
 
@@ -33,23 +34,6 @@ function TrendBadge({ direction }: { direction: InsightReport["trendDirection"] 
     <span style={{
       fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 99,
       background: config.bg, color: config.color, border: `1px solid ${config.border}`,
-    }}>
-      {config.label}
-    </span>
-  );
-}
-
-function CompetitionBadge({ level }: { level: InsightReport["competitionLevel"] }) {
-  const config = {
-    low:    { label: "Low competition", bg: "rgba(20,184,166,0.1)", color: "#14b8a6" },
-    medium: { label: "Medium competition", bg: "rgba(251,191,36,0.1)", color: "#f59e0b" },
-    high:   { label: "High competition", bg: "rgba(239,68,68,0.1)", color: "#ef4444" },
-  }[level];
-
-  return (
-    <span style={{
-      fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 99,
-      background: config.bg, color: config.color,
     }}>
       {config.label}
     </span>
@@ -124,13 +108,37 @@ export function InsightScreen() {
   const [settings] = useSettings();
 
   const locationIdea = (location.state as { idea?: Idea } | null)?.idea;
-  const ideaText = locationIdea?.raw_text ?? "";
+  const [idea, setIdea] = useState<Idea | null>(locationIdea ?? null);
+  const ideaText = idea?.raw_text ?? "";
 
   const [report, setReport] = useState<InsightReport | null>(null);
   const [sources, setSources] = useState<{ youtubeCount: number; trendsAvailable: boolean; trendScore: number | null; relatedQueries: string[] } | null>(null);
   const [cached, setCached] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch idea from API if not passed in state
+  useEffect(() => {
+    if (locationIdea) return; // Already have the idea from state
+    if (!ideaId) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const fetchedIdea = await getIdea(ideaId);
+        if (!cancelled) {
+          setIdea(fetchedIdea);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError("Failed to load idea");
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [ideaId, locationIdea]);
 
   useEffect(() => {
     if (!ideaText) {
@@ -139,6 +147,23 @@ export function InsightScreen() {
       return;
     }
 
+    // Check if insights are already cached in the idea
+    if (idea?.insights) {
+      try {
+        const insightData = idea.insights as any;
+        console.log("💾 Cache hit: Using cached insights for idea", ideaId, insightData);
+        setReport(insightData.report);
+        setSources(insightData.sources);
+        setCached(true);
+        setLoading(false);
+        return;
+      } catch {
+        // If parsing fails, fall through to fetch fresh insights
+        console.warn("⚠️ Failed to parse cached insights, fetching fresh insights");
+      }
+    }
+
+    // Fetch fresh insights if not cached
     fetchInsights(ideaText, settings.niche, ideaId)
       .then((data) => {
         setReport(data.report);
@@ -149,7 +174,7 @@ export function InsightScreen() {
         setError(err instanceof Error ? err.message : "Failed to generate insights");
       })
       .finally(() => setLoading(false));
-  }, [ideaText, settings.niche, ideaId]);
+  }, [ideaText, settings.niche, ideaId, idea?.insights]);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
@@ -251,6 +276,21 @@ export function InsightScreen() {
         {report && !loading && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
+            {/* Verdict banner */}
+            <div style={{
+              padding: "20px 24px",
+              background: "linear-gradient(135deg, rgba(20,184,166,0.08), rgba(99,102,241,0.06))",
+              border: "1px solid rgba(20,184,166,0.2)",
+              borderRadius: "var(--radius-lg)",
+            }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent-text)", margin: "0 0 8px" }}>
+                Verdict
+              </p>
+              <p style={{ fontSize: 15, color: "var(--text)", margin: 0, lineHeight: 1.65, fontWeight: 500 }}>
+                {report.verdictLabel} — {report.verdictReason}
+              </p>
+            </div>
+
             {/* Key insight banner */}
             <div style={{
               padding: "20px 24px",
@@ -266,8 +306,20 @@ export function InsightScreen() {
               </p>
             </div>
 
-            {/* Overview row */}
+            {/* Score row */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }} className="insight-overview-grid">
+              <div style={{
+                background: "var(--bg-card)", border: "1px solid var(--border)",
+                borderRadius: "var(--radius-lg)", padding: "20px",
+              }}>
+                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", margin: "0 0 12px" }}>
+                  Opportunity Score
+                </p>
+                <p style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
+                  {report.opportunityScore}
+                </p>
+                <p style={{ fontSize: 10, color: "var(--text-3)", margin: 0 }}>/100</p>
+              </div>
               <div style={{
                 background: "var(--bg-card)", border: "1px solid var(--border)",
                 borderRadius: "var(--radius-lg)", padding: "20px",
@@ -285,34 +337,12 @@ export function InsightScreen() {
                 borderRadius: "var(--radius-lg)", padding: "20px",
               }}>
                 <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", margin: "0 0 12px" }}>
-                  Competition
+                  Audience Fit
                 </p>
-                <CompetitionBadge level={report.competitionLevel} />
-                <p style={{ fontSize: 12, color: "var(--text-3)", margin: "10px 0 0", lineHeight: 1.5 }}>
-                  {report.competitionLevel === "low" ? "Good time to enter this space." : report.competitionLevel === "medium" ? "Differentiation is key." : "You need a very specific angle."}
+                <p style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
+                  {report.audienceFit.score}
                 </p>
-              </div>
-              <div style={{
-                background: "var(--bg-card)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius-lg)", padding: "20px",
-              }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", margin: "0 0 12px" }}>
-                  Best Format
-                </p>
-                <p style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>
-                  {report.recommendedFormat}
-                </p>
-                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                  {report.bestPlatforms.map((p) => (
-                    <span key={p} style={{
-                      fontSize: 11, padding: "2px 8px", borderRadius: 99,
-                      background: "var(--bg-subtle)", color: "var(--text-3)",
-                      border: "1px solid var(--border)",
-                    }}>
-                      {p}
-                    </span>
-                  ))}
-                </div>
+                <p style={{ fontSize: 10, color: "var(--text-3)", margin: 0 }}>/100</p>
               </div>
             </div>
 
@@ -323,24 +353,154 @@ export function InsightScreen() {
               </p>
             </Section>
 
+            {/* YouTube Data */}
+            {report.youtubeData && (
+              <Section title="▶️ YouTube Data">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+                      Top Video
+                    </p>
+                    <p style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: 0 }}>
+                      {(report.youtubeData.topVideoViews / 1000).toFixed(0)}K
+                    </p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+                      Avg Top 5
+                    </p>
+                    <p style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: 0 }}>
+                      {(report.youtubeData.avgTopVideoViews / 1000).toFixed(0)}K
+                    </p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+                      Videos Found
+                    </p>
+                    <p style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: 0 }}>
+                      {report.youtubeData.totalVideosFound}
+                    </p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+                      Views Range
+                    </p>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", margin: 0 }}>
+                      {report.youtubeData.viewsRange}
+                    </p>
+                  </div>
+                </div>
+                {report.youtubeData.topChannels.length > 0 && (
+                  <div style={{ marginBottom: 12 }}>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: "var(--text-3)", marginBottom: 6 }}>
+                      Top Channels
+                    </p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {report.youtubeData.topChannels.map(ch => (
+                        <span key={ch} style={{
+                          display: "inline-block",
+                          fontSize: 12,
+                          fontWeight: 500,
+                          color: "var(--accent-text)",
+                          background: "rgba(20,184,166,0.08)",
+                          border: "1px solid rgba(20,184,166,0.2)",
+                          borderRadius: 99,
+                          padding: "3px 10px",
+                        }}>
+                          {ch}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </Section>
+            )}
+
+            {/* Content Blueprint */}
+            <Section title="🎬 Content Blueprint">
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{
+                  padding: "12px 14px",
+                  borderRadius: "var(--radius-sm)",
+                  background: "rgba(20,184,166,0.08)",
+                  border: "1px solid rgba(20,184,166,0.2)",
+                }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>
+                    ⚡ Opening Hook
+                  </p>
+                  <p style={{ fontSize: 13, color: "var(--text)", fontWeight: 500, lineHeight: 1.6, margin: 0 }}>
+                    {report.contentBlueprint.openingHook}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
+                    Core Message
+                  </p>
+                  <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
+                    {report.contentBlueprint.coreMessage}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
+                    Closing CTA
+                  </p>
+                  <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
+                    {report.contentBlueprint.closingCTA}
+                  </p>
+                </div>
+              </div>
+            </Section>
+
+            {/* Platform Analysis */}
+            {report.platformAnalysis.length > 0 && (
+              <Section title="📱 Platform Analysis">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+                  {report.platformAnalysis.map((p, i) => (
+                    <div key={i} style={{
+                      background: "var(--bg-subtle)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "var(--radius-md)",
+                      padding: "12px",
+                    }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>
+                        {p.platform}
+                      </p>
+                      <p style={{ fontSize: 11, color: "var(--text-3)", margin: "0 0 6px" }}>
+                        <span style={{ fontWeight: 600 }}>Avg views: </span>
+                        {p.avgViewsForTopic}
+                      </p>
+                      <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.5, margin: 0 }}>
+                        {p.contentStyle}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
+
             {/* Top angles */}
-            <Section title="What's already working">
+            <Section title="🎯 Top Angles">
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {report.topAngles.map((item, i) => (
                   <div key={i} style={{
-                    display: "grid", gridTemplateColumns: "1fr 2fr", gap: 16,
-                    paddingBottom: i < report.topAngles.length - 1 ? 12 : 0,
-                    borderBottom: i < report.topAngles.length - 1 ? "1px solid var(--border)" : "none",
+                    padding: "12px 14px",
+                    background: "var(--bg-subtle)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "var(--radius-md)",
                   }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: 0 }}>{item.angle}</p>
-                    <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>{item.why}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: "0 0 4px" }}>
+                      {item.angle}
+                    </p>
+                    <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>
+                      {item.why}
+                    </p>
                   </div>
                 ))}
               </div>
             </Section>
 
             {/* Untapped angles */}
-            <Section title="Untapped opportunities">
+            <Section title="💎 Untapped opportunities">
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {report.untappedAngles.map((item, i) => (
                   <div key={i} style={{
@@ -360,33 +520,13 @@ export function InsightScreen() {
               </div>
             </Section>
 
-            {/* Hook suggestions */}
-            <Section title="Hook suggestions from the data">
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {report.hookSuggestions.map((hook, i) => (
-                  <div key={i} style={{
-                    padding: "12px 16px",
-                    background: "var(--bg-subtle)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "var(--radius-sm)",
-                    fontSize: 14, color: "var(--text)", lineHeight: 1.5,
-                    fontStyle: "italic",
-                  }}>
-                    "{hook}"
-                  </div>
-                ))}
-              </div>
-            </Section>
-
-            {/* Reddit sentiment removed — no Reddit API */}
-
             {/* CTA */}
             <div style={{
               display: "flex", justifyContent: "flex-end", gap: 10,
               paddingTop: 8,
             }}>
               <button
-                onClick={() => navigate(`/develop/${ideaId ?? ""}`, { state: { idea: locationIdea } })}
+                onClick={() => navigate(`/studio?ideaId=${ideaId ?? ""}`)}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 8,
                   padding: "12px 24px", fontSize: 14, fontWeight: 600,
@@ -397,7 +537,7 @@ export function InsightScreen() {
                 onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.8"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
               >
-                Develop this idea <ArrowRight />
+                Go to Studio <ArrowRight />
               </button>
             </div>
           </div>

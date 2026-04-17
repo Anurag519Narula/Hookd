@@ -59,6 +59,7 @@ export function useAmplify(): UseAmplifyResult {
       platforms: Platform[],
       captionLength?: CaptionLength
     ): Promise<void> => {
+      console.log("📨 sendMessage called with prompt:", prompt.slice(0, 50));
       setIsLoading(true);
       setError(null);
 
@@ -67,19 +68,23 @@ export function useAmplify(): UseAmplifyResult {
       try {
         // Step 1: create a new session if none is active
         if (sessionId === null) {
+          console.log("📨 Creating new session");
           const title = prompt.slice(0, 60);
           const session = await createSession(title);
           sessionId = session.id;
+          console.log("📨 New session created:", sessionId);
           setActiveSessionId(sessionId);
+        } else {
+          console.log("📨 Using existing session:", sessionId);
         }
 
-        // Step 2: append user message to local state immediately
+        // Step 2: create user message
         const userMessage: ConversationMessage = {
           role: "user",
           content: prompt,
           timestamp: Date.now(),
         };
-        setMessages((prev) => [...prev, userMessage]);
+        console.log("📤 User message:", userMessage);
 
         // Step 3: call generateCaptions
         const captionResult: CaptionResult = await generateCaptions({
@@ -89,17 +94,26 @@ export function useAmplify(): UseAmplifyResult {
           caption_length: captionLength,
         });
 
-        // Step 4: append assistant message to local state
+        // Step 4: create assistant message
         const assistantMessage: ConversationMessage = {
           role: "assistant",
           content: JSON.stringify(captionResult),
           timestamp: Date.now(),
         };
-        setMessages((prev) => [...prev, assistantMessage]);
+        console.log("📥 Assistant message:", assistantMessage);
 
-        // Step 5: persist both messages server-side
+        // Step 5: add both messages to state at once
+        console.log("📝 Adding both messages to conversation");
+        setMessages((prev) => {
+          const updated = [...prev, userMessage, assistantMessage];
+          console.log("📝 Final messages count:", updated.length);
+          return updated;
+        });
+
+        // Step 6: persist both messages server-side
         await appendMessages(sessionId, [userMessage, assistantMessage]);
       } catch (err) {
+        console.error("❌ Error in sendMessage:", err);
         setError(err instanceof Error ? err.message : "Failed to send message");
       } finally {
         setIsLoading(false);
