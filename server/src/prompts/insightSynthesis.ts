@@ -1,5 +1,6 @@
 import Groq from "groq-sdk";
 import type { YouTubeResult, TrendData } from "../services/insights";
+import { groqWithBackoff } from "../services/groqWithBackoff";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY ?? "" });
 
@@ -251,7 +252,7 @@ IMPORTANT:
 - Reference actual view numbers from the YouTube data wherever possible
 - The contentBlueprint is NOT a script — it's a production guide with key points to hit`;
 
-  const completion = await groq.chat.completions.create({
+  const completion = await groqWithBackoff(groq, {
     model: "llama-3.3-70b-versatile",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.3,

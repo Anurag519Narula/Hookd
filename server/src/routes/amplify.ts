@@ -4,6 +4,8 @@ import pool from "../db";
 import { requireAuth, AuthenticatedRequest } from "../middleware/auth";
 import { buildAmplifySystemPrompt } from "../prompts/amplify";
 import { fetchHashtagIntelligence } from "../services/insights";
+import { groqWithBackoff } from "../services/groqWithBackoff";
+import { checkLimit, incrementUsage } from "../services/usageLimits";
 import type { AmplifyRequest, CaptionResult, Platform } from "../types/index";
 
 const router = Router();
@@ -33,6 +35,16 @@ router.post("/", async (req: AuthenticatedRequest, res: Response) => {
   }
 
   try {
+    // ── Check daily limit ──────────────────────────────────────────────────
+    const { allowed, limit, remaining } = await checkLimit(userId, "amplify");
+    if (!allowed) {
+      return res.status(429).json({
+        error: `Daily limit reached. You can generate captions ${limit} times per day. Resets at midnight UTC.`,
+        limit,
+        remaining: 0,
+      });
+    }
+
     // ── Fetch user profile (niche, sub_niche) ──────────────────────────────
     const userResult = await pool.query(
       "SELECT niche, sub_niche FROM users WHERE id = $1",
@@ -99,8 +111,8 @@ router.post("/", async (req: AuthenticatedRequest, res: Response) => {
       { role: "user", content: prompt },
     ];
 
-    // ── Call Groq ──────────────────────────────────────────────────────────
-    const completion = await groq.chat.completions.create({
+    // ── Call Groq with exponential backoff ────────────────────────────────────
+    const completion = await groqWithBackoff(groq, {
       model: "llama-3.3-70b-versatile",
       messages,
       temperature: 0.8,
@@ -124,6 +136,9 @@ router.post("/", async (req: AuthenticatedRequest, res: Response) => {
     } else {
       result.real_time_data_available = true;
     }
+
+    // ── Increment usage after successful call ──────────────────────────────
+    await incrementUsage(userId, "amplify");
 
     return res.json(result);
   } catch (err) {

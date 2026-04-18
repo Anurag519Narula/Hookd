@@ -1,6 +1,6 @@
 # Hookd — Creator OS
 
-AI-powered content creation platform for short-form creators. Three main pillars: **Amplify** (conversational caption generation), **Script Studio** (idea validation + hook generation), **Idea Vault** (idea capture and management).
+AI-powered content creation platform for short-form creators. Five tools, one workflow: **Vault** (idea capture) → **Studio** (idea validation) → **Develop** (script planning) → **Amplify** (caption generation) → post.
 
 ---
 
@@ -8,12 +8,28 @@ AI-powered content creation platform for short-form creators. Three main pillars
 
 | Tool | What it does |
 |---|---|
-| **Amplify** | Chat interface for caption generation. Multi-turn sessions, platform-native captions for Instagram, LinkedIn, Reels, and YouTube Shorts, real-time hashtag intelligence (YouTube + RapidAPI). Conversations persisted server-side. |
-| **Script Studio** | Validates your idea against real YouTube data before you film. Returns an opportunity score, trend direction, competitor insights, content blueprint, and 3 hook variants each built on a different psychological trigger. Hook-first flow — pick a hook, then generate the full script body. |
-| **Idea Vault** | Capture raw ideas. AI auto-tags, scores potential, and flags whether it's worth developing. Filter, sort, and develop ideas later. |
+| **Vault** | Capture raw ideas instantly — type, speak, or paste. AI auto-tags, scores potential (low/medium/high), and flags whether it's worth developing. Filter, sort, and manage your idea backlog. Ideas captured from Studio and Develop are auto-saved here. |
+| **Studio** | Validates your idea against real YouTube data before you film. Returns a comprehensive report: opportunity score, trend direction, audience fit, competitor insights, top angles, untapped angles, platform analysis, risks, recommendations, and a content blueprint. Leads directly into Develop. |
+| **Develop** | Script planning page. Shows the content blueprint from Studio at the top. Generates 3 hook variants each built on a different psychological trigger (Curiosity Gap, Identity Threat, Surprising Stat, etc.). Pick a hook — a full script with beats and timestamps is built around it. Leads directly into Amplify. |
+| **Amplify** | Conversational caption generation. Multi-turn sessions, individual platform-native captions for each selected platform (Instagram, LinkedIn, Reels, YouTube Shorts) with real-time hashtag intelligence. When navigating from Develop, the idea is auto-sent. Conversations persisted server-side. |
 | **Settings** | Creator profile — niche, sub-niche, language, platform priority. Stored server-side, used to personalise every Groq prompt. |
 
-**Onboarding:** New users complete a 4-step wizard (name → niche → sub-niche → platforms) before accessing Amplify and Studio.
+**Onboarding:** New users complete a 4-step wizard (name → niche → sub-niche → platforms) before accessing the app.
+
+---
+
+## The workflow
+
+```
+Vault  →  Studio  →  Develop  →  Amplify  →  Post
+capture   validate   script      captions
+```
+
+1. **Capture** — Drop any idea into the Vault. AI scores and tags it instantly.
+2. **Validate** — Click "Validate" on any idea card → opens Studio with idea pre-filled. Or go to Studio directly and type your idea.
+3. **Plan the script** — Click "Plan Your Script" → navigates to Develop with the content blueprint and insights passed via navigation state.
+4. **Generate captions** — Click "Generate Captions" → navigates to Amplify, idea is auto-sent, captions generate immediately.
+5. **Post** — Copy individual platform captions and post.
 
 ---
 
@@ -69,14 +85,26 @@ hookd/
 
 | Path | Screen | Auth required | Notes |
 |---|---|---|---|
-| `/` | HomeScreen | ✓ | Landing page with trending hashtags widget |
+| `/` | HomeScreen | ✓ | Landing/marketing page |
 | `/onboarding` | OnboardingScreen | ✓ | 4-step wizard; redirects away if already complete |
-| `/amplify` | AmplifyScreen | ✓ + onboarding | Conversational caption generation |
-| `/studio` | StudioScreen | ✓ + onboarding | Idea validation + hook + script generation |
+| `/studio` | StudioScreen | ✓ + onboarding | Idea validation — generates full InsightReport |
+| `/develop` | DevelopScreen | ✓ + onboarding | Hook generation + script planning. Receives idea + insights via navigation state from Studio |
+| `/amplify` | AmplifyScreen | ✓ + onboarding | Conversational caption generation. Receives idea via navigation state from Develop |
 | `/vault` | VaultScreen | ✓ | Idea capture and management |
+| `/insights/:ideaId` | InsightScreen | ✓ | Read-only cached insight report for a saved idea |
 | `/settings` | SettingsScreen | ✓ | Creator profile |
-| `/develop/:ideaId` | DevelopScreen | ✓ | Legacy hook engine (kept for vault ideas) |
-| `/insights/:ideaId` | InsightScreen | ✓ | Legacy insight view |
+
+---
+
+## Navigation state (no URL params)
+
+Data is passed between pages via React Router navigation state to keep URLs clean:
+
+| From | To | State passed |
+|---|---|---|
+| Studio | Develop | `{ idea, ideaId, insights: InsightReport }` |
+| Develop | Amplify | `{ idea, ideaId }` |
+| Vault (idea card) | Studio | `?ideaId=` query param (pre-fills idea from DB) |
 
 ---
 
@@ -96,15 +124,11 @@ GET    /api/ideas/:id
 PATCH  /api/ideas/:id
 DELETE /api/ideas/:id
 
-POST   /api/hooks
-POST   /api/captions
-POST   /api/captions/regenerate
-
-POST   /api/generate
-POST   /api/regenerate
-GET    /api/transcript
-
 GET    /api/insights
+
+POST   /api/studio/hooks
+POST   /api/studio/script
+POST   /api/studio/regenerate
 
 GET    /api/conversations
 GET    /api/conversations/:id
@@ -113,11 +137,6 @@ PATCH  /api/conversations/:id
 DELETE /api/conversations/:id
 
 POST   /api/amplify
-
-POST   /api/studio/hooks
-POST   /api/studio/script
-POST   /api/studio/generate
-POST   /api/studio/regenerate
 
 GET    /api/trending
 ```
@@ -191,9 +210,7 @@ All expensive API calls are cached in the `api_cache` table with a 7-day TTL. Ca
 | `hashtag_intelligence` | Per-platform hashtag strategy (YouTube + RapidAPI + Groq synthesis) |
 | `studio_hooks` | Hook variants for a given idea + profile |
 | `studio_script` | Script body for a given hook |
-| `studio_generate` | Legacy studio generation |
-| `studio_regenerate` | Legacy studio regeneration |
-| `insights` | Full idea validation report |
+| `insights` | Full idea validation report (InsightReport) |
 | `rapidapi_instagram_hashtags` | RapidAPI instagram-hashtags results |
 | `rapidapi_top_hashtags_global` | RapidAPI top-instagram-hashtag results |
 
@@ -205,14 +222,38 @@ Expired rows are purged on server startup and every 6 hours via `setInterval`.
 
 | File | Purpose | Output type |
 |---|---|---|
-| `amplify.ts` | Platform-explicit caption generation with hashtag intelligence | `CaptionResult` |
-| `studio.ts` | Hook-only generation + script-from-hook generation | `HookVariant[]` / `ScriptBody` |
-| `insightSynthesis.ts` | Full idea validation report with YouTube data | `InsightReport` (13 sections) |
-| `hooks.ts` | Legacy hook generation for DevelopScreen | `Hook[]` |
-| `captionWithHook.ts` | Legacy caption generation | `string` |
+| `amplify.ts` | Platform-explicit caption generation with per-platform hashtag intelligence | `CaptionResult` — individual captions per platform |
+| `studio.ts` | Hook variant generation + script-from-hook generation | `HookVariant[]` / `ScriptBody` |
+| `insightSynthesis.ts` | Full idea validation report with real YouTube data | `InsightReport` (13 sections including contentBlueprint) |
 | `ideaTagging.ts` | Auto-tags ideas on save | `{ tags, format_type, emotion_angle, potential_score }` |
 
 All prompts receive the creator profile (niche, sub-niche, language, platform priority) when available.
+
+### InsightReport sections
+
+The `InsightReport` returned by `/api/insights` contains:
+
+1. Trend direction + score + velocity
+2. Competition level + saturation warning
+3. Audience fit (score, primary audience, intent, best posting times/days)
+4. Summary + opportunity score
+5. Top angles (with reach and difficulty ratings)
+6. Untapped angles
+7. Platform analysis (Instagram Reels + YouTube Shorts)
+8. YouTube data (real view counts, top channels, common title patterns)
+9. **Content blueprint** (opening hook, core message, key points with timestamps, CTA, visual/audio notes, duration target) — passed to Develop page
+10. Competitor insights
+11. Risks
+12. Recommendations
+13. Key insight + verdict label + verdict reason
+
+### Caption length constraints
+
+| Setting | Output |
+|---|---|
+| Short | 1-2 lines |
+| Medium | 4-5 lines |
+| Long | 2-3 paragraphs |
 
 ---
 

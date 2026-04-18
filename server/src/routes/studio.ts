@@ -10,6 +10,8 @@ import {
   STUDIO_SYSTEM_PROMPT,
 } from "../prompts/studio";
 import { getCached, setCached } from "../services/dbCache";
+import { groqWithBackoff } from "../services/groqWithBackoff";
+import { checkLimit, incrementUsage } from "../services/usageLimits";
 import type { StudioGenerateRequest, StudioRegenerateRequest } from "../types/index";
 
 const router = Router();
@@ -32,9 +34,18 @@ router.post("/hooks", async (req: AuthenticatedRequest, res: Response) => {
   const cached = await getCached<{ hook_variants: unknown }>("studio_hooks", cacheParams);
   if (cached) return res.json({ ...cached, cached: true });
 
+  // ── Check daily limit (only on cache miss) ──────────────────────────────
+  const { allowed, limit } = await checkLimit(req.userId!, "studio");
+  if (!allowed) {
+    return res.status(429).json({
+      error: `Daily limit reached. You can generate scripts ${limit} times per day. Resets at midnight UTC.`,
+      limit,
+    });
+  }
+
   try {
     const { system, user } = buildHooksOnlyPrompt(idea, format, niche, sub_niche, language);
-    const completion = await groq.chat.completions.create({
+    const completion = await groqWithBackoff(groq, {
       model: "llama-3.3-70b-versatile",
       messages: [{ role: "system", content: system }, { role: "user", content: user }],
       temperature: 0.85,
@@ -48,6 +59,7 @@ router.post("/hooks", async (req: AuthenticatedRequest, res: Response) => {
     catch { return res.status(502).json({ error: "Failed to parse Groq response" }); }
 
     await setCached("studio_hooks", cacheParams, result);
+    await incrementUsage(req.userId!, "studio");
     return res.json({ ...result, cached: false });
   } catch (err) {
     console.error("POST /api/studio/hooks error:", err);
@@ -85,7 +97,7 @@ router.post("/script", async (req: AuthenticatedRequest, res: Response) => {
 
   try {
     const { system, user } = buildScriptFromHookPrompt(idea, format, selected_hook as any, niche, sub_niche, language);
-    const completion = await groq.chat.completions.create({
+    const completion = await groqWithBackoff(groq, {
       model: "llama-3.3-70b-versatile",
       messages: [{ role: "system", content: system }, { role: "user", content: user }],
       temperature: 0.75,
@@ -123,7 +135,7 @@ router.post("/generate", async (req: AuthenticatedRequest, res: Response) => {
 
   try {
     const { system, user } = buildScriptGeneratePrompt(idea, format, niche, sub_niche, language);
-    const completion = await groq.chat.completions.create({
+    const completion = await groqWithBackoff(groq, {
       model: "llama-3.3-70b-versatile",
       messages: [{ role: "system", content: system }, { role: "user", content: user }],
       temperature: 0.8,
@@ -169,7 +181,7 @@ router.post("/regenerate", async (req: AuthenticatedRequest, res: Response) => {
       userMessage = buildScriptRegeneratePrompt(idea, format, selected_hook, feedback);
     }
 
-    const completion = await groq.chat.completions.create({
+    const completion = await groqWithBackoff(groq, {
       model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: STUDIO_SYSTEM_PROMPT },

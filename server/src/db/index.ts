@@ -81,6 +81,22 @@ export async function initDb(): Promise<void> {
     CREATE INDEX IF NOT EXISTS api_cache_namespace_idx ON api_cache (namespace);
     CREATE INDEX IF NOT EXISTS api_cache_expires_idx ON api_cache (expires_at);
   `);
+
+  // Per-user daily usage tracking for expensive external API calls
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS usage_limits (
+      id          TEXT PRIMARY KEY,
+      user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      action      TEXT NOT NULL,
+      date        TEXT NOT NULL,
+      count       INTEGER NOT NULL DEFAULT 0,
+      UNIQUE (user_id, action, date)
+    )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS usage_limits_user_date_idx ON usage_limits (user_id, date);
+  `);
 }
 
 export default pool;

@@ -1,15 +1,18 @@
-import { Router, Request, Response } from "express";
+import { Router, Response } from "express";
 import pool from "../db";
 import { fetchYouTubeTrends, fetchGoogleTrends } from "../services/insights";
 import { synthesizeInsights } from "../prompts/insightSynthesis";
 import { getCached, setCached } from "../services/dbCache";
+import { checkLimit, incrementUsage } from "../services/usageLimits";
+import { AuthenticatedRequest } from "../middleware/auth";
 
 const router = Router();
 
-const IDEA_CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
+const IDEA_CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // GET /api/insights?idea=<text>&niche=<niche>&ideaId=<id>
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.userId!;
   const { idea, niche = "", ideaId } = req.query as {
     idea?: string;
     niche?: string;
@@ -22,7 +25,7 @@ router.get("/", async (req: Request, res: Response) => {
   }
 
   try {
-    // ── Check idea-level DB cache (tied to a specific saved idea) ─────────────
+    // ── 1. Check idea-level DB cache first (free — no quota burned) ───────────
     if (ideaId) {
       const cached = await pool.query(
         "SELECT insights, insights_cached_at FROM ideas WHERE id = $1",
@@ -38,11 +41,10 @@ router.get("/", async (req: Request, res: Response) => {
       }
     }
 
-    // ── Check generic api_cache (works even without ideaId) ───────────────────
+    // ── 2. Check generic api_cache (free — no quota burned) ──────────────────
     const cacheParams = { idea: idea.trim().toLowerCase(), niche: niche.trim().toLowerCase() };
     const genericCached = await getCached<object>("insights", cacheParams);
     if (genericCached) {
-      // If we have an ideaId, backfill the idea-level cache too
       if (ideaId) {
         await pool.query(
           "UPDATE ideas SET insights = $1, insights_cached_at = $2 WHERE id = $3",
@@ -53,7 +55,19 @@ router.get("/", async (req: Request, res: Response) => {
       return;
     }
 
-    // ── Fetch fresh data ───────────────────────────────────────────────────────
+    // ── 3. Cache miss — check daily limit before hitting external APIs ────────
+    const { allowed, used, limit, remaining } = await checkLimit(userId, "insights");
+    if (!allowed) {
+      res.status(429).json({
+        error: `Daily limit reached. You can validate ${limit} ideas per day. Resets at midnight UTC.`,
+        used,
+        limit,
+        remaining: 0,
+      });
+      return;
+    }
+
+    // ── 4. Fetch fresh data ───────────────────────────────────────────────────
     const [youtubeResults, trendData] = await Promise.all([
       fetchYouTubeTrends(idea, niche || undefined),
       fetchGoogleTrends(idea),
@@ -72,7 +86,7 @@ router.get("/", async (req: Request, res: Response) => {
       cached: false,
     };
 
-    // ── Store in both caches ───────────────────────────────────────────────────
+    // ── 5. Store in caches ────────────────────────────────────────────────────
     await setCached("insights", cacheParams, payload, IDEA_CACHE_TTL);
 
     if (ideaId) {
@@ -82,7 +96,10 @@ router.get("/", async (req: Request, res: Response) => {
       );
     }
 
-    res.json(payload);
+    // ── 6. Increment usage only after successful non-cached call ──────────────
+    await incrementUsage(userId, "insights");
+
+    res.json({ ...payload, remaining: remaining - 1, limit });
   } catch (err) {
     console.error("Insights error:", err);
     res.status(502).json({ error: "Failed to generate insights" });

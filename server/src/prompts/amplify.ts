@@ -2,8 +2,8 @@ import type { Platform, CaptionLength } from "../types/index";
 
 const LENGTH_CONSTRAINTS: Record<CaptionLength, string> = {
   short: "1-2 lines (concise, punchy — ideal for Instagram)",
-  medium: "1 paragraph (balanced — enough context without losing attention)",
-  long: "2 paragraphs (detailed — for audiences who want depth)",
+  medium: "4-5 lines (balanced — enough context without losing attention)",
+  long: "2-3 paragraphs (detailed — for audiences who want depth)",
 };
 
 const PLATFORM_DEFAULTS: Record<Platform, CaptionLength> = {
@@ -103,8 +103,8 @@ GENERAL QUALITY RULES:
 
 LENGTH RULES:
 - short: 1-2 lines (caption text only, not counting hashtags)
-- medium: 1 paragraph (caption text only, not counting hashtags)
-- long: 2 paragraphs (caption text only, not counting hashtags)
+- medium: 4-5 lines (caption text only, not counting hashtags)
+- long: 2-3 paragraphs (caption text only, not counting hashtags)
 Strictly respect the length constraint for each platform listed above.
 ${hashtagSection}${perPlatformSection}
 HASHTAG RULES:
