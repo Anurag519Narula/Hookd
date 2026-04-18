@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /api/
+Disallow: /onboarding
+Disallow: /settings
+Disallow: /vault
+Disallow: /studio
+Disallow: /develop
+Disallow: /amplify
+Disallow: /insights/
+
+Allow: /
