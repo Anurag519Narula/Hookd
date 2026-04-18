@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Script } from "../types/index";
 import { useClipboard } from "../hooks/useClipboard";
 
@@ -10,34 +10,6 @@ interface ScriptDraftProps {
   insights?: object | null;
 }
 
-const ClipboardIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
-
-const RefreshIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="23 4 23 10 17 10" />
-    <polyline points="1 20 1 14 7 14" />
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-  </svg>
-);
-
-const VaultIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-  </svg>
-);
-
 function formatFullScript(script: Script): string {
   const lines: string[] = [];
   lines.push(`HOOK: ${script.selected_hook.hook_text}`);
@@ -48,6 +20,22 @@ function formatFullScript(script: Script): string {
   lines.push("");
   lines.push(`CTA: ${script.cta}`);
   return lines.join("\n");
+}
+
+// ── Section divider ───────────────────────────────────────────────────────────
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "20px 0 14px" }}>
+      <span style={{
+        fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
+        textTransform: "uppercase", color: "var(--text-3)",
+        whiteSpace: "nowrap",
+      }}>
+        {label}
+      </span>
+      <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+    </div>
+  );
 }
 
 export function ScriptDraft({
@@ -66,23 +54,19 @@ export function ScriptDraft({
   const { copied: copiedFull, copy: copyFull } = useClipboard();
   const { copied: copiedHook, copy: copyHook } = useClipboard();
 
-  // Real-time word count from script content
   const wordCount = useMemo(() => {
     const allText = [
       script.selected_hook.hook_text,
       ...script.beats.map((b) => b.text),
       script.cta,
-    ]
-      .join(" ")
-      .trim();
+    ].join(" ").trim();
     return allText.split(/\s+/).filter(Boolean).length;
   }, [script]);
 
   const durationSeconds = Math.round((wordCount / 130) * 60);
-  const durationLabel =
-    durationSeconds >= 60
-      ? `${Math.floor(durationSeconds / 60)}m ${durationSeconds % 60}s`
-      : `${durationSeconds}s`;
+  const durationLabel = durationSeconds >= 60
+    ? `${Math.floor(durationSeconds / 60)}m ${durationSeconds % 60}s`
+    : `${durationSeconds}s`;
 
   async function handleRegenerate() {
     await onRegenerateWithFeedback(feedback);
@@ -104,284 +88,199 @@ export function ScriptDraft({
     }
   }
 
-  const sectionLabel: React.CSSProperties = {
-    fontSize: 11,
-    fontWeight: 600,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
-    color: "var(--text-3)",
-    marginBottom: 8,
-  };
-
-  const divider: React.CSSProperties = {
-    height: 1,
-    background: "var(--border)",
-    margin: "20px 0",
-  };
-
   return (
-    <div
-      style={{
-        background: "var(--bg-card)",
-        border: "1px solid var(--border)",
-        borderRadius: "var(--radius-lg)",
-        boxShadow: "var(--shadow-sm)",
-        overflow: "hidden",
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "16px 20px",
-          borderBottom: "1px solid var(--border)",
-          background: "var(--bg-subtle)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>
+    <div style={{
+      background: "var(--bg-card)",
+      border: "1px solid var(--border)",
+      borderRadius: 8,
+      overflow: "hidden",
+    }}>
+      {/* ── Header ── */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "12px 18px",
+        borderBottom: "1px solid var(--border)",
+        background: "var(--bg-subtle)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em" }}>
             Script Draft
           </span>
-          {/* Word count + duration badges */}
-          <span
-            style={{
-              fontSize: 12,
-              color: "var(--text-3)",
-              background: "var(--bg-hover)",
-              border: "1px solid var(--border)",
-              borderRadius: 99,
-              padding: "2px 10px",
-            }}
-          >
-            {wordCount} words
+          <span style={{
+            fontSize: 11, color: "var(--text-3)",
+            background: "var(--bg-hover)",
+            border: "1px solid var(--border)",
+            borderRadius: 4,
+            padding: "1px 7px",
+            fontVariantNumeric: "tabular-nums",
+          }}>
+            {wordCount}w
           </span>
-          <span
-            style={{
-              fontSize: 12,
-              color: "var(--accent-text)",
-              background: "var(--accent-subtle)",
-              border: "1px solid rgba(20, 184, 166, 0.2)",
-              borderRadius: 99,
-              padding: "2px 10px",
-            }}
-          >
+          <span style={{
+            fontSize: 11, color: "#14b8a6",
+            background: "rgba(20,184,166,0.08)",
+            border: "1px solid rgba(20,184,166,0.2)",
+            borderRadius: 4,
+            padding: "1px 7px",
+          }}>
             ~{durationLabel}
           </span>
         </div>
 
-        {/* Copy buttons */}
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 6 }}>
           <button
             onClick={() => copyHook(script.selected_hook.hook_text)}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "6px 12px",
-              fontSize: 12,
-              fontWeight: 500,
-              borderRadius: "var(--radius-sm)",
-              border: `1px solid ${copiedHook ? "var(--accent)" : "var(--border)"}`,
-              background: copiedHook ? "var(--accent-subtle)" : "transparent",
-              color: copiedHook ? "var(--accent-text)" : "var(--text-3)",
-              cursor: "pointer",
-              transition: "all var(--transition)",
-              whiteSpace: "nowrap",
+              display: "inline-flex", alignItems: "center", gap: 5,
+              padding: "5px 10px", fontSize: 11, fontWeight: 600,
+              letterSpacing: "0.02em",
+              borderRadius: 4,
+              border: `1px solid ${copiedHook ? "rgba(20,184,166,0.4)" : "var(--border)"}`,
+              background: copiedHook ? "rgba(20,184,166,0.08)" : "transparent",
+              color: copiedHook ? "#14b8a6" : "var(--text-3)",
+              cursor: "pointer", transition: "all 0.15s ease",
             }}
           >
-            {copiedHook ? <CheckIcon /> : <ClipboardIcon />}
-            {copiedHook ? "Copied!" : "Copy hook"}
+            {copiedHook ? "✓ Copied" : "Copy hook"}
           </button>
           <button
             onClick={() => copyFull(formatFullScript(script))}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "6px 12px",
-              fontSize: 12,
-              fontWeight: 500,
-              borderRadius: "var(--radius-sm)",
-              border: `1px solid ${copiedFull ? "var(--accent)" : "var(--border)"}`,
-              background: copiedFull ? "var(--accent-subtle)" : "transparent",
-              color: copiedFull ? "var(--accent-text)" : "var(--text-3)",
-              cursor: "pointer",
-              transition: "all var(--transition)",
-              whiteSpace: "nowrap",
+              display: "inline-flex", alignItems: "center", gap: 5,
+              padding: "5px 10px", fontSize: 11, fontWeight: 600,
+              letterSpacing: "0.02em",
+              borderRadius: 4,
+              border: `1px solid ${copiedFull ? "rgba(20,184,166,0.4)" : "var(--border)"}`,
+              background: copiedFull ? "rgba(20,184,166,0.08)" : "transparent",
+              color: copiedFull ? "#14b8a6" : "var(--text-3)",
+              cursor: "pointer", transition: "all 0.15s ease",
             }}
           >
-            {copiedFull ? <CheckIcon /> : <ClipboardIcon />}
-            {copiedFull ? "Copied!" : "Copy full script"}
+            {copiedFull ? "✓ Copied" : "Copy all"}
           </button>
         </div>
       </div>
 
-      {/* Body */}
-      <div style={{ padding: "20px" }}>
-        {/* Hook section */}
-        <div>
-          <p style={sectionLabel}>Hook</p>
-          <p
-            style={{
-              fontSize: 15,
-              lineHeight: 1.65,
-              color: "var(--text)",
-              margin: 0,
-              fontWeight: 500,
-              padding: "12px 14px",
-              background: "var(--accent-subtle)",
-              border: "1px solid rgba(20, 184, 166, 0.2)",
-              borderRadius: "var(--radius-md)",
-            }}
-          >
+      {/* ── Body ── */}
+      <div style={{ padding: "4px 18px 20px" }}>
+
+        {/* Hook */}
+        <SectionDivider label="Hook" />
+        <div style={{
+          padding: "14px 16px",
+          background: "rgba(20,184,166,0.04)",
+          border: "1px solid rgba(20,184,166,0.15)",
+          borderLeft: "3px solid #14b8a6",
+          borderRadius: 6,
+        }}>
+          <p style={{
+            fontSize: 15, lineHeight: 1.7, color: "var(--text)",
+            margin: 0, fontWeight: 500, letterSpacing: "-0.01em",
+          }}>
             {script.selected_hook.hook_text}
           </p>
         </div>
 
-        <div style={divider} />
-
-        {/* Beats section */}
-        <div>
-          <p style={sectionLabel}>Body</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {script.beats.map((beat, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  gap: 12,
-                  alignItems: "flex-start",
-                }}
-              >
-                {/* Timestamp label */}
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: "var(--text-3)",
-                    background: "var(--bg-subtle)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 6,
-                    padding: "3px 8px",
-                    whiteSpace: "nowrap",
-                    flexShrink: 0,
-                    marginTop: 2,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
+        {/* Body beats */}
+        <SectionDivider label="Body" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 1, background: "var(--border)", borderRadius: 6, overflow: "hidden" }}>
+          {script.beats.map((beat, i) => (
+            <div key={i} style={{
+              display: "grid",
+              gridTemplateColumns: "56px 1fr",
+              gap: 0,
+              background: "var(--bg-card)",
+            }}>
+              <div style={{
+                padding: "12px 10px",
+                borderRight: "1px solid var(--border)",
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "center",
+              }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, color: "var(--text-3)",
+                  fontVariantNumeric: "tabular-nums",
+                  letterSpacing: "0.02em",
+                  paddingTop: 2,
+                }}>
                   {beat.timestamp}
                 </span>
-                <p
-                  style={{
-                    fontSize: 14,
-                    lineHeight: 1.65,
-                    color: "var(--text-2)",
-                    margin: 0,
-                  }}
-                >
+              </div>
+              <div style={{ padding: "12px 14px" }}>
+                <p style={{
+                  fontSize: 13, lineHeight: 1.7, color: "var(--text-2)",
+                  margin: 0,
+                }}>
                   {beat.text}
                 </p>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={divider} />
-
-        {/* CTA section */}
-        <div>
-          <p style={sectionLabel}>Call to Action</p>
-          <p
-            style={{
-              fontSize: 14,
-              lineHeight: 1.65,
-              color: "var(--text-2)",
-              margin: 0,
-              fontStyle: "italic",
-            }}
-          >
-            {script.cta}
-          </p>
-        </div>
-
-        <div style={divider} />
-
-        {/* Regenerate section */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {feedbackOpen && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <textarea
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Optional: tell the AI what to change (e.g. 'make it more energetic', 'shorter beats')"
-                rows={3}
-                style={{
-                  width: "100%",
-                  resize: "vertical",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--radius-sm)",
-                  padding: "10px 12px",
-                  fontSize: 13,
-                  lineHeight: 1.6,
-                  color: "var(--text)",
-                  background: "var(--bg-input)",
-                  outline: "none",
-                  fontFamily: "inherit",
-                  transition: "border-color var(--transition)",
-                }}
-                onFocus={(e) => {
-                  (e.currentTarget as HTMLTextAreaElement).style.borderColor = "var(--accent)";
-                }}
-                onBlur={(e) => {
-                  (e.currentTarget as HTMLTextAreaElement).style.borderColor = "var(--border)";
-                }}
-              />
             </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <SectionDivider label="Call to Action" />
+        <p style={{
+          fontSize: 13, lineHeight: 1.7, color: "var(--text-2)",
+          margin: 0, fontStyle: "italic",
+          paddingLeft: 12,
+          borderLeft: "2px solid var(--border)",
+        }}>
+          {script.cta}
+        </p>
+
+        {/* ── Actions ── */}
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 10 }}>
+          {feedbackOpen && (
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="What to change? e.g. 'more energetic', 'shorter beats', 'different angle'"
+              rows={3}
+              style={{
+                width: "100%", resize: "vertical",
+                border: "1px solid var(--border)",
+                borderRadius: 6, padding: "10px 12px",
+                fontSize: 13, lineHeight: 1.6,
+                color: "var(--text)", background: "var(--bg-input)",
+                outline: "none", fontFamily: "inherit",
+                transition: "border-color 0.15s ease",
+                boxSizing: "border-box",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "#14b8a6"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
+            />
           )}
 
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {/* Regenerate button */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             {feedbackOpen ? (
               <>
                 <button
                   onClick={handleRegenerate}
                   disabled={isRegenerating}
                   style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "9px 16px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    borderRadius: "var(--radius-sm)",
-                    border: "none",
-                    background: isRegenerating ? "var(--bg-hover)" : "var(--accent)",
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "8px 14px", fontSize: 12, fontWeight: 600,
+                    borderRadius: 4, border: "none",
+                    background: isRegenerating ? "var(--bg-hover)" : "#14b8a6",
                     color: isRegenerating ? "var(--text-3)" : "#fff",
                     cursor: isRegenerating ? "not-allowed" : "pointer",
-                    transition: "all var(--transition)",
+                    transition: "all 0.15s ease",
                   }}
                 >
-                  <RefreshIcon />
                   {isRegenerating ? "Regenerating…" : "Regenerate"}
                 </button>
                 <button
-                  onClick={() => {
-                    setFeedbackOpen(false);
-                    setFeedback("");
-                  }}
+                  onClick={() => { setFeedbackOpen(false); setFeedback(""); }}
                   disabled={isRegenerating}
                   style={{
-                    padding: "9px 14px",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    borderRadius: "var(--radius-sm)",
-                    border: "1px solid var(--border)",
-                    background: "transparent",
-                    color: "var(--text-3)",
-                    cursor: isRegenerating ? "not-allowed" : "pointer",
-                    transition: "all var(--transition)",
+                    padding: "8px 12px", fontSize: 12, fontWeight: 500,
+                    borderRadius: 4, border: "1px solid var(--border)",
+                    background: "transparent", color: "var(--text-3)",
+                    cursor: "pointer", transition: "all 0.15s ease",
                   }}
                 >
                   Cancel
@@ -392,85 +291,67 @@ export function ScriptDraft({
                 onClick={() => setFeedbackOpen(true)}
                 disabled={isRegenerating}
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "9px 16px",
-                  fontSize: 13,
-                  fontWeight: 500,
-                  borderRadius: "var(--radius-sm)",
-                  border: "1px solid var(--border)",
-                  background: "transparent",
-                  color: "var(--text-2)",
-                  cursor: isRegenerating ? "not-allowed" : "pointer",
-                  transition: "all var(--transition)",
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "8px 14px", fontSize: 12, fontWeight: 500,
+                  borderRadius: 4, border: "1px solid var(--border)",
+                  background: "transparent", color: "var(--text-2)",
+                  cursor: "pointer", transition: "all 0.15s ease",
                 }}
                 onMouseEnter={(e) => {
-                  if (!isRegenerating) {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-strong)";
-                    (e.currentTarget as HTMLButtonElement).style.color = "var(--text)";
-                  }
+                  const b = e.currentTarget as HTMLButtonElement;
+                  b.style.borderColor = "var(--border-strong)";
+                  b.style.color = "var(--text)";
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
-                  (e.currentTarget as HTMLButtonElement).style.color = "var(--text-2)";
+                  const b = e.currentTarget as HTMLButtonElement;
+                  b.style.borderColor = "var(--border)";
+                  b.style.color = "var(--text-2)";
                 }}
               >
-                <RefreshIcon />
-                Regenerate script
+                ↻ Regenerate
               </button>
             )}
 
-            {/* Save to Vault button */}
             <button
               onClick={handleSave}
               disabled={saveLoading || saveDone}
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "9px 16px",
-                fontSize: 13,
-                fontWeight: 500,
-                borderRadius: "var(--radius-sm)",
-                border: `1px solid ${saveDone ? "var(--accent)" : "var(--border)"}`,
-                background: saveDone ? "var(--accent-subtle)" : "transparent",
-                color: saveDone ? "var(--accent-text)" : "var(--text-2)",
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "8px 14px", fontSize: 12, fontWeight: 500,
+                borderRadius: 4,
+                border: `1px solid ${saveDone ? "rgba(20,184,166,0.4)" : "var(--border)"}`,
+                background: saveDone ? "rgba(20,184,166,0.08)" : "transparent",
+                color: saveDone ? "#14b8a6" : "var(--text-2)",
                 cursor: saveLoading || saveDone ? "not-allowed" : "pointer",
-                transition: "all var(--transition)",
+                transition: "all 0.15s ease",
                 marginLeft: "auto",
               }}
               onMouseEnter={(e) => {
                 if (!saveLoading && !saveDone) {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--accent)";
-                  (e.currentTarget as HTMLButtonElement).style.color = "var(--accent-text)";
+                  const b = e.currentTarget as HTMLButtonElement;
+                  b.style.borderColor = "rgba(20,184,166,0.4)";
+                  b.style.color = "#14b8a6";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!saveDone) {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
-                  (e.currentTarget as HTMLButtonElement).style.color = "var(--text-2)";
+                  const b = e.currentTarget as HTMLButtonElement;
+                  b.style.borderColor = "var(--border)";
+                  b.style.color = "var(--text-2)";
                 }
               }}
             >
-              <VaultIcon />
-              {saveLoading ? "Saving…" : saveDone ? "Saved!" : "Save to Vault"}
+              {saveLoading ? "Saving…" : saveDone ? "✓ Saved" : "Save to Vault"}
             </button>
           </div>
 
-          {/* Save error */}
           {saveError && (
-            <p
-              style={{
-                fontSize: 12,
-                color: "var(--error)",
-                background: "var(--error-subtle)",
-                border: "1px solid rgba(248, 113, 113, 0.2)",
-                borderRadius: "var(--radius-sm)",
-                padding: "6px 10px",
-                margin: 0,
-              }}
-            >
+            <p style={{
+              fontSize: 12, color: "var(--error)",
+              background: "rgba(248,113,113,0.06)",
+              border: "1px solid rgba(248,113,113,0.2)",
+              borderRadius: 6, padding: "6px 10px", margin: 0,
+            }}>
               {saveError}
             </p>
           )}

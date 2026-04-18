@@ -122,7 +122,7 @@ export function HomeScreen() {
               display: "flex", gap: 10, flexWrap: "wrap",
             }}>
               <button
-                onClick={() => navigate("/amplify")}
+                onClick={() => navigate("/studio")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 8,
                   padding: "11px 24px", fontSize: 13, fontWeight: 600,
@@ -271,116 +271,143 @@ export function HomeScreen() {
 
         <div style={{
           display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 16,
+          gap: 1,
+          background: "var(--border)",
+          border: "1px solid var(--border)",
+          borderRadius: 10,
+          overflow: "hidden",
         }} className="usecases-grid">
           {[
             {
-              emoji: "🤖",
               niche: "Tech & AI",
               idea: "Weekly AI news roundup — biggest stories this week in artificial intelligence",
-              result: "Validated against 2,400+ YouTube videos. Opportunity score 85. Hook: \"This week in AI changed everything — here's what you actually need to know.\"",
+              stats: [
+                { label: "Opportunity", value: "85", unit: "/100" },
+                { label: "Videos found", value: "2,400+", unit: "" },
+              ],
+              output: "Hook: \"This week in AI changed everything — here's what you actually need to know.\"",
+              signal: "#14b8a6",
             },
             {
-              emoji: "✈️",
               niche: "Travel",
               idea: "Hidden waterfalls in Bali that tourists completely miss",
-              result: "Top video: 2.4M views. Untapped angle found: sunrise-only access spots nobody is filming. Content blueprint ready in 40 seconds.",
+              stats: [
+                { label: "Top video", value: "2.4M", unit: "views" },
+                { label: "Untapped angles", value: "3", unit: "found" },
+              ],
+              output: "Sunrise-only access spots nobody is filming. Content blueprint ready in 40 seconds.",
+              signal: "#818cf8",
             },
             {
-              emoji: "💪",
               niche: "Fitness",
               idea: "Why most people never see results from the gym despite going consistently",
-              result: "Rising trend. High audience fit for 25-34 year olds. 3 hooks generated — identity threat variant outperforms in this niche.",
+              stats: [
+                { label: "Trend", value: "Rising", unit: "" },
+                { label: "Audience fit", value: "82", unit: "/100" },
+              ],
+              output: "Identity threat hook outperforms in this niche. 3 variants generated.",
+              signal: "#34d399",
             },
             {
-              emoji: "💼",
               niche: "Business",
               idea: "I quit my 9-5 six months ago — here's what my bank account actually looks like",
-              result: "Strong opportunity. Competitor gap: everyone shows success, nobody shows the real numbers. Captions ready for LinkedIn + Reels.",
+              stats: [
+                { label: "Verdict", value: "Strong", unit: "opportunity" },
+                { label: "Competition", value: "Medium", unit: "" },
+              ],
+              output: "Competitor gap: everyone shows success, nobody shows the real numbers.",
+              signal: "#f59e0b",
             },
             {
-              emoji: "🍳",
               niche: "Food",
               idea: "The one ingredient that makes restaurant-quality pasta at home",
-              result: "Avg top 5 videos: 800K views. Best posting time: Sunday 6-9pm. Caption generated with trending hashtags in under a minute.",
+              stats: [
+                { label: "Avg top 5", value: "800K", unit: "views" },
+                { label: "Best time", value: "Sun 6–9pm", unit: "" },
+              ],
+              output: "Captions with trending hashtags generated for 4 platforms in under a minute.",
+              signal: "#f472b6",
             },
             {
-              emoji: "🎮",
               niche: "Gaming",
               idea: "This obscure mechanic in Elden Ring that 99% of players never discover",
-              result: "Curiosity gap hook scored highest. YouTube data shows 1.2M top video. Script built around the reveal moment for maximum retention.",
+              stats: [
+                { label: "Top video", value: "1.2M", unit: "views" },
+                { label: "Best hook", value: "Curiosity Gap", unit: "" },
+              ],
+              output: "Script built around the reveal moment for maximum retention.",
+              signal: "#818cf8",
             },
           ].map((card) => (
             <div
               key={card.niche}
               style={{
                 background: "var(--bg-card)",
-                border: "1px solid var(--border)",
-                borderRadius: "var(--radius-lg)",
-                padding: "24px",
+                padding: "22px 24px",
                 display: "flex",
                 flexDirection: "column",
                 gap: 16,
-                transition: "all var(--transition)",
-                cursor: "default",
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLDivElement;
-                el.style.borderColor = "var(--accent)";
-                el.style.boxShadow = "0 4px 24px rgba(20,184,166,0.1)";
-                el.style.transform = "translateY(-2px)";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLDivElement;
-                el.style.borderColor = "var(--border)";
-                el.style.boxShadow = "none";
-                el.style.transform = "translateY(0)";
               }}
             >
-              {/* Header */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 22 }}>{card.emoji}</span>
+              {/* Niche label */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{
+                  width: 6, height: 6, borderRadius: "50%",
+                  background: card.signal, flexShrink: 0,
+                }} />
                 <span style={{
-                  fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
+                  fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
                   textTransform: "uppercase", color: "var(--text-3)",
                 }}>
                   {card.niche}
                 </span>
               </div>
 
-              {/* Idea */}
-              <div style={{
-                padding: "12px 14px",
-                background: "var(--bg-subtle)",
-                borderRadius: "var(--radius-sm)",
-                border: "1px solid var(--border)",
-                borderLeft: "3px solid var(--accent)",
+              {/* Idea — the input */}
+              <p style={{
+                fontSize: 13, color: "var(--text)", lineHeight: 1.65,
+                margin: 0, fontWeight: 500, letterSpacing: "-0.01em",
               }}>
-                <p style={{
-                  fontSize: 11, fontWeight: 600, color: "var(--text-3)",
-                  textTransform: "uppercase", letterSpacing: "0.06em",
-                  margin: "0 0 6px",
-                }}>
-                  The idea
-                </p>
-                <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.6, margin: 0, fontStyle: "italic" }}>
-                  "{card.idea}"
-                </p>
+                "{card.idea}"
+              </p>
+
+              {/* Stats row — the signal */}
+              <div style={{
+                display: "grid", gridTemplateColumns: "1fr 1fr",
+                gap: 1, background: "var(--border)",
+                borderRadius: 6, overflow: "hidden",
+              }}>
+                {card.stats.map((s) => (
+                  <div key={s.label} style={{
+                    padding: "10px 12px",
+                    background: "var(--bg-subtle)",
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 4 }}>
+                      {s.label}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: card.signal, letterSpacing: "-0.03em" }}>
+                        {s.value}
+                      </span>
+                      {s.unit && (
+                        <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 500 }}>
+                          {s.unit}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              {/* Result */}
-              <div>
-                <p style={{
-                  fontSize: 11, fontWeight: 600, color: "var(--accent)",
-                  textTransform: "uppercase", letterSpacing: "0.06em",
-                  margin: "0 0 6px",
-                }}>
-                  What Hookd found
-                </p>
-                <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.65, margin: 0 }}>
-                  {card.result}
-                </p>
-              </div>
+              {/* Output — what Hookd produced */}
+              <p style={{
+                fontSize: 12, color: "var(--text-2)", lineHeight: 1.65,
+                margin: 0,
+                paddingLeft: 10,
+                borderLeft: `2px solid ${card.signal}40`,
+              }}>
+                {card.output}
+              </p>
             </div>
           ))}
         </div>

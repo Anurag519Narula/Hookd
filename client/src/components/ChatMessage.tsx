@@ -1,31 +1,21 @@
 import type { ConversationMessage, CaptionResult } from "../types";
 import { CaptionResultCard } from "./CaptionResultCard";
 
-function relativeTime(timestamp: number): string {
-  const diffMs = Date.now() - timestamp;
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHour = Math.floor(diffMin / 60);
-
-  if (diffSec < 60) return "just now";
-  if (diffMin < 60) return `${diffMin} min ago`;
-  if (diffHour < 24) return `${diffHour} hour${diffHour !== 1 ? "s" : ""} ago`;
-
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
+function relativeTime(ts: number): string {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  if (s < 60) return "just now";
+  if (m < 60) return `${m}m ago`;
+  if (h < 24) return `${h}h ago`;
+  return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 function parseCaptionResult(content: string): CaptionResult | null {
   try {
-    const parsed = JSON.parse(content);
-    if (parsed && typeof parsed === "object" && "captions" in parsed) {
-      return parsed as CaptionResult;
-    }
-  } catch {
-    // not JSON
-  }
+    const p = JSON.parse(content);
+    if (p && typeof p === "object" && "captions" in p) return p as CaptionResult;
+  } catch { /* not JSON */ }
   return null;
 }
 
@@ -39,90 +29,50 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
   if (isUser) {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: 4,
-          animation: "fadeUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) both",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "75%",
-            padding: "10px 14px",
-            background: "var(--bg-subtle)",
-            borderRadius: "var(--radius-md)",
-            borderBottomRightRadius: 4,
-            fontSize: 14,
-            color: "var(--text)",
-            lineHeight: 1.6,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-          }}
-        >
+      <div style={{
+        display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4,
+        animation: "fadeUp 0.25s ease both",
+      }}>
+        <div style={{
+          maxWidth: "72%", padding: "9px 13px",
+          background: "var(--bg-subtle)",
+          border: "1px solid var(--border)",
+          borderRadius: "8px 8px 2px 8px",
+          fontSize: 13, color: "var(--text)", lineHeight: 1.65,
+          whiteSpace: "pre-wrap", wordBreak: "break-word",
+        }}>
           {message.content}
         </div>
-        <span
-          style={{
-            fontSize: 11,
-            color: "var(--text-4)",
-            paddingRight: 2,
-          }}
-          aria-label={`Sent ${timeLabel}`}
-        >
+        <span style={{ fontSize: 10, color: "var(--text-4)", paddingRight: 2 }} aria-label={`Sent ${timeLabel}`}>
           {timeLabel}
         </span>
       </div>
     );
   }
 
-  // Assistant message
   const captionResult = parseCaptionResult(message.content);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        gap: 4,
-        animation: "fadeUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) both",
-      }}
-    >
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4,
+      animation: "fadeUp 0.25s ease both",
+    }}>
       {captionResult ? (
-        <div style={{ width: "100%", maxWidth: 560 }}>
+        <div style={{ width: "100%", maxWidth: 540 }}>
           <CaptionResultCard result={captionResult} />
         </div>
       ) : (
-        <div
-          style={{
-            maxWidth: "75%",
-            padding: "10px 14px",
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-md)",
-            borderBottomLeftRadius: 4,
-            fontSize: 14,
-            color: "var(--text)",
-            lineHeight: 1.6,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            boxShadow: "var(--shadow-sm)",
-          }}
-        >
+        <div style={{
+          maxWidth: "72%", padding: "9px 13px",
+          background: "var(--bg-card)", border: "1px solid var(--border)",
+          borderRadius: "8px 8px 8px 2px",
+          fontSize: 13, color: "var(--text)", lineHeight: 1.65,
+          whiteSpace: "pre-wrap", wordBreak: "break-word",
+        }}>
           {message.content}
         </div>
       )}
-      <span
-        style={{
-          fontSize: 11,
-          color: "var(--text-4)",
-          paddingLeft: 2,
-        }}
-        aria-label={`Received ${timeLabel}`}
-      >
+      <span style={{ fontSize: 10, color: "var(--text-4)", paddingLeft: 2 }} aria-label={`Received ${timeLabel}`}>
         {timeLabel}
       </span>
     </div>

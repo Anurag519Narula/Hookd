@@ -6,260 +6,125 @@ import { deleteMe } from "../api/users";
 export function DangerZone() {
   const navigate = useNavigate();
   const { logout } = useAuth();
-
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
+  const [error, setError] = useState("");
 
-  async function handleDeleteAccount() {
-    if (deleting || deleteConfirmText !== "DELETE") return;
+  async function handleDelete() {
+    if (deleting || confirmText !== "DELETE") return;
     setDeleting(true);
-    setDeleteError("");
+    setError("");
     try {
       await deleteMe();
       logout();
       navigate("/");
     } catch (err: unknown) {
-      setDeleteError(
-        err instanceof Error ? err.message : "Failed to delete account. Please try again."
-      );
+      setError(err instanceof Error ? err.message : "Failed to delete account.");
       setDeleting(false);
     }
   }
 
-  return (
-    <>
-      {!showDeleteDialog ? (
-        <div>
-          <p
-            style={{
-              fontSize: 13,
-              color: "var(--text-3)",
-              marginBottom: 16,
-              lineHeight: 1.6,
-            }}
-          >
-            Deleting your account will permanently remove all your data,
-            including your ideas, scripts, and conversations. This action
-            cannot be undone.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              setShowDeleteDialog(true);
-              setDeleteConfirmText("");
-              setDeleteError("");
-            }}
-            style={{
-              padding: "10px 20px",
-              fontSize: 13,
-              fontWeight: 600,
-              borderRadius: "var(--radius-sm)",
-              border: "1px solid rgba(248,113,113,0.4)",
-              background: "rgba(248,113,113,0.06)",
-              color: "var(--error)",
-              cursor: "pointer",
-              transition: "all var(--transition)",
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLButtonElement;
-              el.style.background = "rgba(248,113,113,0.12)";
-              el.style.borderColor = "rgba(248,113,113,0.6)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLButtonElement;
-              el.style.background = "rgba(248,113,113,0.06)";
-              el.style.borderColor = "rgba(248,113,113,0.4)";
-            }}
-          >
-            Delete Account
-          </button>
-        </div>
-      ) : (
-        /* Confirmation dialog (inline) */
-        <div
-          className="scale-in"
+  if (!showConfirm) {
+    return (
+      <div>
+        <p style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 14, lineHeight: 1.65 }}>
+          Permanently removes your account, ideas, scripts, and conversations. Cannot be undone.
+        </p>
+        <button
+          type="button"
+          onClick={() => { setShowConfirm(true); setConfirmText(""); setError(""); }}
           style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 16,
+            padding: "7px 16px", fontSize: 12, fontWeight: 600,
+            borderRadius: 4, border: "1px solid rgba(248,113,113,0.35)",
+            background: "rgba(248,113,113,0.06)", color: "var(--error)",
+            cursor: "pointer", transition: "all 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            const b = e.currentTarget as HTMLButtonElement;
+            b.style.background = "rgba(248,113,113,0.12)";
+            b.style.borderColor = "rgba(248,113,113,0.6)";
+          }}
+          onMouseLeave={(e) => {
+            const b = e.currentTarget as HTMLButtonElement;
+            b.style.background = "rgba(248,113,113,0.06)";
+            b.style.borderColor = "rgba(248,113,113,0.35)";
           }}
         >
-          <div
-            style={{
-              padding: "14px 16px",
-              borderRadius: "var(--radius-sm)",
-              background: "rgba(248,113,113,0.06)",
-              border: "1px solid rgba(248,113,113,0.2)",
-            }}
-          >
-            <p
-              style={{
-                fontSize: 13,
-                color: "var(--error)",
-                margin: 0,
-                lineHeight: 1.6,
-                fontWeight: 500,
-              }}
-            >
-              ⚠️ This will permanently delete your account and all your
-              content. This action{" "}
-              <strong style={{ fontWeight: 700 }}>cannot be undone</strong>.
-            </p>
-          </div>
+          Delete Account
+        </button>
+      </div>
+    );
+  }
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <label
-              htmlFor="delete-confirm"
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "var(--text-2)",
-              }}
-            >
-              Type{" "}
-              <code
-                style={{
-                  fontFamily: "monospace",
-                  fontSize: 13,
-                  color: "var(--error)",
-                  background: "rgba(248,113,113,0.08)",
-                  padding: "1px 5px",
-                  borderRadius: 4,
-                }}
-              >
-                DELETE
-              </code>{" "}
-              to confirm
-            </label>
-            <input
-              id="delete-confirm"
-              type="text"
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-              placeholder="DELETE"
-              autoFocus
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                fontSize: 14,
-                color: "var(--text)",
-                background: "var(--bg-input)",
-                border: `1px solid ${
-                  deleteConfirmText === "DELETE"
-                    ? "rgba(248,113,113,0.5)"
-                    : "var(--border)"
-                }`,
-                borderRadius: "var(--radius-sm)",
-                outline: "none",
-                transition:
-                  "border-color var(--transition), box-shadow var(--transition)",
-                fontFamily: "monospace",
-                letterSpacing: "0.05em",
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.boxShadow =
-                  "0 0 0 3px rgba(248,113,113,0.12)";
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            />
-          </div>
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{
+        padding: "10px 14px",
+        background: "rgba(248,113,113,0.06)",
+        border: "1px solid rgba(248,113,113,0.2)",
+        borderRadius: 6,
+      }}>
+        <p style={{ fontSize: 12, color: "var(--error)", margin: 0, lineHeight: 1.6 }}>
+          This will permanently delete your account and all your content. This action <strong>cannot be undone</strong>.
+        </p>
+      </div>
 
-          {/* Delete error */}
-          {deleteError && (
-            <div
-              style={{
-                padding: "10px 14px",
-                borderRadius: "var(--radius-sm)",
-                background: "var(--error-subtle)",
-                border: "1px solid rgba(248,113,113,0.25)",
-              }}
-            >
-              <p style={{ fontSize: 13, color: "var(--error)", margin: 0 }}>
-                {deleteError}
-              </p>
-            </div>
-          )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <label htmlFor="delete-confirm" style={{ fontSize: 12, fontWeight: 600, color: "var(--text-2)" }}>
+          Type <code style={{ fontFamily: "monospace", fontSize: 12, color: "var(--error)", background: "rgba(248,113,113,0.08)", padding: "1px 5px", borderRadius: 3 }}>DELETE</code> to confirm
+        </label>
+        <input
+          id="delete-confirm"
+          type="text"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder="DELETE"
+          autoFocus
+          style={{
+            width: "100%", padding: "8px 12px", fontSize: 13,
+            color: "var(--text)", background: "var(--bg-input)",
+            border: `1px solid ${confirmText === "DELETE" ? "rgba(248,113,113,0.5)" : "var(--border)"}`,
+            borderRadius: 6, outline: "none", fontFamily: "monospace",
+            letterSpacing: "0.05em", boxSizing: "border-box",
+            transition: "border-color 0.15s ease",
+          }}
+        />
+      </div>
 
-          <div style={{ display: "flex", gap: 10 }}>
-            {/* Cancel */}
-            <button
-              type="button"
-              onClick={() => {
-                setShowDeleteDialog(false);
-                setDeleteConfirmText("");
-                setDeleteError("");
-              }}
-              disabled={deleting}
-              style={{
-                padding: "10px 20px",
-                fontSize: 13,
-                fontWeight: 600,
-                borderRadius: "var(--radius-sm)",
-                border: "1px solid var(--border)",
-                background: "transparent",
-                color: "var(--text-2)",
-                cursor: deleting ? "not-allowed" : "pointer",
-                transition: "all var(--transition)",
-              }}
-              onMouseEnter={(e) => {
-                if (!deleting) {
-                  const el = e.currentTarget as HTMLButtonElement;
-                  el.style.borderColor = "var(--border-strong)";
-                  el.style.color = "var(--text)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.borderColor = "var(--border)";
-                el.style.color = "var(--text-2)";
-              }}
-            >
-              Cancel
-            </button>
-
-            {/* Confirm delete */}
-            <button
-              type="button"
-              onClick={handleDeleteAccount}
-              disabled={deleteConfirmText !== "DELETE" || deleting}
-              style={{
-                padding: "10px 20px",
-                fontSize: 13,
-                fontWeight: 700,
-                borderRadius: "var(--radius-sm)",
-                border: "none",
-                background:
-                  deleteConfirmText === "DELETE" && !deleting
-                    ? "var(--error)"
-                    : "rgba(248,113,113,0.2)",
-                color:
-                  deleteConfirmText === "DELETE" && !deleting
-                    ? "#fff"
-                    : "rgba(248,113,113,0.4)",
-                cursor:
-                  deleteConfirmText !== "DELETE" || deleting
-                    ? "not-allowed"
-                    : "pointer",
-                transition: "all var(--transition)",
-              }}
-              onMouseEnter={(e) => {
-                if (deleteConfirmText === "DELETE" && !deleting) {
-                  (e.currentTarget as HTMLButtonElement).style.opacity = "0.85";
-                }
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-              }}
-            >
-              {deleting ? "Deleting…" : "Delete My Account"}
-            </button>
-          </div>
-        </div>
+      {error && (
+        <p style={{ fontSize: 12, color: "var(--error)", margin: 0 }}>{error}</p>
       )}
-    </>
+
+      <div style={{ display: "flex", gap: 8 }}>
+        <button
+          type="button"
+          onClick={() => { setShowConfirm(false); setConfirmText(""); setError(""); }}
+          disabled={deleting}
+          style={{
+            padding: "7px 14px", fontSize: 12, fontWeight: 500,
+            borderRadius: 4, border: "1px solid var(--border)",
+            background: "transparent", color: "var(--text-2)", cursor: "pointer",
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={confirmText !== "DELETE" || deleting}
+          style={{
+            padding: "7px 14px", fontSize: 12, fontWeight: 600,
+            borderRadius: 4, border: "none",
+            background: confirmText === "DELETE" && !deleting ? "var(--error)" : "rgba(248,113,113,0.2)",
+            color: confirmText === "DELETE" && !deleting ? "#fff" : "rgba(248,113,113,0.4)",
+            cursor: confirmText !== "DELETE" || deleting ? "not-allowed" : "pointer",
+            transition: "all 0.15s ease",
+          }}
+        >
+          {deleting ? "Deleting…" : "Delete My Account"}
+        </button>
+      </div>
+    </div>
   );
 }

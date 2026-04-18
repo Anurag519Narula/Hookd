@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
 import { useSettings } from "../hooks/useSettings";
@@ -7,100 +7,39 @@ import { getIdea } from "../api/ideas";
 import type { InsightReport } from "../types/insights";
 import type { Idea } from "../types/index";
 
-// ── Icons ──────────────────────────────────────────────────────────────────────
-const ArrowRight = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="5" y1="12" x2="19" y2="12"/>
-    <polyline points="12 5 19 12 12 19"/>
-  </svg>
-);
-
-const BackIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="15 18 9 12 15 6"/>
-  </svg>
-);
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-function TrendBadge({ direction }: { direction: InsightReport["trendDirection"] }) {
-  const config = {
-    rising:   { label: "Rising ↑", bg: "rgba(20,184,166,0.12)", color: "#14b8a6", border: "rgba(20,184,166,0.3)" },
-    peaked:   { label: "Peaked →", bg: "rgba(251,191,36,0.12)", color: "#f59e0b", border: "rgba(251,191,36,0.3)" },
-    declining:{ label: "Declining ↓", bg: "rgba(239,68,68,0.1)", color: "#ef4444", border: "rgba(239,68,68,0.3)" },
-    stable:   { label: "Stable —", bg: "rgba(148,163,184,0.12)", color: "#94a3b8", border: "rgba(148,163,184,0.3)" },
-  }[direction];
-
+function SectionHeader({ label }: { label: string }) {
   return (
-    <span style={{
-      fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 99,
-      background: config.bg, color: config.color, border: `1px solid ${config.border}`,
-    }}>
-      {config.label}
-    </span>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)" }}>
+        {label}
+      </span>
+      <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+    </div>
   );
 }
 
 function ScoreBar({ score }: { score: number }) {
-  const color = score >= 70 ? "#14b8a6" : score >= 40 ? "#f59e0b" : "#ef4444";
+  const color = score >= 70 ? "#34d399" : score >= 40 ? "#f59e0b" : "#f87171";
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-      <div style={{
-        flex: 1, height: 6, borderRadius: 99,
-        background: "var(--bg-hover)", overflow: "hidden",
-      }}>
-        <div style={{
-          width: `${score}%`, height: "100%",
-          background: color, borderRadius: 99,
-          transition: "width 1s ease",
-        }} />
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ flex: 1, height: 4, borderRadius: 99, background: "var(--border)", overflow: "hidden" }}>
+        <div style={{ width: `${score}%`, height: "100%", background: color, borderRadius: 99, transition: "width 1s ease" }} />
       </div>
-      <span style={{ fontSize: 13, fontWeight: 700, color, minWidth: 36 }}>{score}/100</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color, minWidth: 32, textAlign: "right" }}>{score}</span>
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={{
-      background: "var(--bg-card)", border: "1px solid var(--border)",
-      borderRadius: "var(--radius-lg)", overflow: "hidden",
-    }}>
-      <div style={{
-        padding: "14px 20px", borderBottom: "1px solid var(--border)",
-        background: "var(--bg-subtle)",
-      }}>
-        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", margin: 0 }}>
-          {title}
-        </p>
-      </div>
-      <div style={{ padding: "20px" }}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-// ── Shimmer ────────────────────────────────────────────────────────────────────
 function InsightSkeleton() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {[180, 140, 200, 160].map((h, i) => (
-        <div key={i} style={{
-          background: "var(--bg-card)", border: "1px solid var(--border)",
-          borderRadius: "var(--radius-lg)", padding: 20, height: h,
-          display: "flex", flexDirection: "column", gap: 12,
-        }}>
-          <div className="shimmer-line" style={{ height: 12, width: "30%", borderRadius: 4 }} />
-          <div className="shimmer-line" style={{ height: 14, width: "90%", borderRadius: 4 }} />
-          <div className="shimmer-line" style={{ height: 14, width: "75%", borderRadius: 4 }} />
-          <div className="shimmer-line" style={{ height: 14, width: "60%", borderRadius: 4 }} />
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {[160, 120, 180, 140].map((h, i) => (
+        <div key={i} className="shimmer-line" style={{ height: h, borderRadius: 8 }} />
       ))}
     </div>
   );
 }
 
-// ── Main ───────────────────────────────────────────────────────────────────────
 export function InsightScreen() {
   const { ideaId } = useParams<{ ideaId: string }>();
   const location = useLocation();
@@ -112,67 +51,37 @@ export function InsightScreen() {
   const ideaText = idea?.raw_text ?? "";
 
   const [report, setReport] = useState<InsightReport | null>(null);
-  const [sources, setSources] = useState<{ youtubeCount: number; trendsAvailable: boolean; trendScore: number | null; relatedQueries: string[] } | null>(null);
+  const [sources, setSources] = useState<{ youtubeCount: number; trendsAvailable: boolean; trendScore: number | null } | null>(null);
   const [cached, setCached] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch idea from API if not passed in state
   useEffect(() => {
-    if (locationIdea) return; // Already have the idea from state
+    if (locationIdea) return;
     if (!ideaId) return;
-
     let cancelled = false;
     (async () => {
       try {
-        const fetchedIdea = await getIdea(ideaId);
-        if (!cancelled) {
-          setIdea(fetchedIdea);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError("Failed to load idea");
-          setLoading(false);
-        }
+        const fetched = await getIdea(ideaId);
+        if (!cancelled) setIdea(fetched);
+      } catch {
+        if (!cancelled) { setError("Failed to load idea"); setLoading(false); }
       }
     })();
-
     return () => { cancelled = true; };
   }, [ideaId, locationIdea]);
 
   useEffect(() => {
-    if (!ideaText) {
-      setError("No idea text found. Please go back and try again.");
-      setLoading(false);
-      return;
-    }
-
-    // Check if insights are already cached in the idea
+    if (!ideaText) { setError("No idea text found."); setLoading(false); return; }
     if (idea?.insights) {
       try {
-        const insightData = idea.insights as any;
-        console.log("💾 Cache hit: Using cached insights for idea", ideaId, insightData);
-        setReport(insightData.report);
-        setSources(insightData.sources);
-        setCached(true);
-        setLoading(false);
-        return;
-      } catch {
-        // If parsing fails, fall through to fetch fresh insights
-        console.warn("⚠️ Failed to parse cached insights, fetching fresh insights");
-      }
+        const d = idea.insights as any;
+        setReport(d.report); setSources(d.sources); setCached(true); setLoading(false); return;
+      } catch { /* fall through */ }
     }
-
-    // Fetch fresh insights if not cached
     fetchInsights(ideaText, settings.niche, ideaId)
-      .then((data) => {
-        setReport(data.report);
-        setSources(data.sources);
-        setCached(data.cached);
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Failed to generate insights");
-      })
+      .then((d) => { setReport(d.report); setSources(d.sources); setCached(d.cached); })
+      .catch((err) => setError(err instanceof Error ? err.message : "Failed to generate insights"))
       .finally(() => setLoading(false));
   }, [ideaText, settings.niche, ideaId, idea?.insights]);
 
@@ -180,364 +89,214 @@ export function InsightScreen() {
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <Navbar />
 
-      {/* Page header */}
-      <div style={{
-        maxWidth: 900, margin: "0 auto",
-        padding: "48px 24px 32px",
-        borderBottom: "1px solid var(--border)",
-        position: "relative", zIndex: 1,
-      }}>
-        <button
-          onClick={() => navigate("/vault")}
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 5,
-            fontSize: 11, fontWeight: 500, color: "var(--text-3)",
-            background: "none", border: "none", cursor: "pointer", padding: 0,
-            marginBottom: 12, transition: "color var(--transition)",
-            letterSpacing: "0.04em", textTransform: "uppercase",
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--accent-text)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-3)"; }}
-        >
-          <BackIcon /> Back to Vault
-        </button>
-        <p style={{
-          fontSize: 11, fontWeight: 500, letterSpacing: "0.12em",
-          textTransform: "uppercase", color: "var(--text-3)", margin: "0 0 10px",
-        }}>
-          Idea Insights
-        </p>
-        <h1 style={{
-          fontSize: "clamp(20px, 3vw, 30px)", fontWeight: 800,
-          letterSpacing: "-0.03em", color: "var(--text)", margin: "0 0 8px",
-        }}>
-          {ideaText ? `"${ideaText.slice(0, 80)}${ideaText.length > 80 ? "…" : ""}"` : "Analysing your idea"}
-        </h1>
-        {sources && (
-          <p style={{ fontSize: 12, color: "var(--text-4)", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
-            Based on {sources.youtubeCount} YouTube videos
-            {sources.trendsAvailable ? ` · Google Trends score: ${sources.trendScore}/100` : ""}
-            {cached && (
-              <span style={{
-                fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 99,
-                background: "rgba(99,102,241,0.1)", color: "#818cf8",
-                border: "1px solid rgba(99,102,241,0.2)",
-              }}>
-                Cached · refreshes in 24h
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "32px 24px 80px" }}>
+        {/* Header */}
+        <div style={{ marginBottom: 28 }}>
+          <button
+            onClick={() => navigate("/vault")}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              fontSize: 11, fontWeight: 600, letterSpacing: "0.08em",
+              textTransform: "uppercase", color: "var(--text-3)",
+              background: "none", border: "none", cursor: "pointer", padding: 0,
+              marginBottom: 18, transition: "color 0.15s ease",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#14b8a6"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-3)"; }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Vault
+          </button>
+
+          <h1 style={{ fontSize: "clamp(16px, 2.5vw, 22px)", fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", margin: "0 0 6px", lineHeight: 1.4 }}>
+            {ideaText ? `"${ideaText.slice(0, 80)}${ideaText.length > 80 ? "…" : ""}"` : "Analysing your idea"}
+          </h1>
+          {sources && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, color: "var(--text-4)" }}>
+                Based on {sources.youtubeCount} YouTube videos
+                {sources.trendsAvailable ? ` · Trends score: ${sources.trendScore}/100` : ""}
               </span>
-            )}
-          </p>
-        )}
-      </div>
+              {cached && (
+                <span style={{
+                  fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 3,
+                  background: "rgba(20,184,166,0.08)", color: "#14b8a6",
+                  border: "1px solid rgba(20,184,166,0.2)",
+                }}>
+                  Cached
+                </span>
+              )}
+            </div>
+          )}
+        </div>
 
-      {/* Content */}
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "32px 24px 80px", position: "relative", zIndex: 1 }}>
-
+        {/* Loading */}
         {loading && (
           <div>
             <div style={{
-              display: "flex", alignItems: "center", gap: 12,
-              padding: "16px 20px", marginBottom: 24,
-              background: "var(--accent-subtle)", border: "1px solid rgba(20,184,166,0.2)",
-              borderRadius: "var(--radius-md)",
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "12px 16px", marginBottom: 20,
+              background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.15)",
+              borderRadius: 6,
             }}>
-              <span style={{ animation: "spin 1s linear infinite", display: "inline-block", fontSize: 16 }}>⟳</span>
-              <p style={{ fontSize: 13, color: "var(--accent-text)", margin: 0, fontWeight: 500 }}>
-                Pulling real-time data from YouTube and Groq AI…
-              </p>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#14b8a6", display: "inline-block", animation: "pulse-glow 1.4s ease-in-out infinite" }} />
+              <p style={{ fontSize: 12, color: "#14b8a6", margin: 0 }}>Pulling real-time data from YouTube…</p>
             </div>
             <InsightSkeleton />
           </div>
         )}
 
+        {/* Error */}
         {error && (
-          <div style={{
-            background: "var(--error-subtle)", border: "1px solid rgba(239,68,68,0.2)",
-            borderRadius: "var(--radius-lg)", padding: "24px",
-            textAlign: "center",
-          }}>
-            <p style={{ fontSize: 15, fontWeight: 600, color: "var(--error)", margin: "0 0 8px" }}>
-              Couldn't generate insights
-            </p>
-            <p style={{ fontSize: 13, color: "var(--text-3)", margin: "0 0 16px" }}>{error}</p>
-            <button
-              onClick={() => navigate("/vault")}
-              style={{
-                padding: "9px 20px", fontSize: 13, fontWeight: 600,
-                borderRadius: "var(--radius-sm)", border: "1px solid var(--border)",
-                background: "var(--bg-card)", color: "var(--text-2)", cursor: "pointer",
-              }}
-            >
+          <div style={{ background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 8, padding: "20px", textAlign: "center" }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "var(--error)", margin: "0 0 6px" }}>Couldn't generate insights</p>
+            <p style={{ fontSize: 12, color: "var(--text-3)", margin: "0 0 14px" }}>{error}</p>
+            <button onClick={() => navigate("/vault")} style={{ padding: "7px 16px", fontSize: 12, fontWeight: 600, borderRadius: 4, border: "1px solid var(--border)", background: "transparent", color: "var(--text-2)", cursor: "pointer" }}>
               Back to Vault
             </button>
           </div>
         )}
 
+        {/* Report */}
         {report && !loading && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
-            {/* Verdict banner */}
-            <div style={{
-              padding: "20px 24px",
-              background: "linear-gradient(135deg, rgba(20,184,166,0.08), rgba(99,102,241,0.06))",
-              border: "1px solid rgba(20,184,166,0.2)",
-              borderRadius: "var(--radius-lg)",
-            }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent-text)", margin: "0 0 8px" }}>
-                Verdict
-              </p>
-              <p style={{ fontSize: 15, color: "var(--text)", margin: 0, lineHeight: 1.65, fontWeight: 500 }}>
-                {report.verdictLabel} — {report.verdictReason}
-              </p>
+            {/* Verdict */}
+            <div>
+              <SectionHeader label="Verdict" />
+              <div style={{
+                padding: "14px 18px",
+                background: "var(--bg-card)", border: "1px solid var(--border)",
+                borderLeft: "3px solid #14b8a6", borderRadius: 8,
+              }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", margin: "0 0 4px" }}>{report.verdictLabel}</p>
+                <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, lineHeight: 1.65 }}>{report.verdictReason}</p>
+              </div>
             </div>
 
-            {/* Key insight banner */}
-            <div style={{
-              padding: "20px 24px",
-              background: "linear-gradient(135deg, rgba(20,184,166,0.08), rgba(99,102,241,0.06))",
-              border: "1px solid rgba(20,184,166,0.2)",
-              borderRadius: "var(--radius-lg)",
-            }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent-text)", margin: "0 0 8px" }}>
-                Key Insight
-              </p>
-              <p style={{ fontSize: 15, color: "var(--text)", margin: 0, lineHeight: 1.65, fontWeight: 500 }}>
-                {report.keyInsight}
-              </p>
-            </div>
-
-            {/* Score row */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }} className="insight-overview-grid">
-              <div style={{
-                background: "var(--bg-card)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius-lg)", padding: "20px",
-              }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", margin: "0 0 12px" }}>
-                  Opportunity Score
-                </p>
-                <p style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
-                  {report.opportunityScore}
-                </p>
-                <p style={{ fontSize: 10, color: "var(--text-3)", margin: 0 }}>/100</p>
-              </div>
-              <div style={{
-                background: "var(--bg-card)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius-lg)", padding: "20px",
-              }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", margin: "0 0 12px" }}>
-                  Trend
-                </p>
-                <TrendBadge direction={report.trendDirection} />
-                <div style={{ marginTop: 12 }}>
-                  <ScoreBar score={report.trendScore} />
-                </div>
-              </div>
-              <div style={{
-                background: "var(--bg-card)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius-lg)", padding: "20px",
-              }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", margin: "0 0 12px" }}>
-                  Audience Fit
-                </p>
-                <p style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
-                  {report.audienceFit.score}
-                </p>
-                <p style={{ fontSize: 10, color: "var(--text-3)", margin: 0 }}>/100</p>
+            {/* Scores */}
+            <div>
+              <SectionHeader label="Scores" />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, background: "var(--border)", borderRadius: 8, overflow: "hidden" }} className="insight-overview-grid">
+                {[
+                  { label: "Opportunity", value: report.opportunityScore },
+                  { label: "Trend", value: report.trendScore },
+                  { label: "Audience Fit", value: report.audienceFit.score },
+                ].map((s) => (
+                  <div key={s.label} style={{ padding: "14px 16px", background: "var(--bg-card)" }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 10 }}>
+                      {s.label}
+                    </div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.03em", marginBottom: 8 }}>
+                      {s.value}
+                    </div>
+                    <ScoreBar score={s.value} />
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* Summary */}
-            <Section title="Overview">
-              <p style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.75, margin: 0 }}>
-                {report.summary}
-              </p>
-            </Section>
+            <div>
+              <SectionHeader label="Summary" />
+              <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.75, margin: 0 }}>{report.summary}</p>
+            </div>
 
             {/* YouTube Data */}
             {report.youtubeData && (
-              <Section title="▶️ YouTube Data">
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
-                  <div>
-                    <p style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-                      Top Video
-                    </p>
-                    <p style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: 0 }}>
-                      {(report.youtubeData.topVideoViews / 1000).toFixed(0)}K
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-                      Avg Top 5
-                    </p>
-                    <p style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: 0 }}>
-                      {(report.youtubeData.avgTopVideoViews / 1000).toFixed(0)}K
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-                      Videos Found
-                    </p>
-                    <p style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: 0 }}>
-                      {report.youtubeData.totalVideosFound}
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-                      Views Range
-                    </p>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", margin: 0 }}>
-                      {report.youtubeData.viewsRange}
-                    </p>
-                  </div>
-                </div>
-                {report.youtubeData.topChannels.length > 0 && (
-                  <div style={{ marginBottom: 12 }}>
-                    <p style={{ fontSize: 11, fontWeight: 600, color: "var(--text-3)", marginBottom: 6 }}>
-                      Top Channels
-                    </p>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                      {report.youtubeData.topChannels.map(ch => (
-                        <span key={ch} style={{
-                          display: "inline-block",
-                          fontSize: 12,
-                          fontWeight: 500,
-                          color: "var(--accent-text)",
-                          background: "rgba(20,184,166,0.08)",
-                          border: "1px solid rgba(20,184,166,0.2)",
-                          borderRadius: 99,
-                          padding: "3px 10px",
-                        }}>
-                          {ch}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </Section>
-            )}
-
-            {/* Content Blueprint */}
-            <Section title="🎬 Content Blueprint">
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{
-                  padding: "12px 14px",
-                  borderRadius: "var(--radius-sm)",
-                  background: "rgba(20,184,166,0.08)",
-                  border: "1px solid rgba(20,184,166,0.2)",
-                }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>
-                    ⚡ Opening Hook
-                  </p>
-                  <p style={{ fontSize: 13, color: "var(--text)", fontWeight: 500, lineHeight: 1.6, margin: 0 }}>
-                    {report.contentBlueprint.openingHook}
-                  </p>
-                </div>
-                <div>
-                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
-                    Core Message
-                  </p>
-                  <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
-                    {report.contentBlueprint.coreMessage}
-                  </p>
-                </div>
-                <div>
-                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
-                    Closing CTA
-                  </p>
-                  <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
-                    {report.contentBlueprint.closingCTA}
-                  </p>
-                </div>
-              </div>
-            </Section>
-
-            {/* Platform Analysis */}
-            {report.platformAnalysis.length > 0 && (
-              <Section title="📱 Platform Analysis">
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
-                  {report.platformAnalysis.map((p, i) => (
-                    <div key={i} style={{
-                      background: "var(--bg-subtle)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "var(--radius-md)",
-                      padding: "12px",
-                    }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>
-                        {p.platform}
-                      </p>
-                      <p style={{ fontSize: 11, color: "var(--text-3)", margin: "0 0 6px" }}>
-                        <span style={{ fontWeight: 600 }}>Avg views: </span>
-                        {p.avgViewsForTopic}
-                      </p>
-                      <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.5, margin: 0 }}>
-                        {p.contentStyle}
-                      </p>
+              <div>
+                <SectionHeader label="YouTube Data" />
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1, background: "var(--border)", borderRadius: 8, overflow: "hidden" }}>
+                  {[
+                    { label: "Top Video", value: `${(report.youtubeData.topVideoViews / 1000).toFixed(0)}K` },
+                    { label: "Avg Top 5", value: `${(report.youtubeData.avgTopVideoViews / 1000).toFixed(0)}K` },
+                    { label: "Videos Found", value: String(report.youtubeData.totalVideosFound) },
+                    { label: "Range", value: report.youtubeData.viewsRange },
+                  ].map((s) => (
+                    <div key={s.label} style={{ padding: "12px 14px", background: "var(--bg-card)" }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>{s.label}</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em" }}>{s.value}</div>
                     </div>
                   ))}
                 </div>
-              </Section>
+              </div>
             )}
 
-            {/* Top angles */}
-            <Section title="🎯 Top Angles">
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {report.topAngles.map((item, i) => (
-                  <div key={i} style={{
-                    padding: "12px 14px",
-                    background: "var(--bg-subtle)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "var(--radius-md)",
-                  }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: "0 0 4px" }}>
-                      {item.angle}
-                    </p>
-                    <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>
-                      {item.why}
-                    </p>
-                  </div>
-                ))}
+            {/* Top Angles */}
+            {report.topAngles.length > 0 && (
+              <div>
+                <SectionHeader label="Top Angles" />
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {report.topAngles.map((a, i) => (
+                    <div key={i} style={{
+                      display: "grid", gridTemplateColumns: "28px 1fr",
+                      gap: 12, padding: "12px 14px",
+                      background: "var(--bg-card)", border: "1px solid var(--border)",
+                      borderRadius: 6,
+                    }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text-4)", paddingTop: 2, fontVariantNumeric: "tabular-nums" }}>
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: "0 0 4px" }}>{a.angle}</p>
+                        <p style={{ fontSize: 12, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>{a.why}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </Section>
+            )}
 
-            {/* Untapped angles */}
-            <Section title="💎 Untapped opportunities">
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {report.untappedAngles.map((item, i) => (
-                  <div key={i} style={{
-                    padding: "14px 16px",
-                    background: "rgba(20,184,166,0.04)",
-                    border: "1px solid rgba(20,184,166,0.15)",
-                    borderRadius: "var(--radius-md)",
-                  }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: "0 0 4px" }}>
-                      {item.angle}
-                    </p>
-                    <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>
-                      {item.opportunity}
-                    </p>
-                  </div>
-                ))}
+            {/* Untapped Angles */}
+            {report.untappedAngles.length > 0 && (
+              <div>
+                <SectionHeader label="Untapped Angles" />
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {report.untappedAngles.map((a, i) => (
+                    <div key={i} style={{
+                      padding: "12px 14px",
+                      background: "rgba(52,211,153,0.04)",
+                      border: "1px solid rgba(52,211,153,0.15)",
+                      borderRadius: 6,
+                    }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: "0 0 4px" }}>{a.angle}</p>
+                      <p style={{ fontSize: 12, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>{a.opportunity}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </Section>
+            )}
+
+            {/* Key Insight */}
+            <div style={{
+              padding: "14px 18px",
+              background: "var(--bg-subtle)", border: "1px solid var(--border)",
+              borderLeft: "3px solid #14b8a6", borderRadius: 8,
+            }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#14b8a6", marginBottom: 7 }}>
+                Key Insight
+              </div>
+              <p style={{ fontSize: 14, color: "var(--text)", fontWeight: 500, lineHeight: 1.75, margin: 0 }}>
+                {report.keyInsight}
+              </p>
+            </div>
 
             {/* CTA */}
-            <div style={{
-              display: "flex", justifyContent: "flex-end", gap: 10,
-              paddingTop: 8,
-            }}>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button
                 onClick={() => navigate(`/studio?ideaId=${ideaId ?? ""}`)}
                 style={{
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  padding: "12px 24px", fontSize: 14, fontWeight: 600,
-                  borderRadius: 99, border: "none",
-                  background: "var(--text)", color: "var(--bg)",
-                  cursor: "pointer", transition: "opacity var(--transition)",
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  padding: "10px 20px", fontSize: 13, fontWeight: 600,
+                  borderRadius: 6, border: "none",
+                  background: "#14b8a6", color: "#fff",
+                  cursor: "pointer", transition: "background 0.15s ease",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.8"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#0d9488"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#14b8a6"; }}
               >
-                Go to Studio <ArrowRight />
+                Open in Studio
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </button>
             </div>
           </div>
@@ -545,10 +304,7 @@ export function InsightScreen() {
       </div>
 
       <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @media (max-width: 640px) {
-          .insight-overview-grid { grid-template-columns: 1fr !important; }
-        }
+        @media (max-width: 640px) { .insight-overview-grid { grid-template-columns: 1fr !important; } }
       `}</style>
     </div>
   );

@@ -12,27 +12,21 @@ interface HookCardProps {
 
 function ShimmerBlock({ width, height }: { width: string; height: number }) {
   return (
-    <div
-      className="shimmer-line"
-      style={{ width, height, borderRadius: 6, flexShrink: 0 }}
-    />
+    <div className="shimmer-line" style={{ width, height, borderRadius: 4, flexShrink: 0 }} />
   );
 }
 
-const TRIGGER_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  "Curiosity Gap":        { bg: "rgba(20, 184, 166, 0.12)", text: "#14b8a6", border: "rgba(20, 184, 166, 0.3)" },
-  "Identity Threat":      { bg: "rgba(239, 68, 68, 0.1)",   text: "#f87171", border: "rgba(239, 68, 68, 0.25)" },
-  "Controversy":          { bg: "rgba(245, 158, 11, 0.1)",  text: "#fbbf24", border: "rgba(245, 158, 11, 0.25)" },
-  "Surprising Stat":      { bg: "rgba(99, 102, 241, 0.1)",  text: "#818cf8", border: "rgba(99, 102, 241, 0.25)" },
-  "Personal Story Angle": { bg: "rgba(236, 72, 153, 0.1)",  text: "#f472b6", border: "rgba(236, 72, 153, 0.25)" },
-  "Pattern Interrupt":    { bg: "rgba(34, 197, 94, 0.1)",   text: "#4ade80", border: "rgba(34, 197, 94, 0.25)" },
+// Trigger → color mapping. Purposeful, not decorative.
+const TRIGGER_META: Record<string, { color: string; label: string }> = {
+  "Curiosity Gap":        { color: "#14b8a6", label: "Curiosity Gap" },
+  "Identity Threat":      { color: "#f87171", label: "Identity Threat" },
+  "Controversy":          { color: "#f59e0b", label: "Controversy" },
+  "Surprising Stat":      { color: "#818cf8", label: "Surprising Stat" },
+  "Personal Story Angle": { color: "#f472b6", label: "Personal Story" },
+  "Pattern Interrupt":    { color: "#34d399", label: "Pattern Interrupt" },
 };
 
-const DEFAULT_TRIGGER_STYLE = {
-  bg: "rgba(20, 184, 166, 0.12)",
-  text: "#14b8a6",
-  border: "rgba(20, 184, 166, 0.3)",
-};
+const DEFAULT_META = { color: "#14b8a6", label: "Hook" };
 
 export function HookCard({
   hook,
@@ -43,200 +37,151 @@ export function HookCard({
   onTryAnother,
 }: HookCardProps) {
   const [isHovered, setIsHovered] = React.useState(false);
-  const triggerStyle = TRIGGER_COLORS[hook.trigger] ?? DEFAULT_TRIGGER_STYLE;
+  const meta = TRIGGER_META[hook.trigger] ?? DEFAULT_META;
 
-  const cardStyle: React.CSSProperties = {
-    background: isSelected ? "rgba(20, 184, 166, 0.05)" : "var(--bg-card)",
-    border: isSelected ? "1.5px solid var(--accent)" : "1px solid var(--border)",
-    borderLeft: isSelected ? "4px solid var(--accent)" : "1px solid var(--border)",
-    borderRadius: "var(--radius-lg)",
-    boxShadow: isSelected
-      ? "0 4px 20px rgba(20, 184, 166, 0.15)"
-      : "var(--shadow-sm)",
-    padding: "20px",
-    transition: "all var(--transition)",
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-    opacity: isLoading ? 0.7 : 1,
-    cursor: isLoading ? "default" : "pointer",
-    position: "relative",
-  };
-
-  // Loading skeleton state
   if (isLoading) {
     return (
-      <div style={{ ...cardStyle, cursor: "default" }}>
-        {/* Trigger badge skeleton */}
-        <ShimmerBlock width="100px" height={22} />
-        {/* Hook text skeleton */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <ShimmerBlock width="95%" height={16} />
-          <ShimmerBlock width="80%" height={16} />
-          <ShimmerBlock width="60%" height={16} />
+      <div style={{
+        background: "var(--bg-card)",
+        border: "1px solid var(--border)",
+        borderRadius: 8,
+        padding: "18px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        opacity: 0.6,
+      }}>
+        <ShimmerBlock width="80px" height={18} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+          <ShimmerBlock width="100%" height={14} />
+          <ShimmerBlock width="85%" height={14} />
+          <ShimmerBlock width="65%" height={14} />
         </div>
-        {/* Button skeleton */}
-        <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-          <ShimmerBlock width="110px" height={34} />
-        </div>
+        <ShimmerBlock width="90px" height={28} />
       </div>
     );
   }
 
+  const borderColor = isSelected ? meta.color : isHovered ? `${meta.color}60` : "var(--border)";
+  const bg = isSelected
+    ? `${meta.color}08`
+    : isHovered
+    ? `${meta.color}04`
+    : "var(--bg-card)";
+
   return (
     <div
       onClick={onSelect}
-      style={cardStyle}
-      onMouseEnter={(e) => {
-        setIsHovered(true);
-        const el = e.currentTarget as HTMLDivElement;
-        if (!isSelected) {
-          el.style.borderColor = "var(--accent)";
-          el.style.borderLeftWidth = "4px";
-          el.style.background = "rgba(20, 184, 166, 0.03)";
-        }
-        el.style.boxShadow = isSelected
-          ? "0 8px 30px rgba(20, 184, 166, 0.25)"
-          : "0 6px 24px rgba(20, 184, 166, 0.12)";
-        el.style.transform = "translateY(-2px)";
-      }}
-      onMouseLeave={(e) => {
-        setIsHovered(false);
-        const el = e.currentTarget as HTMLDivElement;
-        if (!isSelected) {
-          el.style.borderColor = "var(--border)";
-          el.style.borderLeftWidth = "1px";
-          el.style.background = "var(--bg-card)";
-        }
-        el.style.boxShadow = isSelected
-          ? "0 4px 20px rgba(20, 184, 166, 0.15)"
-          : "var(--shadow-sm)";
-        el.style.transform = "translateY(0)";
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        background: bg,
+        border: `1px solid ${borderColor}`,
+        borderTop: `2px solid ${isSelected || isHovered ? meta.color : "var(--border)"}`,
+        borderRadius: 8,
+        padding: "18px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
+        cursor: "pointer",
+        transition: "all 0.15s ease",
+        position: "relative",
+        transform: isHovered && !isSelected ? "translateY(-1px)" : "translateY(0)",
       }}
     >
-      {/* Selected indicator */}
-      {isSelected && (
-        <div style={{
-          position: "absolute",
-          top: 12,
-          right: 12,
-          width: 24,
-          height: 24,
-          borderRadius: "50%",
-          background: "var(--accent)",
-          color: "#fff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 14,
+      {/* Trigger label row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{
+          fontSize: 10,
           fontWeight: 700,
-          boxShadow: "0 2px 8px rgba(20, 184, 166, 0.3)",
-        }}>
-          ✓
-        </div>
-      )}
-
-      {/* Trigger badge */}
-      <span
-        style={{
-          display: "inline-flex",
-          alignSelf: "flex-start",
-          alignItems: "center",
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: "0.04em",
+          letterSpacing: "0.1em",
           textTransform: "uppercase",
-          padding: "3px 10px",
-          borderRadius: 99,
-          background: triggerStyle.bg,
-          color: triggerStyle.text,
-          border: `1px solid ${triggerStyle.border}`,
-        }}
-      >
-        {hook.trigger}
-      </span>
+          color: meta.color,
+        }}>
+          {meta.label}
+        </span>
+        {isSelected && (
+          <span style={{
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: meta.color,
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+          }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Selected
+          </span>
+        )}
+        {!isSelected && isHovered && (
+          <span style={{ fontSize: 10, fontWeight: 600, color: meta.color, letterSpacing: "0.06em" }}>
+            Click to select
+          </span>
+        )}
+      </div>
 
       {/* Hook text */}
-      <p
-        style={{
-          fontSize: 15,
-          lineHeight: 1.65,
-          color: "var(--text)",
-          margin: 0,
-          fontWeight: isSelected ? 500 : 400,
-          paddingRight: isSelected ? 32 : 0,
-        }}
-      >
+      <p style={{
+        fontSize: 14,
+        lineHeight: 1.7,
+        color: isSelected ? "var(--text)" : "var(--text-2)",
+        margin: 0,
+        fontWeight: isSelected ? 500 : 400,
+        letterSpacing: "-0.01em",
+      }}>
         {hook.hook_text}
       </p>
 
-      {/* Inline error */}
+      {/* Error */}
       {error && (
-        <p
-          style={{
-            fontSize: 12,
-            color: "var(--error)",
-            background: "var(--error-subtle)",
-            border: "1px solid rgba(248, 113, 113, 0.2)",
-            borderRadius: "var(--radius-sm)",
-            padding: "6px 10px",
-            margin: 0,
-          }}
-        >
+        <p style={{
+          fontSize: 12,
+          color: "var(--error)",
+          background: "rgba(248,113,113,0.06)",
+          border: "1px solid rgba(248,113,113,0.2)",
+          borderRadius: 6,
+          padding: "6px 10px",
+          margin: 0,
+        }}>
           {error}
         </p>
       )}
 
-      {/* Try another button */}
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
-        <button
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent card click
-            onTryAnother();
-          }}
-          style={{
-            padding: "8px 14px",
-            fontSize: 13,
-            fontWeight: 500,
-            borderRadius: "var(--radius-sm)",
-            border: "1px solid var(--border)",
-            background: "transparent",
-            color: "var(--text-3)",
-            cursor: "pointer",
-            transition: "all var(--transition)",
-            whiteSpace: "nowrap",
-          }}
-          onMouseEnter={(e) => {
-            const el = e.currentTarget as HTMLButtonElement;
-            el.style.borderColor = "var(--border-strong)";
-            el.style.color = "var(--text)";
-            el.style.background = "var(--bg-subtle)";
-          }}
-          onMouseLeave={(e) => {
-            const el = e.currentTarget as HTMLButtonElement;
-            el.style.borderColor = "var(--border)";
-            el.style.color = "var(--text-3)";
-            el.style.background = "transparent";
-          }}
-        >
-          ↻ Try another
-        </button>
-      </div>
-
-      {/* Click to select hint (only show when not selected and hovered) */}
-      {!isSelected && isHovered && (
-        <div style={{
-          position: "absolute",
-          bottom: 12,
-          right: 12,
+      {/* Try another */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onTryAnother(); }}
+        style={{
+          alignSelf: "flex-start",
+          padding: "5px 10px",
           fontSize: 11,
-          color: "var(--accent)",
           fontWeight: 600,
-          pointerEvents: "none",
-        }}>
-          Click to select
-        </div>
-      )}
+          letterSpacing: "0.04em",
+          borderRadius: 4,
+          border: "1px solid var(--border)",
+          background: "transparent",
+          color: "var(--text-3)",
+          cursor: "pointer",
+          transition: "all 0.15s ease",
+        }}
+        onMouseEnter={(e) => {
+          const b = e.currentTarget as HTMLButtonElement;
+          b.style.borderColor = "var(--border-strong)";
+          b.style.color = "var(--text)";
+          b.style.background = "var(--bg-subtle)";
+        }}
+        onMouseLeave={(e) => {
+          const b = e.currentTarget as HTMLButtonElement;
+          b.style.borderColor = "var(--border)";
+          b.style.color = "var(--text-3)";
+          b.style.background = "transparent";
+        }}
+      >
+        ↻ Try another
+      </button>
     </div>
   );
 }

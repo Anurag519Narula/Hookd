@@ -13,44 +13,42 @@ interface PlatformToggleProps {
 }
 
 export function PlatformToggle({ selected, onChange }: PlatformToggleProps) {
-  const toggle = (platform: Platform) => {
-    if (selected.includes(platform)) {
-      onChange(selected.filter((p) => p !== platform));
-    } else {
-      onChange([...selected, platform]);
-    }
+  const toggle = (p: Platform) => {
+    onChange(selected.includes(p) ? selected.filter((x) => x !== p) : [...selected, p]);
   };
 
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 8,
-        }}
-        role="group"
-        aria-label="Select platforms"
-      >
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }} role="group" aria-label="Select platforms">
         {PLATFORMS.map(({ value, label }) => {
-          const isSelected = selected.includes(value);
+          const active = selected.includes(value);
           return (
             <button
               key={value}
               type="button"
               onClick={() => toggle(value)}
-              aria-pressed={isSelected}
+              aria-pressed={active}
               style={{
-                padding: "6px 14px",
-                borderRadius: 999,
-                border: `1px solid ${isSelected ? "var(--accent)" : "var(--border)"}`,
-                background: isSelected ? "var(--accent)" : "transparent",
-                color: isSelected ? "#fff" : "var(--text-2)",
-                fontSize: 13,
-                fontWeight: 500,
-                cursor: "pointer",
-                transition: "all var(--transition)",
-                lineHeight: 1.4,
+                padding: "5px 12px", borderRadius: 4,
+                border: `1px solid ${active ? "rgba(20,184,166,0.5)" : "var(--border)"}`,
+                background: active ? "rgba(20,184,166,0.1)" : "transparent",
+                color: active ? "#14b8a6" : "var(--text-3)",
+                fontSize: 12, fontWeight: active ? 600 : 500,
+                cursor: "pointer", transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                if (!active) {
+                  const b = e.currentTarget as HTMLButtonElement;
+                  b.style.borderColor = "var(--border-strong)";
+                  b.style.color = "var(--text-2)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  const b = e.currentTarget as HTMLButtonElement;
+                  b.style.borderColor = "var(--border)";
+                  b.style.color = "var(--text-3)";
+                }
               }}
             >
               {label}
@@ -59,14 +57,7 @@ export function PlatformToggle({ selected, onChange }: PlatformToggleProps) {
         })}
       </div>
       {selected.length === 0 && (
-        <p
-          style={{
-            marginTop: 6,
-            fontSize: 12,
-            color: "var(--error)",
-          }}
-          role="alert"
-        >
+        <p style={{ marginTop: 5, fontSize: 11, color: "var(--error)" }} role="alert">
           Select at least one platform to generate captions.
         </p>
       )}

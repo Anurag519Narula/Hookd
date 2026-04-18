@@ -18,33 +18,25 @@ export function LengthSelector({ value, onChange }: LengthSelectorProps) {
         display: "inline-flex",
         background: "var(--bg-subtle)",
         border: "1px solid var(--border)",
-        borderRadius: "var(--radius-sm)",
-        padding: 3,
-        gap: 2,
+        borderRadius: 6, padding: 2, gap: 2,
       }}
       role="group"
       aria-label="Caption length"
     >
       {OPTIONS.map((opt) => {
-        const isActive = value === opt.value;
+        const active = value === opt.value;
         return (
           <button
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            aria-pressed={isActive}
+            aria-pressed={active}
             style={{
-              padding: "5px 14px",
-              borderRadius: 6,
-              border: "none",
-              background: isActive ? "var(--bg-card)" : "transparent",
-              color: isActive ? "var(--text)" : "var(--text-3)",
-              fontSize: 13,
-              fontWeight: isActive ? 600 : 400,
-              cursor: "pointer",
-              transition: "all var(--transition)",
-              boxShadow: isActive ? "var(--shadow-sm)" : "none",
-              lineHeight: 1.4,
+              padding: "4px 12px", borderRadius: 4, border: "none",
+              background: active ? "var(--bg-card)" : "transparent",
+              color: active ? "var(--text)" : "var(--text-3)",
+              fontSize: 12, fontWeight: active ? 600 : 400,
+              cursor: "pointer", transition: "all 0.15s ease",
             }}
           >
             {opt.label}

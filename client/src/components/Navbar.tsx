@@ -3,51 +3,6 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../App";
 import { useAuth } from "../context/AuthContext";
 
-const SparkleIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="white">
-    <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
-  </svg>
-);
-
-const MoonIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-  </svg>
-);
-
-const SunIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="5"/>
-    <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-  </svg>
-);
-
-const HamburgerIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="3" y1="6" x2="21" y2="6"/>
-    <line x1="3" y1="12" x2="21" y2="12"/>
-    <line x1="3" y1="18" x2="21" y2="18"/>
-  </svg>
-);
-
-const CloseIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="6" x2="6" y2="18"/>
-    <line x1="6" y1="6" x2="18" y2="18"/>
-  </svg>
-);
-
-const LogOutIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-    <polyline points="16 17 21 12 16 7"/>
-    <line x1="21" y1="12" x2="9" y2="12"/>
-  </svg>
-);
-
 interface NavbarProps {
   children?: React.ReactNode;
   showBack?: boolean;
@@ -63,140 +18,92 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setDropdownOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  function handleLogout() {
-    setDropdownOpen(false);
-    logout();
-  }
-
-  // Get user initials for avatar
   const displayName = user?.name || user?.email || "";
   const initials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
-    : user?.email
-    ? user.email[0].toUpperCase()
-    : "?";
+    : user?.email ? user.email[0].toUpperCase() : "?";
 
-  // Active link helper — exact match for "/" to avoid matching everything
   function isActive(path: string) {
     if (path === "/") return location.pathname === "/";
     return location.pathname === path || location.pathname.startsWith(path + "/");
   }
 
-  const navLinkStyle: React.CSSProperties = {
-    fontSize: 14,
-    fontWeight: 500,
-    color: "var(--text-2)",
-    padding: "4px 10px",
-    borderRadius: 6,
-    transition: "all var(--transition)",
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    textDecoration: "none",
-    display: "inline-block",
-  };
-
-  function activeLinkStyle(path: string): React.CSSProperties {
-    const active = isActive(path);
-    return {
-      ...navLinkStyle,
-      color: active ? "var(--accent)" : "var(--text-2)",
-      borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",
-      borderRadius: 0,
-      paddingBottom: 2,
-    };
-  }
+  const NAV_LINKS = [
+    { to: "/", label: "Home" },
+    { to: "/studio", label: "Studio" },
+    { to: "/develop", label: "Develop" },
+    { to: "/amplify", label: "Amplify" },
+    { to: "/vault", label: "Vault" },
+  ];
 
   return (
     <nav style={{
       position: "sticky", top: 0, zIndex: 100,
-      background: dark ? "rgba(14,14,14,0.88)" : "rgba(247,246,243,0.88)",
-      backdropFilter: "blur(16px)",
-      WebkitBackdropFilter: "blur(16px)",
+      background: dark ? "rgba(10,10,10,0.92)" : "rgba(250,250,250,0.92)",
+      backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
       borderBottom: "1px solid var(--border)",
     }}>
       <div style={{
-        padding: "0 32px", height: 60,
+        padding: "0 28px", height: 56,
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         {/* Wordmark */}
         <button
           onClick={() => onBack ? onBack() : navigate("/")}
           style={{
-            display: "flex", alignItems: "center", gap: 8,
+            display: "flex", alignItems: "center", gap: 7,
             background: "none", border: "none", cursor: "pointer", padding: 0,
           }}
         >
           <div style={{
-            width: 28, height: 28, borderRadius: 8,
-            background: "linear-gradient(135deg, var(--accent), #6366f1)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0,
+            width: 24, height: 24, borderRadius: 6,
+            background: "#14b8a6",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>
-            <SparkleIcon />
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="white">
+              <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+            </svg>
           </div>
-          <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.01em" }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
             Hookd
           </span>
         </button>
 
-        {/* Desktop nav links */}
-        <div className="nav-links-desktop" style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <Link
-            to="/"
-            style={activeLinkStyle("/")}
-            onMouseEnter={(e) => { if (!isActive("/")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; } }}
-            onMouseLeave={(e) => { if (!isActive("/")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; (e.currentTarget as HTMLAnchorElement).style.background = "none"; } }}
-          >
-            Home
-          </Link>
-          <Link
-            to="/studio"
-            style={activeLinkStyle("/studio")}
-            onMouseEnter={(e) => { if (!isActive("/studio")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; } }}
-            onMouseLeave={(e) => { if (!isActive("/studio")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; (e.currentTarget as HTMLAnchorElement).style.background = "none"; } }}
-          >
-            Studio
-          </Link>
-          <Link
-            to="/develop"
-            style={activeLinkStyle("/develop")}
-            onMouseEnter={(e) => { if (!isActive("/develop")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; } }}
-            onMouseLeave={(e) => { if (!isActive("/develop")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; (e.currentTarget as HTMLAnchorElement).style.background = "none"; } }}
-          >
-            Develop
-          </Link>
-          <Link
-            to="/amplify"
-            style={activeLinkStyle("/amplify")}
-            onMouseEnter={(e) => { if (!isActive("/amplify")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; } }}
-            onMouseLeave={(e) => { if (!isActive("/amplify")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; (e.currentTarget as HTMLAnchorElement).style.background = "none"; } }}
-          >
-            Amplify
-          </Link>
-          <Link
-            to="/vault"
-            style={activeLinkStyle("/vault")}
-            onMouseEnter={(e) => { if (!isActive("/vault")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; } }}
-            onMouseLeave={(e) => { if (!isActive("/vault")) { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-2)"; (e.currentTarget as HTMLAnchorElement).style.background = "none"; } }}
-          >
-            Vault
-          </Link>
+        {/* Desktop nav */}
+        <div className="nav-links-desktop" style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {NAV_LINKS.map(({ to, label }) => {
+            const active = isActive(to);
+            return (
+              <Link
+                key={to}
+                to={to}
+                style={{
+                  fontSize: 13, fontWeight: active ? 600 : 400,
+                  color: active ? "#14b8a6" : "var(--text-3)",
+                  padding: "4px 10px 2px",
+                  textDecoration: "none", transition: "all 0.15s ease",
+                  borderBottom: active ? "1.5px solid #14b8a6" : "1.5px solid transparent",
+                  borderRadius: 0,
+                }}
+                onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)"; }}
+                onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-3)"; }}
+              >
+                {label}
+              </Link>
+            );
+          })}
         </div>
 
-        {/* Right slot */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {/* Right */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {children}
 
           {/* Hamburger — mobile only */}
@@ -205,148 +112,107 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="Toggle menu"
             style={{
-              width: 34, height: 34, borderRadius: 8,
-              border: "1px solid var(--border)", background: "var(--bg-subtle)",
-              color: "var(--text-2)", cursor: "pointer",
+              width: 30, height: 30, borderRadius: 4,
+              border: "1px solid var(--border)", background: "transparent",
+              color: "var(--text-3)", cursor: "pointer",
               display: "none", alignItems: "center", justifyContent: "center",
-              transition: "all var(--transition)",
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--bg-hover)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--bg-subtle)"; }}
           >
-            {menuOpen ? <CloseIcon /> : <HamburgerIcon />}
+            {menuOpen ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            )}
           </button>
 
           {/* Theme toggle */}
           <button
             onClick={toggle}
             style={{
-              width: 34, height: 34, borderRadius: 8,
-              border: "1px solid var(--border)", background: "var(--bg-subtle)",
-              color: "var(--text-2)", cursor: "pointer",
+              width: 30, height: 30, borderRadius: 4,
+              border: "1px solid var(--border)", background: "transparent",
+              color: "var(--text-3)", cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all var(--transition)",
+              transition: "color 0.15s ease",
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--bg-hover)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--bg-subtle)"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-3)"; }}
           >
-            {dark ? <SunIcon /> : <MoonIcon />}
+            {dark ? (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            )}
           </button>
 
-          {/* User avatar + dropdown */}
+          {/* Avatar + dropdown */}
           {user && (
             <div ref={dropdownRef} style={{ position: "relative" }}>
               <button
-                id="nav-user-avatar"
                 onClick={() => setDropdownOpen((o) => !o)}
                 title={displayName}
                 style={{
-                  width: 34, height: 34, borderRadius: "50%",
-                  background: "linear-gradient(135deg, var(--accent), #6366f1)",
-                  border: "2px solid transparent",
-                  outline: dropdownOpen ? "2px solid var(--accent)" : "none",
+                  width: 30, height: 30, borderRadius: "50%",
+                  background: "#14b8a6",
+                  border: dropdownOpen ? "2px solid #14b8a6" : "2px solid transparent",
+                  outline: dropdownOpen ? "2px solid rgba(20,184,166,0.3)" : "none",
                   outlineOffset: 1,
                   cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 12, fontWeight: 700, color: "#fff",
-                  letterSpacing: "0.02em",
-                  transition: "all var(--transition)",
+                  fontSize: 11, fontWeight: 700, color: "#fff",
                   flexShrink: 0,
                 }}
               >
                 {initials}
               </button>
 
-              {/* Dropdown */}
               {dropdownOpen && (
                 <div style={{
-                  position: "absolute", top: "calc(100% + 10px)", right: 0,
-                  width: 220,
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--radius-md)",
-                  boxShadow: "var(--shadow-lg)",
-                  overflow: "hidden",
-                  animation: "scaleIn 0.18s cubic-bezier(0.4,0,0.2,1) both",
-                  transformOrigin: "top right",
-                  zIndex: 200,
+                  position: "absolute", top: "calc(100% + 8px)", right: 0,
+                  width: 200, background: "var(--bg-card)",
+                  border: "1px solid var(--border)", borderRadius: 8,
+                  overflow: "hidden", zIndex: 200,
                 }}>
-                  {/* User info */}
-                  <div style={{
-                    padding: "14px 16px",
-                    borderBottom: "1px solid var(--border)",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{
-                        width: 36, height: 36, borderRadius: "50%",
-                        background: "linear-gradient(135deg, var(--accent), #6366f1)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0,
-                      }}>
-                        {initials}
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{
-                          fontSize: 13, fontWeight: 600, color: "var(--text)",
-                          margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        }}>
-                          {displayName}
-                        </p>
-                        {user.name && (
-                          <p style={{
-                            fontSize: 11, color: "var(--text-3)",
-                            margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                          }}>
-                            {user.email}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                  <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: "var(--text)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {displayName}
+                    </p>
+                    {user.name && (
+                      <p style={{ fontSize: 11, color: "var(--text-3)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {user.email}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Settings */}
                   <Link
                     to="/settings"
                     onClick={() => setDropdownOpen(false)}
                     style={{
-                      width: "100%", padding: "11px 16px",
                       display: "flex", alignItems: "center", gap: 8,
-                      color: "var(--text-2)", fontSize: 13, fontWeight: 500,
-                      textDecoration: "none", transition: "all var(--transition)",
+                      padding: "9px 14px", color: "var(--text-2)",
+                      fontSize: 12, fontWeight: 500, textDecoration: "none",
                       borderBottom: "1px solid var(--border)",
+                      transition: "background 0.15s ease",
                     }}
-                    onMouseEnter={(e) => {
-                      const a = e.currentTarget as HTMLAnchorElement;
-                      a.style.background = "var(--bg-subtle)";
-                      a.style.color = "var(--text)";
-                    }}
-                    onMouseLeave={(e) => {
-                      const a = e.currentTarget as HTMLAnchorElement;
-                      a.style.background = "none";
-                      a.style.color = "var(--text-2)";
-                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="3"/>
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                    </svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                     Settings
                   </Link>
 
-                  {/* Sign out */}
                   <button
-                    id="nav-logout"
-                    onClick={handleLogout}
+                    onClick={() => { setDropdownOpen(false); logout(); }}
                     style={{
-                      width: "100%", padding: "11px 16px",
+                      width: "100%", padding: "9px 14px",
                       display: "flex", alignItems: "center", gap: 8,
                       background: "none", border: "none", cursor: "pointer",
-                      color: "var(--text-2)", fontSize: 13, fontWeight: 500,
-                      textAlign: "left", transition: "all var(--transition)",
+                      color: "var(--text-2)", fontSize: 12, fontWeight: 500,
+                      textAlign: "left", transition: "all 0.15s ease",
                     }}
                     onMouseEnter={(e) => {
                       const b = e.currentTarget as HTMLButtonElement;
-                      b.style.background = "var(--error-subtle)";
+                      b.style.background = "rgba(248,113,113,0.06)";
                       b.style.color = "var(--error)";
                     }}
                     onMouseLeave={(e) => {
@@ -355,7 +221,8 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
                       b.style.color = "var(--text-2)";
                     }}
                   >
-                    <LogOutIcon /> Sign out
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Sign out
                   </button>
                 </div>
               )}
@@ -364,118 +231,51 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
         </div>
       </div>
 
-      {/* Mobile dropdown menu */}
+      {/* Mobile menu */}
       {menuOpen && (
-        <div
-          className="nav-mobile-menu"
-          style={{
-            padding: "8px 24px 16px",
-            borderTop: "1px solid var(--border)",
-            display: "flex", flexDirection: "column", gap: 4,
-          }}
-        >
-          <Link
-            to="/"
-            onClick={() => setMenuOpen(false)}
-            style={{
-              fontSize: 15, fontWeight: 500,
-              color: isActive("/") ? "var(--accent)" : "var(--text-2)",
-              padding: "10px 12px", borderRadius: 8,
-              transition: "all var(--transition)",
-              textDecoration: "none",
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
-          >
-            Home
-          </Link>
-          <Link
-            to="/studio"
-            onClick={() => setMenuOpen(false)}
-            style={{
-              fontSize: 15, fontWeight: 500,
-              color: isActive("/studio") ? "var(--accent)" : "var(--text-2)",
-              padding: "10px 12px", borderRadius: 8,
-              transition: "all var(--transition)",
-              textDecoration: "none",
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
-          >
-            Studio
-          </Link>
-          <Link
-            to="/develop"
-            onClick={() => setMenuOpen(false)}
-            style={{
-              fontSize: 15, fontWeight: 500,
-              color: isActive("/develop") ? "var(--accent)" : "var(--text-2)",
-              padding: "10px 12px", borderRadius: 8,
-              transition: "all var(--transition)",
-              textDecoration: "none",
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
-          >
-            Develop
-          </Link>
-          <Link
-            to="/amplify"
-            onClick={() => setMenuOpen(false)}
-            style={{
-              fontSize: 15, fontWeight: 500,
-              color: isActive("/amplify") ? "var(--accent)" : "var(--text-2)",
-              padding: "10px 12px", borderRadius: 8,
-              transition: "all var(--transition)",
-              textDecoration: "none",
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
-          >
-            Amplify
-          </Link>
-          <Link
-            to="/vault"
-            onClick={() => setMenuOpen(false)}
-            style={{
-              fontSize: 15, fontWeight: 500,
-              color: isActive("/vault") ? "var(--accent)" : "var(--text-2)",
-              padding: "10px 12px", borderRadius: 8,
-              transition: "all var(--transition)",
-              textDecoration: "none",
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
-          >
-            Vault
-          </Link>
-          {/* Mobile settings */}
+        <div style={{
+          padding: "8px 20px 14px",
+          borderTop: "1px solid var(--border)",
+          display: "flex", flexDirection: "column", gap: 2,
+        }}>
+          {NAV_LINKS.map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              onClick={() => setMenuOpen(false)}
+              style={{
+                fontSize: 14, fontWeight: 500,
+                color: isActive(to) ? "#14b8a6" : "var(--text-2)",
+                padding: "9px 10px", borderRadius: 6,
+                textDecoration: "none", transition: "background 0.15s ease",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
+            >
+              {label}
+            </Link>
+          ))}
           {user && (
             <Link
               to="/settings"
               onClick={() => setMenuOpen(false)}
               style={{
-                fontSize: 15, fontWeight: 500,
-                color: isActive("/settings") ? "var(--accent)" : "var(--text-2)",
-                padding: "10px 12px", borderRadius: 8,
-                transition: "all var(--transition)",
+                fontSize: 14, fontWeight: 500,
+                color: isActive("/settings") ? "#14b8a6" : "var(--text-2)",
+                padding: "9px 10px", borderRadius: 6,
                 textDecoration: "none",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "var(--bg-subtle)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "none"; }}
             >
               Settings
             </Link>
           )}
-          {/* Mobile sign out */}
           {user && (
             <button
               onClick={() => { setMenuOpen(false); logout(); }}
               style={{
-                fontSize: 15, fontWeight: 500, color: "var(--error)",
-                padding: "10px 12px", borderRadius: 8, textAlign: "left",
-                transition: "all var(--transition)", background: "none", border: "none",
-                cursor: "pointer",
+                fontSize: 14, fontWeight: 500, color: "var(--error)",
+                padding: "9px 10px", borderRadius: 6, textAlign: "left",
+                background: "none", border: "none", cursor: "pointer",
               }}
             >
               Sign out
@@ -483,6 +283,13 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
           )}
         </div>
       )}
+
+      <style>{`
+        @media (max-width: 680px) {
+          .nav-links-desktop { display: none !important; }
+          .nav-hamburger { display: flex !important; }
+        }
+      `}</style>
     </nav>
   );
 }

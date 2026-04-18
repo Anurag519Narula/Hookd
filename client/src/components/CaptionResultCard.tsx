@@ -9,6 +9,13 @@ const PLATFORM_LABELS: Record<Platform, string> = {
   youtube_shorts: "YouTube Shorts",
 };
 
+const PLATFORM_COLORS: Record<Platform, { bg: string; color: string; border: string }> = {
+  instagram: { bg: "rgba(225,48,108,0.12)", color: "#e1306c", border: "rgba(225,48,108,0.3)" },
+  linkedin:  { bg: "rgba(10,102,194,0.12)", color: "#0a66c2", border: "rgba(10,102,194,0.3)" },
+  reels:     { bg: "rgba(131,58,180,0.12)", color: "#833ab4", border: "rgba(131,58,180,0.3)" },
+  youtube_shorts: { bg: "rgba(255,0,0,0.1)", color: "#ff0000", border: "rgba(255,0,0,0.25)" },
+};
+
 interface CaptionResultCardProps {
   result: CaptionResult;
 }
@@ -91,10 +98,7 @@ function PlatformCaption({
 
 export function CaptionResultCard({ result }: CaptionResultCardProps) {
   const platforms = Object.keys(result.captions) as Platform[];
-  const [activeTab, setActiveTab] = useState<Platform>(platforms[0]);
   const [researchOpen, setResearchOpen] = useState(false);
-
-  const activeCaption = result.captions[activeTab];
 
   return (
     <div
@@ -127,63 +131,59 @@ export function CaptionResultCard({ result }: CaptionResultCardProps) {
         </div>
       )}
 
-      {/* Platform tabs */}
-      {platforms.length > 1 && (
-        <div
-          style={{
-            display: "flex",
-            borderBottom: "1px solid var(--border)",
-            overflowX: "auto",
-          }}
-          role="tablist"
-          aria-label="Platform captions"
-        >
-          {platforms.map((p) => (
-            <button
+      {/* All platform captions stacked */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        {platforms.map((p, i) => {
+          const caption = result.captions[p];
+          if (!caption) return null;
+          const colors = PLATFORM_COLORS[p] ?? { bg: "rgba(20,184,166,0.1)", color: "#14b8a6", border: "rgba(20,184,166,0.3)" };
+          const label = PLATFORM_LABELS[p] ?? p;
+          return (
+            <div
               key={p}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === p}
-              onClick={() => setActiveTab(p)}
               style={{
-                padding: "10px 16px",
-                border: "none",
-                borderBottom: `2px solid ${activeTab === p ? "var(--accent)" : "transparent"}`,
-                background: "transparent",
-                color: activeTab === p ? "var(--accent-text)" : "var(--text-3)",
-                fontSize: 13,
-                fontWeight: activeTab === p ? 600 : 400,
-                cursor: "pointer",
-                transition: "all var(--transition)",
-                whiteSpace: "nowrap",
+                borderBottom: i < platforms.length - 1 ? "1px solid var(--border)" : "none",
               }}
             >
-              {PLATFORM_LABELS[p]}
-            </button>
-          ))}
-        </div>
-      )}
+              {/* Platform label */}
+              <div style={{
+                padding: "12px 16px 0",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}>
+                <span style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.07em",
+                  textTransform: "uppercase",
+                  color: colors.color,
+                  background: colors.bg,
+                  padding: "3px 10px",
+                  borderRadius: 99,
+                  border: `1px solid ${colors.border}`,
+                  display: "inline-block",
+                }}>
+                  {label}
+                </span>
+              </div>
 
-      {/* Caption content */}
-      <div style={{ padding: 16 }}>
-        {activeCaption ? (
-          <PlatformCaption
-            platform={activeTab}
-            text={activeCaption.text}
-            hashtags={activeCaption.hashtags}
-          />
-        ) : (
-          <p style={{ fontSize: 13, color: "var(--text-3)" }}>No caption available.</p>
-        )}
+              {/* Caption content */}
+              <div style={{ padding: "10px 16px 14px" }}>
+                <PlatformCaption
+                  platform={p}
+                  text={caption.text}
+                  hashtags={caption.hashtags}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Market research section */}
       {result.market_research && (
-        <div
-          style={{
-            borderTop: "1px solid var(--border)",
-          }}
-        >
+        <div style={{ borderTop: "1px solid var(--border)" }}>
           <button
             type="button"
             onClick={() => setResearchOpen((o) => !o)}

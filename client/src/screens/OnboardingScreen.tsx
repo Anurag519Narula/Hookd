@@ -6,27 +6,21 @@ import { NichePicker } from "../components/NichePicker";
 import { SubNicheInput } from "../components/SubNicheInput";
 import type { Platform } from "../types/index";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
 const TOTAL_STEPS = 4;
 
-const PLATFORMS: { id: Platform; label: string; icon: string }[] = [
-  { id: "instagram",      label: "Instagram",       icon: "📸" },
-  { id: "linkedin",       label: "LinkedIn",         icon: "💼" },
-  { id: "reels",          label: "Reels",            icon: "🎬" },
-  { id: "youtube_shorts", label: "YouTube Shorts",   icon: "▶️" },
+const PLATFORMS: { id: Platform; label: string }[] = [
+  { id: "instagram", label: "Instagram" },
+  { id: "linkedin", label: "LinkedIn" },
+  { id: "reels", label: "Reels" },
+  { id: "youtube_shorts", label: "YouTube Shorts" },
 ];
-
-// ── Step meta ─────────────────────────────────────────────────────────────────
 
 const STEP_META = [
-  { title: "What's your name?",          subtitle: "How should we address you?" },
-  { title: "Pick your niche",            subtitle: "What kind of content do you create?" },
-  { title: "Narrow it down",             subtitle: "Add a sub-niche to sharpen your content (optional)" },
-  { title: "Preferred platforms",        subtitle: "Where do you publish? (optional)" },
+  { title: "What's your name?", subtitle: "How should we address you?" },
+  { title: "Pick your niche", subtitle: "What kind of content do you create?" },
+  { title: "Narrow it down", subtitle: "Add a sub-niche to sharpen your content (optional)" },
+  { title: "Preferred platforms", subtitle: "Where do you publish? (optional)" },
 ];
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 export function OnboardingScreen() {
   const { user, refreshProfile } = useAuth();
@@ -40,38 +34,17 @@ export function OnboardingScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // ── Navigation helpers ──────────────────────────────────────────────────────
-
-  function canAdvance(): boolean {
+  function canAdvance() {
     if (step === 1) return name.trim().length > 0;
     if (step === 2) return niche.trim().length > 0;
-    return true; // steps 3 & 4 are skippable
-  }
-
-  function handleNext() {
-    if (step < TOTAL_STEPS) {
-      setStep((s) => s + 1);
-    }
-  }
-
-  function handleSkip() {
-    if (step < TOTAL_STEPS) {
-      setStep((s) => s + 1);
-    }
+    return true;
   }
 
   async function handleFinish() {
     if (submitting) return;
-    setError("");
-    setSubmitting(true);
+    setError(""); setSubmitting(true);
     try {
-      await patchMe({
-        name: name.trim(),
-        niche: niche.trim() || null,
-        sub_niche: subNiche.trim() || null,
-        platform_priority: platforms,
-        onboarding_complete: true,
-      });
+      await patchMe({ name: name.trim(), niche: niche.trim() || null, sub_niche: subNiche.trim() || null, platform_priority: platforms, onboarding_complete: true });
       await refreshProfile();
       navigate("/");
     } catch (err: unknown) {
@@ -81,443 +54,182 @@ export function OnboardingScreen() {
     }
   }
 
-  // ── Platform toggle ─────────────────────────────────────────────────────────
-
-  function togglePlatform(id: Platform) {
-    setPlatforms((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
-  }
-
-  // ── Styles ──────────────────────────────────────────────────────────────────
-
   const isSkippable = step === 3 || step === 4;
   const isLastStep = step === TOTAL_STEPS;
   const meta = STEP_META[step - 1];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#080808",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px",
-        fontFamily: "'Inter', sans-serif",
-        position: "relative",
-      }}
-    >
-      {/* Background glows */}
-      <div
-        style={{
-          position: "fixed",
-          top: -200,
-          right: -200,
-          width: 600,
-          height: 600,
-          background: "radial-gradient(circle, rgba(20,184,166,0.07) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "fixed",
-          bottom: -150,
-          left: -150,
-          width: 500,
-          height: 500,
-          background: "radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }}
-      />
-
+    <div style={{
+      minHeight: "100vh", background: "var(--bg)",
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center", padding: "24px",
+    }}>
       {/* Card */}
-      <div
-        style={{
-          width: "100%",
-          maxWidth: step === 2 ? 640 : 480,
-          background: "var(--bg-card, #111)",
-          border: "1px solid var(--border, rgba(255,255,255,0.08))",
-          borderRadius: "var(--radius-xl, 20px)",
-          padding: "40px 36px",
-          boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
-          position: "relative",
-          zIndex: 1,
-          transition: "max-width 0.3s ease",
-        }}
-      >
-        {/* Progress dots */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            marginBottom: 32,
-          }}
-          role="progressbar"
-          aria-valuenow={step}
-          aria-valuemin={1}
-          aria-valuemax={TOTAL_STEPS}
-          aria-label={`Step ${step} of ${TOTAL_STEPS}`}
-        >
+      <div style={{
+        width: "100%", maxWidth: step === 2 ? 620 : 460,
+        background: "var(--bg-card)", border: "1px solid var(--border)",
+        borderRadius: 10, padding: "32px 28px",
+        transition: "max-width 0.3s ease",
+      }}>
+        {/* Progress */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 28, justifyContent: "center" }}>
           {Array.from({ length: TOTAL_STEPS }, (_, i) => {
-            const dotStep = i + 1;
-            const isActive = dotStep === step;
-            const isDone = dotStep < step;
+            const s = i + 1;
+            const active = s === step;
+            const done = s < step;
             return (
-              <div
-                key={dotStep}
-                style={{
-                  width: isActive ? 24 : 8,
-                  height: 8,
-                  borderRadius: 999,
-                  background: isActive || isDone ? "#14b8a6" : "rgba(255,255,255,0.15)",
-                  transition: "all 0.3s ease",
-                }}
-              />
+              <div key={s} style={{
+                width: active ? 20 : 6, height: 6, borderRadius: 99,
+                background: active || done ? "#14b8a6" : "var(--border)",
+                transition: "all 0.3s ease",
+              }} />
             );
           })}
         </div>
 
         {/* Step counter */}
-        <p
-          style={{
-            fontSize: 12,
-            fontWeight: 500,
-            color: "#14b8a6",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            marginBottom: 8,
-            textAlign: "center",
-          }}
-        >
+        <p style={{ fontSize: 10, fontWeight: 700, color: "#14b8a6", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8, textAlign: "center" }}>
           Step {step} of {TOTAL_STEPS}
         </p>
 
-        {/* Title */}
-        <h1
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            color: "#fff",
-            letterSpacing: "-0.02em",
-            marginBottom: 6,
-            textAlign: "center",
-          }}
-        >
+        <h1 style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em", marginBottom: 5, textAlign: "center" }}>
           {meta.title}
         </h1>
-        <p
-          style={{
-            fontSize: 14,
-            color: "rgba(255,255,255,0.45)",
-            textAlign: "center",
-            marginBottom: 28,
-          }}
-        >
+        <p style={{ fontSize: 12, color: "var(--text-3)", textAlign: "center", marginBottom: 24, lineHeight: 1.5 }}>
           {meta.subtitle}
         </p>
 
-        {/* ── Step content ── */}
-
+        {/* Step content */}
         {step === 1 && (
-          <StepName name={name} onChange={setName} />
-        )}
-
-        {step === 2 && (
-          <NichePicker value={niche} onChange={setNiche} />
-        )}
-
-        {step === 3 && (
-          <SubNicheInput niche={niche} value={subNiche} onChange={setSubNiche} />
-        )}
-
-        {step === 4 && (
-          <StepPlatforms selected={platforms} onToggle={togglePlatform} />
-        )}
-
-        {/* Error */}
-        {error && (
-          <div
-            style={{
-              marginTop: 16,
-              padding: "10px 14px",
-              borderRadius: 8,
-              background: "rgba(220,38,38,0.1)",
-              border: "1px solid rgba(220,38,38,0.25)",
-            }}
-          >
-            <p style={{ fontSize: 13, color: "#f87171", margin: 0 }}>{error}</p>
+          <div>
+            <label htmlFor="onboarding-name" style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-2)", marginBottom: 7 }}>
+              Display name
+            </label>
+            <input
+              id="onboarding-name" type="text" value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Alex Rivera" autoFocus maxLength={80}
+              style={{
+                width: "100%", padding: "9px 12px", fontSize: 13,
+                borderRadius: 6, border: "1px solid var(--border)",
+                background: "var(--bg-input)", color: "var(--text)",
+                outline: "none", transition: "border-color 0.15s ease",
+                boxSizing: "border-box",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "#14b8a6"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
+            />
           </div>
         )}
 
-        {/* Navigation buttons */}
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            marginTop: 28,
-            justifyContent: "flex-end",
-          }}
-        >
-          {/* Skip button — only on skippable steps */}
+        {step === 2 && <NichePicker value={niche} onChange={setNiche} />}
+        {step === 3 && <SubNicheInput niche={niche} value={subNiche} onChange={setSubNiche} />}
+
+        {step === 4 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }} role="group">
+            {PLATFORMS.map(({ id, label }) => {
+              const active = platforms.includes(id);
+              return (
+                <button
+                  key={id} type="button"
+                  onClick={() => setPlatforms((prev) => prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id])}
+                  aria-pressed={active}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "11px 14px", borderRadius: 6,
+                    border: `1px solid ${active ? "rgba(20,184,166,0.4)" : "var(--border)"}`,
+                    background: active ? "rgba(20,184,166,0.06)" : "var(--bg-subtle)",
+                    color: active ? "#14b8a6" : "var(--text-2)",
+                    cursor: "pointer", textAlign: "left",
+                    transition: "all 0.15s ease", width: "100%",
+                  }}
+                >
+                  <span style={{ fontSize: 13, fontWeight: active ? 600 : 500, flex: 1 }}>{label}</span>
+                  {active && (
+                    <span style={{
+                      width: 16, height: 16, borderRadius: "50%",
+                      background: "#14b8a6", display: "flex",
+                      alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {error && (
+          <div style={{ marginTop: 14, padding: "8px 12px", borderRadius: 6, background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.2)" }}>
+            <p style={{ fontSize: 12, color: "var(--error)", margin: 0 }}>{error}</p>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div style={{ display: "flex", gap: 8, marginTop: 24, justifyContent: "flex-end" }}>
           {isSkippable && !isLastStep && (
             <button
-              type="button"
-              onClick={handleSkip}
+              type="button" onClick={() => setStep((s) => s + 1)}
               style={{
-                padding: "11px 20px",
-                fontSize: 14,
-                fontWeight: 500,
-                borderRadius: 8,
-                border: "1px solid rgba(255,255,255,0.12)",
-                background: "transparent",
-                color: "rgba(255,255,255,0.45)",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.7)";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.25)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.45)";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+                padding: "9px 18px", fontSize: 13, fontWeight: 500,
+                borderRadius: 6, border: "1px solid var(--border)",
+                background: "transparent", color: "var(--text-3)", cursor: "pointer",
               }}
             >
               Skip
             </button>
           )}
 
-          {/* Next / Finish button */}
           {isLastStep ? (
             <button
-              type="button"
-              onClick={handleFinish}
-              disabled={submitting}
+              type="button" onClick={handleFinish} disabled={submitting}
               style={{
-                flex: 1,
-                padding: "12px 0",
-                fontSize: 14,
-                fontWeight: 600,
-                borderRadius: 8,
-                border: "none",
-                background: submitting
-                  ? "rgba(255,255,255,0.08)"
-                  : "linear-gradient(135deg, #14b8a6, #6366f1)",
-                color: submitting ? "rgba(255,255,255,0.3)" : "#fff",
+                flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600,
+                borderRadius: 6, border: "none",
+                background: submitting ? "var(--bg-subtle)" : "#14b8a6",
+                color: submitting ? "var(--text-3)" : "#fff",
                 cursor: submitting ? "not-allowed" : "pointer",
-                transition: "all 0.2s ease",
-                boxShadow: submitting ? "none" : "0 4px 14px rgba(20,184,166,0.3)",
+                transition: "background 0.15s ease",
               }}
-              onMouseEnter={(e) => {
-                if (!submitting) (e.currentTarget as HTMLButtonElement).style.opacity = "0.9";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-              }}
+              onMouseEnter={(e) => { if (!submitting) (e.currentTarget as HTMLButtonElement).style.background = "#0d9488"; }}
+              onMouseLeave={(e) => { if (!submitting) (e.currentTarget as HTMLButtonElement).style.background = "#14b8a6"; }}
             >
               {submitting ? "Saving…" : "Finish"}
             </button>
           ) : (
             <button
-              type="button"
-              onClick={handleNext}
-              disabled={!canAdvance()}
+              type="button" onClick={() => setStep((s) => s + 1)} disabled={!canAdvance()}
               style={{
                 flex: isSkippable ? undefined : 1,
-                padding: "12px 28px",
-                fontSize: 14,
-                fontWeight: 600,
-                borderRadius: 8,
-                border: "none",
-                background: canAdvance()
-                  ? "linear-gradient(135deg, #14b8a6, #6366f1)"
-                  : "rgba(255,255,255,0.08)",
-                color: canAdvance() ? "#fff" : "rgba(255,255,255,0.3)",
+                padding: "10px 24px", fontSize: 13, fontWeight: 600,
+                borderRadius: 6, border: "none",
+                background: canAdvance() ? "#14b8a6" : "var(--bg-subtle)",
+                color: canAdvance() ? "#fff" : "var(--text-4)",
                 cursor: canAdvance() ? "pointer" : "not-allowed",
-                transition: "all 0.2s ease",
-                boxShadow: canAdvance() ? "0 4px 14px rgba(20,184,166,0.3)" : "none",
+                transition: "background 0.15s ease",
               }}
-              onMouseEnter={(e) => {
-                if (canAdvance()) (e.currentTarget as HTMLButtonElement).style.opacity = "0.9";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-              }}
+              onMouseEnter={(e) => { if (canAdvance()) (e.currentTarget as HTMLButtonElement).style.background = "#0d9488"; }}
+              onMouseLeave={(e) => { if (canAdvance()) (e.currentTarget as HTMLButtonElement).style.background = "#14b8a6"; }}
             >
               Next →
             </button>
           )}
         </div>
 
-        {/* Skip on last step */}
         {isLastStep && isSkippable && (
-          <div style={{ textAlign: "center", marginTop: 12 }}>
+          <div style={{ textAlign: "center", marginTop: 10 }}>
             <button
-              type="button"
-              onClick={handleFinish}
-              disabled={submitting}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: submitting ? "not-allowed" : "pointer",
-                color: "rgba(255,255,255,0.35)",
-                fontSize: 13,
-                padding: 0,
-              }}
+              type="button" onClick={handleFinish} disabled={submitting}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-4)", fontSize: 12, padding: 0 }}
             >
               Skip for now
             </button>
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-// ── Step 1: Display Name ──────────────────────────────────────────────────────
-
-interface StepNameProps {
-  name: string;
-  onChange: (v: string) => void;
-}
-
-function StepName({ name, onChange }: StepNameProps) {
-  return (
-    <div>
-      <label
-        htmlFor="onboarding-name"
-        style={{
-          display: "block",
-          fontSize: 13,
-          fontWeight: 500,
-          color: "rgba(255,255,255,0.6)",
-          marginBottom: 8,
-        }}
-      >
-        Display name
-      </label>
-      <input
-        id="onboarding-name"
-        type="text"
-        value={name}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="e.g. Alex Rivera"
-        autoFocus
-        maxLength={80}
-        style={{
-          width: "100%",
-          padding: "11px 14px",
-          fontSize: 15,
-          borderRadius: 8,
-          border: "1px solid rgba(255,255,255,0.12)",
-          background: "rgba(255,255,255,0.05)",
-          color: "#fff",
-          outline: "none",
-          transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-          boxSizing: "border-box",
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.borderColor = "#14b8a6";
-          e.currentTarget.style.boxShadow = "0 0 0 3px rgba(20,184,166,0.15)";
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-          e.currentTarget.style.boxShadow = "none";
-        }}
-      />
-    </div>
-  );
-}
-
-// ── Step 4: Preferred Platforms ───────────────────────────────────────────────
-
-interface StepPlatformsProps {
-  selected: Platform[];
-  onToggle: (id: Platform) => void;
-}
-
-function StepPlatforms({ selected, onToggle }: StepPlatformsProps) {
-  return (
-    <div
-      style={{ display: "flex", flexDirection: "column", gap: 10 }}
-      role="group"
-      aria-label="Platform selection"
-    >
-      {PLATFORMS.map(({ id, label, icon }) => {
-        const isSelected = selected.includes(id);
-        return (
-          <button
-            key={id}
-            type="button"
-            onClick={() => onToggle(id)}
-            aria-pressed={isSelected}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              padding: "14px 18px",
-              borderRadius: 10,
-              border: isSelected
-                ? "1px solid #14b8a6"
-                : "1px solid rgba(255,255,255,0.1)",
-              background: isSelected
-                ? "rgba(20,184,166,0.08)"
-                : "rgba(255,255,255,0.03)",
-              color: isSelected ? "#14b8a6" : "rgba(255,255,255,0.6)",
-              cursor: "pointer",
-              textAlign: "left",
-              transition: "all 0.2s ease",
-              width: "100%",
-            }}
-            onMouseEnter={(e) => {
-              if (!isSelected) {
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.borderColor = "rgba(255,255,255,0.2)";
-                el.style.background = "rgba(255,255,255,0.06)";
-                el.style.color = "rgba(255,255,255,0.8)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isSelected) {
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.borderColor = "rgba(255,255,255,0.1)";
-                el.style.background = "rgba(255,255,255,0.03)";
-                el.style.color = "rgba(255,255,255,0.6)";
-              }
-            }}
-          >
-            <span style={{ fontSize: 22, lineHeight: 1 }}>{icon}</span>
-            <span style={{ fontSize: 14, fontWeight: isSelected ? 600 : 500 }}>
-              {label}
-            </span>
-            {isSelected && (
-              <span
-                style={{
-                  marginLeft: "auto",
-                  width: 20,
-                  height: 20,
-                  borderRadius: "50%",
-                  background: "#14b8a6",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 11,
-                  color: "#fff",
-                  fontWeight: 700,
-                  flexShrink: 0,
-                }}
-              >
-                ✓
-              </span>
-            )}
-          </button>
-        );
-      })}
     </div>
   );
 }
