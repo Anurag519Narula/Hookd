@@ -2,6 +2,18 @@ import fetch from "node-fetch";
 import Groq from "groq-sdk";
 import { getCached, setCached } from "./dbCache";
 
+// ── Timeout wrapper for all external fetch calls ──────────────────────────────
+async function fetchWithTimeout(url: string, options: Parameters<typeof fetch>[1] = {}, timeoutMs = 15000): Promise<ReturnType<typeof fetch>> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal as any });
+    return res;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 export interface YouTubeResult {
@@ -123,13 +135,13 @@ export async function fetchTopInstagramHashtags(keyword: string): Promise<
 
   try {
     const url = `https://instagram-hashtags.p.rapidapi.com/?keyword=${encodeURIComponent(normalised)}`;
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       headers: {
         "x-rapidapi-key": RAPIDAPI_KEY,
         "x-rapidapi-host": "instagram-hashtags.p.rapidapi.com",
         "Content-Type": "application/json",
       },
-    });
+    }, 10000);
     if (!res.ok) return [];
 
     const data = (await res.json()) as any;
@@ -177,13 +189,13 @@ export async function fetchTopInstagramHashtagsGlobal(page = 0): Promise<
 
   try {
     const url = `https://top-instagram-hashtag.p.rapidapi.com/new-hashtags?page=${page}`;
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       headers: {
         "x-rapidapi-key": RAPIDAPI_KEY,
         "x-rapidapi-host": "top-instagram-hashtag.p.rapidapi.com",
         "Content-Type": "application/json",
       },
-    });
+    }, 10000);
     if (!res.ok) return [];
 
     const data = (await res.json()) as any;
@@ -234,7 +246,7 @@ async function searchYouTube(query: string, maxResults = 8): Promise<YouTubeResu
       `?part=snippet&q=${encodeURIComponent(query)}&type=video` +
       `&order=relevance&maxResults=${maxResults}&key=${apiKey}`;
 
-    const searchRes = await fetch(searchUrl);
+    const searchRes = await fetchWithTimeout(searchUrl, {}, 12000);
     if (!searchRes.ok) return [];
 
     const searchData = (await searchRes.json()) as any;
@@ -250,7 +262,7 @@ async function searchYouTube(query: string, maxResults = 8): Promise<YouTubeResu
       `https://www.googleapis.com/youtube/v3/videos` +
       `?part=statistics,snippet&id=${videoIds}&key=${apiKey}`;
 
-    const statsRes = await fetch(statsUrl);
+    const statsRes = await fetchWithTimeout(statsUrl, {}, 12000);
     if (!statsRes.ok) return [];
 
     const statsData = (await statsRes.json()) as any;

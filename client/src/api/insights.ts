@@ -11,6 +11,16 @@ export interface InsightResponse {
     relatedQueries: string[];
   };
   cached: boolean;
+  remaining?: number;
+  limit?: number;
+}
+
+// Thrown when the user has hit their daily validation limit
+export class QuotaExceededError extends Error {
+  constructor(public readonly serverMessage: string) {
+    super(serverMessage);
+    this.name = "QuotaExceededError";
+  }
 }
 
 export async function fetchInsights(idea: string, niche: string, ideaId?: string): Promise<InsightResponse> {
@@ -20,14 +30,11 @@ export async function fetchInsights(idea: string, niche: string, ideaId?: string
     headers: { ...authHeaders() },
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { error?: string }).error ?? "Failed to fetch insights");
+    const err = await res.json().catch(() => ({})) as { error?: string };
+    if (res.status === 429) {
+      throw new QuotaExceededError(err.error ?? "Daily limit reached.");
+    }
+    throw new Error(err.error ?? "Failed to fetch insights");
   }
-  const data = await res.json() as InsightResponse;
-  if (data.cached) {
-    console.log("💾 Cache hit: Server returned cached insights for idea", ideaId);
-  } else {
-    console.log("🔄 Cache miss: Generated fresh insights for idea", ideaId);
-  }
-  return data;
+  return res.json() as Promise<InsightResponse>;
 }

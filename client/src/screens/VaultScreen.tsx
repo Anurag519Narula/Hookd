@@ -97,14 +97,25 @@ function EmptyState({ onCaptureFocus }: { onCaptureFocus?: () => void }) {
 }
 
 // ── Main screen ───────────────────────────────────────────────────────────────
+const PAGE_SIZE = 50;
+
 export function VaultScreen() {
   const vault = useVault();
   const [filter, setFilter] = useState<FilterChip>("All");
   const [sort, setSort] = useState<SortOption>("Newest");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const filteredAndSorted = useMemo(() => {
     return applySort(applyFilter(vault.ideas, filter), sort);
   }, [vault.ideas, filter, sort]);
+
+  // Reset pagination when filter/sort changes
+  const prevFilter = useMemo(() => filter, [filter]);
+  const prevSort = useMemo(() => sort, [sort]);
+  useMemo(() => { setVisibleCount(PAGE_SIZE); }, [prevFilter, prevSort]);
+
+  const visibleIdeas = filteredAndSorted.slice(0, visibleCount);
+  const hasMore = filteredAndSorted.length > visibleCount;
 
   async function handleCapture(text: string) {
     const idea = await createIdea(text);
@@ -260,17 +271,44 @@ export function VaultScreen() {
 
         {isEmpty && <EmptyState onCaptureFocus={handleFocusCapture} />}
 
-        {!vault.loading && !vault.error && filteredAndSorted.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }} className="vault-grid">
-            {filteredAndSorted.map((idea) => (
-              <IdeaCard
-                key={idea.id} idea={idea}
-                onMarkUsed={handleMarkUsed}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+        {!vault.loading && !vault.error && visibleIdeas.length > 0 && (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }} className="vault-grid">
+              {visibleIdeas.map((idea) => (
+                <IdeaCard
+                  key={idea.id} idea={idea}
+                  onMarkUsed={handleMarkUsed}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+            {hasMore && (
+              <div style={{ textAlign: "center", marginTop: 20 }}>
+                <button
+                  onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                  style={{
+                    padding: "8px 20px", fontSize: 12, fontWeight: 600,
+                    borderRadius: 6, border: "1px solid var(--border)",
+                    background: "transparent", color: "var(--text-2)",
+                    cursor: "pointer", transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    const b = e.currentTarget as HTMLButtonElement;
+                    b.style.borderColor = "#14b8a6";
+                    b.style.color = "#14b8a6";
+                  }}
+                  onMouseLeave={(e) => {
+                    const b = e.currentTarget as HTMLButtonElement;
+                    b.style.borderColor = "var(--border)";
+                    b.style.color = "var(--text-2)";
+                  }}
+                >
+                  Load more ({filteredAndSorted.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {!vault.loading && !vault.error && vault.ideas.length > 0 && filteredAndSorted.length === 0 && (

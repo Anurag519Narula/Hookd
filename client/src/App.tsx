@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { HomeScreen } from "./screens/HomeScreen";
 import { AmplifyScreen } from "./screens/AmplifyScreen";
 import { VaultScreen } from "./screens/VaultScreen";
@@ -10,6 +11,7 @@ import { AuthScreen } from "./screens/AuthScreen";
 import { OnboardingScreen } from "./screens/OnboardingScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { StudioScreen } from "./screens/StudioScreen";
+import { NotFoundScreen } from "./screens/NotFoundScreen";
 
 // ── Theme context ──────────────────────────────────────────────────────────────
 export const ThemeContext = createContext<{ dark: boolean; toggle: () => void }>({
@@ -179,8 +181,8 @@ function AppInner() {
         }
       />
 
-      {/* Catch-all */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Catch-all → 404 */}
+      <Route path="*" element={<NotFoundScreen />} />
     </Routes>
   );
 }
@@ -201,7 +203,9 @@ function App() {
   return (
     <ThemeContext.Provider value={{ dark, toggle: () => setDark((d) => !d) }}>
       <AuthProvider>
-        <AppInner />
+        <ErrorBoundary>
+          <AppInner />
+        </ErrorBoundary>
       </AuthProvider>
     </ThemeContext.Provider>
   );

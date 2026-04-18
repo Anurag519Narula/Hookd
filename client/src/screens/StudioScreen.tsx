@@ -5,7 +5,7 @@ import { Navbar } from "../components/Navbar";
 import { MarketResearchPanel } from "../components/MarketResearchPanel";
 import { useCreatorProfile } from "../hooks/useCreatorProfile";
 import { getIdea, createIdea } from "../api/ideas";
-import { fetchInsights, type InsightResponse } from "../api/insights";
+import { fetchInsights, type InsightResponse, QuotaExceededError } from "../api/insights";
 
 // ── Section header — shared design language ───────────────────────────────────
 function SectionHeader({ label, status }: { label: string; status?: "active" | "done" | "idle" }) {
@@ -40,6 +40,7 @@ export function StudioScreen() {
   const [insights, setInsights] = useState<InsightResponse | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [insightsFetched, setInsightsFetched] = useState(false);
+  const [quotaError, setQuotaError] = useState<string | null>(null);
 
   const { profile } = useCreatorProfile();
   const savedIdeaIdRef = React.useRef<string | null>(null);
@@ -63,6 +64,7 @@ export function StudioScreen() {
     setInsights(null);
     setInsightsFetched(false);
     setInsightsOpen(false);
+    setQuotaError(null);
     if (!ideaId) {
       createIdea(idea.trim())
         .then((saved) => { savedIdeaIdRef.current = saved.id; })
@@ -75,7 +77,11 @@ export function StudioScreen() {
         setInsightsFetched(true);
         setInsightsOpen(true);
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (err instanceof QuotaExceededError) {
+          setQuotaError(err.serverMessage);
+        }
+      })
       .finally(() => setInsightsLoading(false));
   }
 
@@ -206,6 +212,24 @@ export function StudioScreen() {
               </button>
             </div>
           </div>
+
+          {/* Quota error */}
+          {quotaError && (
+            <div style={{
+              marginTop: 10, padding: "12px 16px",
+              background: "rgba(245,158,11,0.06)",
+              border: "1px solid rgba(245,158,11,0.25)",
+              borderRadius: 6,
+              display: "flex", alignItems: "flex-start", gap: 10,
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <p style={{ fontSize: 13, color: "#f59e0b", margin: 0, lineHeight: 1.6 }}>
+                {quotaError}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* ── STAGE 2: Validation report ── */}

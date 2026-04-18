@@ -40,7 +40,7 @@ router.post("/signup", async (req: Request, res: Response) => {
     );
 
     const user = result.rows[0];
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: "30d" });
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
 
     res.status(201).json({ token, user: { ...user, onboarding_complete: false } });
   } catch (err) {
@@ -74,7 +74,7 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: "30d" });
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
 
     const { password_hash: _ph, ...safeUser } = user;
     res.json({ token, user: safeUser });
