@@ -35,7 +35,7 @@ function ScoreDot({ score }: { score: "low" | "medium" | "high" | null }) {
           position: "absolute", bottom: "calc(100% + 6px)", left: "50%",
           transform: "translateX(-50%)",
           background: "var(--text)", color: "var(--bg-card)",
-          fontSize: 11, fontWeight: 500, padding: "3px 8px",
+          fontSize: 13, fontWeight: 500, padding: "3px 8px",
           borderRadius: 4, whiteSpace: "nowrap", pointerEvents: "none", zIndex: 10,
         }}>
           {label} potential
@@ -104,7 +104,7 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
           <ScoreDot score={idea.potential_score} />
           {idea.format_type && (
             <span style={{
-              fontSize: 11, color: "var(--text-3)", fontWeight: 500,
+              fontSize: 13, color: "var(--text-3)", fontWeight: 500,
               textTransform: "capitalize", overflow: "hidden",
               textOverflow: "ellipsis", whiteSpace: "nowrap",
             }}>
@@ -113,7 +113,7 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
           )}
           {isUsed && (
             <span style={{
-              fontSize: 10, fontWeight: 600, color: "var(--text-4)",
+              fontSize: 12, fontWeight: 600, color: "var(--text-4)",
               background: "var(--bg-subtle)", border: "1px solid var(--border)",
               borderRadius: 3, padding: "1px 6px", whiteSpace: "nowrap",
               letterSpacing: "0.04em", textTransform: "uppercase",
@@ -156,7 +156,7 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
                   style={{
                     display: "block", width: "100%", textAlign: "left",
                     background: "none", border: "none",
-                    padding: "8px 12px", fontSize: 12, fontWeight: 500,
+                    padding: "8px 12px", fontSize: 14, fontWeight: 500,
                     color: danger ? "var(--error)" : "var(--text-2)",
                     cursor: "pointer", transition: "background 0.15s ease",
                   }}
@@ -185,14 +185,14 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
             style={{
               width: "100%", resize: "none",
               border: "1px solid #14b8a6", borderRadius: 6,
-              padding: "8px 10px", fontSize: 13, lineHeight: 1.6,
+              padding: "8px 10px", fontSize: 15, lineHeight: 1.6,
               color: "var(--text)", background: "var(--bg-input)",
               outline: "none", fontFamily: "inherit", minHeight: 64,
               boxSizing: "border-box",
             }}
           />
         ) : (
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.65, color: "var(--text)", wordBreak: "break-word" }}>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "var(--text)", wordBreak: "break-word" }}>
             {idea.raw_text}
           </p>
         )}
@@ -203,7 +203,7 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: "0 14px 10px" }}>
           {idea.tags.slice(0, 3).map((tag) => (
             <span key={tag} style={{
-              display: "inline-block", fontSize: 11, fontWeight: 500,
+              display: "inline-block", fontSize: 13, fontWeight: 500,
               color: "var(--text-3)", background: "var(--bg-subtle)",
               border: "1px solid var(--border)", borderRadius: 3,
               padding: "2px 7px", lineHeight: 1.4,
@@ -227,7 +227,7 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
             <button
               onClick={() => { setEditText(idea.raw_text); setEditMode(false); }}
               style={{
-                padding: "5px 12px", fontSize: 12, fontWeight: 500,
+                padding: "5px 12px", fontSize: 14, fontWeight: 500,
                 borderRadius: 4, border: "1px solid var(--border)",
                 background: "transparent", color: "var(--text-2)", cursor: "pointer",
               }}
@@ -237,7 +237,7 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
             <button
               onClick={() => { const t = editText.trim(); if (t && t !== idea.raw_text) onEdit(idea.id, t); setEditMode(false); }}
               style={{
-                padding: "5px 12px", fontSize: 12, fontWeight: 600,
+                padding: "5px 12px", fontSize: 14, fontWeight: 600,
                 borderRadius: 4, border: "none",
                 background: "#14b8a6", color: "#fff", cursor: "pointer",
               }}
@@ -250,7 +250,7 @@ export function IdeaCard({ idea, onMarkUsed, onEdit, onDelete }: IdeaCardProps) 
             onClick={() => navigate(`/studio?ideaId=${idea.id}`)}
             style={{
               display: "inline-flex", alignItems: "center", gap: 5,
-              padding: "5px 12px", fontSize: 12, fontWeight: 600,
+              padding: "5px 12px", fontSize: 14, fontWeight: 600,
               borderRadius: 4, border: "1px solid var(--border)",
               background: "transparent", color: "var(--text-2)",
               cursor: "pointer", transition: "all 0.15s ease",

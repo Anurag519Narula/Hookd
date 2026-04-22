@@ -35,7 +35,7 @@ export function LengthSelector({ value, onChange }: LengthSelectorProps) {
               padding: "4px 12px", borderRadius: 4, border: "none",
               background: active ? "var(--bg-card)" : "transparent",
               color: active ? "var(--text)" : "var(--text-3)",
-              fontSize: 12, fontWeight: active ? 600 : 400,
+              fontSize: 14, fontWeight: active ? 600 : 400,
               cursor: "pointer", transition: "all 0.15s ease",
             }}
           >

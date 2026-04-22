@@ -111,7 +111,7 @@ export function CaptureBar({ onSubmit, autoFocus }: CaptureBarProps) {
         style={{
           flex: 1, resize: "none", border: "none", outline: "none",
           background: "transparent", color: "var(--text)",
-          fontSize: 13, lineHeight: `${LINE_HEIGHT}px`,
+          fontSize: 15, lineHeight: `${LINE_HEIGHT}px`,
           padding: "5px 0", overflowY: "hidden",
           minHeight: LINE_HEIGHT + 10, fontFamily: "inherit",
         }}
@@ -164,7 +164,7 @@ export function CaptureBar({ onSubmit, autoFocus }: CaptureBarProps) {
           height: 30, padding: "0 12px", borderRadius: 4, border: "none",
           background: text.trim() && !submitting ? "#14b8a6" : "var(--bg-subtle)",
           color: text.trim() && !submitting ? "#fff" : "var(--text-4)",
-          fontSize: 12, fontWeight: 600,
+          fontSize: 14, fontWeight: 600,
           cursor: text.trim() && !submitting ? "pointer" : "default",
           flexShrink: 0, transition: "all 0.15s ease", whiteSpace: "nowrap",
         }}

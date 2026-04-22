@@ -45,7 +45,7 @@ function PlatformCaption({
     >
       <p
         style={{
-          fontSize: 14,
+          fontSize: 16,
           color: "var(--text)",
           lineHeight: 1.6,
           whiteSpace: "pre-wrap",
@@ -60,7 +60,7 @@ function PlatformCaption({
             <span
               key={tag}
               style={{
-                fontSize: 12,
+                fontSize: 14,
                 color: "var(--accent-text)",
                 background: "var(--accent-subtle)",
                 padding: "2px 8px",
@@ -83,7 +83,7 @@ function PlatformCaption({
           border: "1px solid var(--border)",
           background: copied ? "var(--accent-subtle)" : "var(--bg-card)",
           color: copied ? "var(--accent-text)" : "var(--text-2)",
-          fontSize: 12,
+          fontSize: 14,
           fontWeight: 500,
           cursor: "pointer",
           transition: "all var(--transition)",
@@ -118,7 +118,7 @@ export function CaptionResultCard({ result }: CaptionResultCardProps) {
             padding: "8px 16px",
             background: "var(--bg-subtle)",
             borderBottom: "1px solid var(--border)",
-            fontSize: 12,
+            fontSize: 14,
             color: "var(--text-3)",
             display: "flex",
             alignItems: "center",
@@ -153,7 +153,7 @@ export function CaptionResultCard({ result }: CaptionResultCardProps) {
                 gap: 8,
               }}>
                 <span style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   fontWeight: 700,
                   letterSpacing: "0.07em",
                   textTransform: "uppercase",
@@ -197,7 +197,7 @@ export function CaptionResultCard({ result }: CaptionResultCardProps) {
               justifyContent: "space-between",
               cursor: "pointer",
               color: "var(--text-2)",
-              fontSize: 13,
+              fontSize: 15,
               fontWeight: 500,
             }}
             aria-expanded={researchOpen}
@@ -207,7 +207,7 @@ export function CaptionResultCard({ result }: CaptionResultCardProps) {
               style={{
                 transform: researchOpen ? "rotate(180deg)" : "rotate(0deg)",
                 transition: "transform var(--transition)",
-                fontSize: 10,
+                fontSize: 12,
                 color: "var(--text-3)",
               }}
               aria-hidden="true"
@@ -219,7 +219,7 @@ export function CaptionResultCard({ result }: CaptionResultCardProps) {
             <div
               style={{
                 padding: "0 16px 16px",
-                fontSize: 13,
+                fontSize: 15,
                 color: "var(--text-2)",
                 lineHeight: 1.6,
                 whiteSpace: "pre-wrap",

@@ -33,7 +33,7 @@ export function PlatformToggle({ selected, onChange }: PlatformToggleProps) {
                 border: `1px solid ${active ? "rgba(20,184,166,0.5)" : "var(--border)"}`,
                 background: active ? "rgba(20,184,166,0.1)" : "transparent",
                 color: active ? "#14b8a6" : "var(--text-3)",
-                fontSize: 12, fontWeight: active ? 600 : 500,
+                fontSize: 14, fontWeight: active ? 600 : 500,
                 cursor: "pointer", transition: "all 0.15s ease",
               }}
               onMouseEnter={(e) => {
@@ -57,7 +57,7 @@ export function PlatformToggle({ selected, onChange }: PlatformToggleProps) {
         })}
       </div>
       {selected.length === 0 && (
-        <p style={{ marginTop: 5, fontSize: 11, color: "var(--error)" }} role="alert">
+        <p style={{ marginTop: 5, fontSize: 13, color: "var(--error)" }} role="alert">
           Select at least one platform to generate captions.
         </p>
       )}

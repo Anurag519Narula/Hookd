@@ -27,7 +27,7 @@ function SectionDivider({ label }: { label: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "20px 0 14px" }}>
       <span style={{
-        fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
+        fontSize: 12, fontWeight: 700, letterSpacing: "0.12em",
         textTransform: "uppercase", color: "var(--text-3)",
         whiteSpace: "nowrap",
       }}>
@@ -105,11 +105,11 @@ export function ScriptDraft({
         background: "var(--bg-subtle)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em" }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em" }}>
             Script Draft
           </span>
           <span style={{
-            fontSize: 11, color: "var(--text-3)",
+            fontSize: 13, color: "var(--text-3)",
             background: "var(--bg-hover)",
             border: "1px solid var(--border)",
             borderRadius: 4,
@@ -119,7 +119,7 @@ export function ScriptDraft({
             {wordCount}w
           </span>
           <span style={{
-            fontSize: 11, color: "#14b8a6",
+            fontSize: 13, color: "#14b8a6",
             background: "rgba(20,184,166,0.08)",
             border: "1px solid rgba(20,184,166,0.2)",
             borderRadius: 4,
@@ -134,7 +134,7 @@ export function ScriptDraft({
             onClick={() => copyHook(script.selected_hook.hook_text)}
             style={{
               display: "inline-flex", alignItems: "center", gap: 5,
-              padding: "5px 10px", fontSize: 11, fontWeight: 600,
+              padding: "5px 10px", fontSize: 13, fontWeight: 600,
               letterSpacing: "0.02em",
               borderRadius: 4,
               border: `1px solid ${copiedHook ? "rgba(20,184,166,0.4)" : "var(--border)"}`,
@@ -149,7 +149,7 @@ export function ScriptDraft({
             onClick={() => copyFull(formatFullScript(script))}
             style={{
               display: "inline-flex", alignItems: "center", gap: 5,
-              padding: "5px 10px", fontSize: 11, fontWeight: 600,
+              padding: "5px 10px", fontSize: 13, fontWeight: 600,
               letterSpacing: "0.02em",
               borderRadius: 4,
               border: `1px solid ${copiedFull ? "rgba(20,184,166,0.4)" : "var(--border)"}`,
@@ -201,7 +201,7 @@ export function ScriptDraft({
                 justifyContent: "center",
               }}>
                 <span style={{
-                  fontSize: 10, fontWeight: 700, color: "var(--text-3)",
+                  fontSize: 12, fontWeight: 700, color: "var(--text-3)",
                   fontVariantNumeric: "tabular-nums",
                   letterSpacing: "0.02em",
                   paddingTop: 2,
@@ -211,7 +211,7 @@ export function ScriptDraft({
               </div>
               <div style={{ padding: "12px 14px" }}>
                 <p style={{
-                  fontSize: 13, lineHeight: 1.7, color: "var(--text-2)",
+                  fontSize: 15, lineHeight: 1.7, color: "var(--text-2)",
                   margin: 0,
                 }}>
                   {beat.text}
@@ -224,7 +224,7 @@ export function ScriptDraft({
         {/* CTA */}
         <SectionDivider label="Call to Action" />
         <p style={{
-          fontSize: 13, lineHeight: 1.7, color: "var(--text-2)",
+          fontSize: 15, lineHeight: 1.7, color: "var(--text-2)",
           margin: 0, fontStyle: "italic",
           paddingLeft: 12,
           borderLeft: "2px solid var(--border)",
@@ -244,7 +244,7 @@ export function ScriptDraft({
                 width: "100%", resize: "vertical",
                 border: "1px solid var(--border)",
                 borderRadius: 6, padding: "10px 12px",
-                fontSize: 13, lineHeight: 1.6,
+                fontSize: 15, lineHeight: 1.6,
                 color: "var(--text)", background: "var(--bg-input)",
                 outline: "none", fontFamily: "inherit",
                 transition: "border-color 0.15s ease",
@@ -263,7 +263,7 @@ export function ScriptDraft({
                   disabled={isRegenerating}
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "8px 14px", fontSize: 12, fontWeight: 600,
+                    padding: "8px 14px", fontSize: 14, fontWeight: 600,
                     borderRadius: 4, border: "none",
                     background: isRegenerating ? "var(--bg-hover)" : "#14b8a6",
                     color: isRegenerating ? "var(--text-3)" : "#fff",
@@ -277,7 +277,7 @@ export function ScriptDraft({
                   onClick={() => { setFeedbackOpen(false); setFeedback(""); }}
                   disabled={isRegenerating}
                   style={{
-                    padding: "8px 12px", fontSize: 12, fontWeight: 500,
+                    padding: "8px 12px", fontSize: 14, fontWeight: 500,
                     borderRadius: 4, border: "1px solid var(--border)",
                     background: "transparent", color: "var(--text-3)",
                     cursor: "pointer", transition: "all 0.15s ease",
@@ -292,7 +292,7 @@ export function ScriptDraft({
                 disabled={isRegenerating}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "8px 14px", fontSize: 12, fontWeight: 500,
+                  padding: "8px 14px", fontSize: 14, fontWeight: 500,
                   borderRadius: 4, border: "1px solid var(--border)",
                   background: "transparent", color: "var(--text-2)",
                   cursor: "pointer", transition: "all 0.15s ease",
@@ -317,7 +317,7 @@ export function ScriptDraft({
               disabled={saveLoading || saveDone}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "8px 14px", fontSize: 12, fontWeight: 500,
+                padding: "8px 14px", fontSize: 14, fontWeight: 500,
                 borderRadius: 4,
                 border: `1px solid ${saveDone ? "rgba(20,184,166,0.4)" : "var(--border)"}`,
                 background: saveDone ? "rgba(20,184,166,0.08)" : "transparent",
@@ -347,7 +347,7 @@ export function ScriptDraft({
 
           {saveError && (
             <p style={{
-              fontSize: 12, color: "var(--error)",
+              fontSize: 14, color: "var(--error)",
               background: "rgba(248,113,113,0.06)",
               border: "1px solid rgba(248,113,113,0.2)",
               borderRadius: 6, padding: "6px 10px", margin: 0,

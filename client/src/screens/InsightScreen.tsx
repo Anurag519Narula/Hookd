@@ -10,7 +10,7 @@ import type { Idea } from "../types/index";
 function SectionHeader({ label }: { label: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)" }}>
+      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)" }}>
         {label}
       </span>
       <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
@@ -25,7 +25,7 @@ function ScoreBar({ score }: { score: number }) {
       <div style={{ flex: 1, height: 4, borderRadius: 99, background: "var(--border)", overflow: "hidden" }}>
         <div style={{ width: `${score}%`, height: "100%", background: color, borderRadius: 99, transition: "width 1s ease" }} />
       </div>
-      <span style={{ fontSize: 12, fontWeight: 700, color, minWidth: 32, textAlign: "right" }}>{score}</span>
+      <span style={{ fontSize: 14, fontWeight: 700, color, minWidth: 32, textAlign: "right" }}>{score}</span>
     </div>
   );
 }
@@ -89,14 +89,14 @@ export function InsightScreen() {
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <Navbar />
 
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "32px 24px 80px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 48px 80px" }}>
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
           <button
             onClick={() => navigate("/vault")}
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
-              fontSize: 11, fontWeight: 600, letterSpacing: "0.08em",
+              fontSize: 13, fontWeight: 600, letterSpacing: "0.08em",
               textTransform: "uppercase", color: "var(--text-3)",
               background: "none", border: "none", cursor: "pointer", padding: 0,
               marginBottom: 18, transition: "color 0.15s ease",
@@ -113,13 +113,13 @@ export function InsightScreen() {
           </h1>
           {sources && (
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 11, color: "var(--text-4)" }}>
+              <span style={{ fontSize: 13, color: "var(--text-4)" }}>
                 Based on {sources.youtubeCount} YouTube videos
                 {sources.trendsAvailable ? ` · Trends score: ${sources.trendScore}/100` : ""}
               </span>
               {cached && (
                 <span style={{
-                  fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 3,
+                  fontSize: 12, fontWeight: 600, padding: "2px 7px", borderRadius: 3,
                   background: "rgba(20,184,166,0.08)", color: "#14b8a6",
                   border: "1px solid rgba(20,184,166,0.2)",
                 }}>
@@ -140,7 +140,7 @@ export function InsightScreen() {
               borderRadius: 6,
             }}>
               <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#14b8a6", display: "inline-block", animation: "pulse-glow 1.4s ease-in-out infinite" }} />
-              <p style={{ fontSize: 12, color: "#14b8a6", margin: 0 }}>Pulling real-time data from YouTube…</p>
+              <p style={{ fontSize: 14, color: "#14b8a6", margin: 0 }}>Pulling real-time data from YouTube…</p>
             </div>
             <InsightSkeleton />
           </div>
@@ -149,9 +149,9 @@ export function InsightScreen() {
         {/* Error */}
         {error && (
           <div style={{ background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 8, padding: "20px", textAlign: "center" }}>
-            <p style={{ fontSize: 14, fontWeight: 600, color: "var(--error)", margin: "0 0 6px" }}>Couldn't generate insights</p>
-            <p style={{ fontSize: 12, color: "var(--text-3)", margin: "0 0 14px" }}>{error}</p>
-            <button onClick={() => navigate("/vault")} style={{ padding: "7px 16px", fontSize: 12, fontWeight: 600, borderRadius: 4, border: "1px solid var(--border)", background: "transparent", color: "var(--text-2)", cursor: "pointer" }}>
+            <p style={{ fontSize: 16, fontWeight: 600, color: "var(--error)", margin: "0 0 6px" }}>Couldn't generate insights</p>
+            <p style={{ fontSize: 14, color: "var(--text-3)", margin: "0 0 14px" }}>{error}</p>
+            <button onClick={() => navigate("/vault")} style={{ padding: "7px 16px", fontSize: 14, fontWeight: 600, borderRadius: 4, border: "1px solid var(--border)", background: "transparent", color: "var(--text-2)", cursor: "pointer" }}>
               Back to Vault
             </button>
           </div>
@@ -169,8 +169,8 @@ export function InsightScreen() {
                 background: "var(--bg-card)", border: "1px solid var(--border)",
                 borderLeft: "3px solid #14b8a6", borderRadius: 8,
               }}>
-                <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", margin: "0 0 4px" }}>{report.verdictLabel}</p>
-                <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, lineHeight: 1.65 }}>{report.verdictReason}</p>
+                <p style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", margin: "0 0 4px" }}>{report.verdictLabel}</p>
+                <p style={{ fontSize: 15, color: "var(--text-2)", margin: 0, lineHeight: 1.65 }}>{report.verdictReason}</p>
               </div>
             </div>
 
@@ -184,7 +184,7 @@ export function InsightScreen() {
                   { label: "Audience Fit", value: report.audienceFit.score },
                 ].map((s) => (
                   <div key={s.label} style={{ padding: "14px 16px", background: "var(--bg-card)" }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 10 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 10 }}>
                       {s.label}
                     </div>
                     <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.03em", marginBottom: 8 }}>
@@ -199,7 +199,7 @@ export function InsightScreen() {
             {/* Summary */}
             <div>
               <SectionHeader label="Summary" />
-              <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.75, margin: 0 }}>{report.summary}</p>
+              <p style={{ fontSize: 15, color: "var(--text-2)", lineHeight: 1.75, margin: 0 }}>{report.summary}</p>
             </div>
 
             {/* YouTube Data */}
@@ -214,7 +214,7 @@ export function InsightScreen() {
                     { label: "Range", value: report.youtubeData.viewsRange },
                   ].map((s) => (
                     <div key={s.label} style={{ padding: "12px 14px", background: "var(--bg-card)" }}>
-                      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>{s.label}</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>{s.label}</div>
                       <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em" }}>{s.value}</div>
                     </div>
                   ))}
@@ -234,12 +234,12 @@ export function InsightScreen() {
                       background: "var(--bg-card)", border: "1px solid var(--border)",
                       borderRadius: 6,
                     }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text-4)", paddingTop: 2, fontVariantNumeric: "tabular-nums" }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-4)", paddingTop: 2, fontVariantNumeric: "tabular-nums" }}>
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <div>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: "0 0 4px" }}>{a.angle}</p>
-                        <p style={{ fontSize: 12, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>{a.why}</p>
+                        <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", margin: "0 0 4px" }}>{a.angle}</p>
+                        <p style={{ fontSize: 14, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>{a.why}</p>
                       </div>
                     </div>
                   ))}
@@ -259,8 +259,8 @@ export function InsightScreen() {
                       border: "1px solid rgba(52,211,153,0.15)",
                       borderRadius: 6,
                     }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: "0 0 4px" }}>{a.angle}</p>
-                      <p style={{ fontSize: 12, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>{a.opportunity}</p>
+                      <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", margin: "0 0 4px" }}>{a.angle}</p>
+                      <p style={{ fontSize: 14, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>{a.opportunity}</p>
                     </div>
                   ))}
                 </div>
@@ -273,10 +273,10 @@ export function InsightScreen() {
               background: "var(--bg-subtle)", border: "1px solid var(--border)",
               borderLeft: "3px solid #14b8a6", borderRadius: 8,
             }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#14b8a6", marginBottom: 7 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#14b8a6", marginBottom: 7 }}>
                 Key Insight
               </div>
-              <p style={{ fontSize: 14, color: "var(--text)", fontWeight: 500, lineHeight: 1.75, margin: 0 }}>
+              <p style={{ fontSize: 16, color: "var(--text)", fontWeight: 500, lineHeight: 1.75, margin: 0 }}>
                 {report.keyInsight}
               </p>
             </div>
@@ -287,7 +287,7 @@ export function InsightScreen() {
                 onClick={() => navigate(`/studio?ideaId=${ideaId ?? ""}`)}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
-                  padding: "10px 20px", fontSize: 13, fontWeight: 600,
+                  padding: "10px 20px", fontSize: 15, fontWeight: 600,
                   borderRadius: 6, border: "none",
                   background: "#14b8a6", color: "#fff",
                   cursor: "pointer", transition: "background 0.15s ease",

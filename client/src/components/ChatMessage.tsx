@@ -38,12 +38,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
           background: "var(--bg-subtle)",
           border: "1px solid var(--border)",
           borderRadius: "8px 8px 2px 8px",
-          fontSize: 13, color: "var(--text)", lineHeight: 1.65,
+          fontSize: 15, color: "var(--text)", lineHeight: 1.65,
           whiteSpace: "pre-wrap", wordBreak: "break-word",
         }}>
           {message.content}
         </div>
-        <span style={{ fontSize: 10, color: "var(--text-4)", paddingRight: 2 }} aria-label={`Sent ${timeLabel}`}>
+        <span style={{ fontSize: 12, color: "var(--text-4)", paddingRight: 2 }} aria-label={`Sent ${timeLabel}`}>
           {timeLabel}
         </span>
       </div>
@@ -66,13 +66,13 @@ export function ChatMessage({ message }: ChatMessageProps) {
           maxWidth: "72%", padding: "9px 13px",
           background: "var(--bg-card)", border: "1px solid var(--border)",
           borderRadius: "8px 8px 8px 2px",
-          fontSize: 13, color: "var(--text)", lineHeight: 1.65,
+          fontSize: 15, color: "var(--text)", lineHeight: 1.65,
           whiteSpace: "pre-wrap", wordBreak: "break-word",
         }}>
           {message.content}
         </div>
       )}
-      <span style={{ fontSize: 10, color: "var(--text-4)", paddingLeft: 2 }} aria-label={`Received ${timeLabel}`}>
+      <span style={{ fontSize: 12, color: "var(--text-4)", paddingLeft: 2 }} aria-label={`Received ${timeLabel}`}>
         {timeLabel}
       </span>
     </div>

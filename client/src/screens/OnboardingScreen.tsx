@@ -88,21 +88,21 @@ export function OnboardingScreen() {
         </div>
 
         {/* Step counter */}
-        <p style={{ fontSize: 10, fontWeight: 700, color: "#14b8a6", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8, textAlign: "center" }}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: "#14b8a6", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8, textAlign: "center" }}>
           Step {step} of {TOTAL_STEPS}
         </p>
 
         <h1 style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em", marginBottom: 5, textAlign: "center" }}>
           {meta.title}
         </h1>
-        <p style={{ fontSize: 12, color: "var(--text-3)", textAlign: "center", marginBottom: 24, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 14, color: "var(--text-3)", textAlign: "center", marginBottom: 24, lineHeight: 1.5 }}>
           {meta.subtitle}
         </p>
 
         {/* Step content */}
         {step === 1 && (
           <div>
-            <label htmlFor="onboarding-name" style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-2)", marginBottom: 7 }}>
+            <label htmlFor="onboarding-name" style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-2)", marginBottom: 7 }}>
               Display name
             </label>
             <input
@@ -110,7 +110,7 @@ export function OnboardingScreen() {
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Alex Rivera" autoFocus maxLength={80}
               style={{
-                width: "100%", padding: "9px 12px", fontSize: 13,
+                width: "100%", padding: "9px 12px", fontSize: 15,
                 borderRadius: 6, border: "1px solid var(--border)",
                 background: "var(--bg-input)", color: "var(--text)",
                 outline: "none", transition: "border-color 0.15s ease",
@@ -144,7 +144,7 @@ export function OnboardingScreen() {
                     transition: "all 0.15s ease", width: "100%",
                   }}
                 >
-                  <span style={{ fontSize: 13, fontWeight: active ? 600 : 500, flex: 1 }}>{label}</span>
+                  <span style={{ fontSize: 15, fontWeight: active ? 600 : 500, flex: 1 }}>{label}</span>
                   {active && (
                     <span style={{
                       width: 16, height: 16, borderRadius: "50%",
@@ -164,7 +164,7 @@ export function OnboardingScreen() {
 
         {error && (
           <div style={{ marginTop: 14, padding: "8px 12px", borderRadius: 6, background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.2)" }}>
-            <p style={{ fontSize: 12, color: "var(--error)", margin: 0 }}>{error}</p>
+            <p style={{ fontSize: 14, color: "var(--error)", margin: 0 }}>{error}</p>
           </div>
         )}
 
@@ -174,7 +174,7 @@ export function OnboardingScreen() {
             <button
               type="button" onClick={() => setStep((s) => s + 1)}
               style={{
-                padding: "9px 18px", fontSize: 13, fontWeight: 500,
+                padding: "9px 18px", fontSize: 15, fontWeight: 500,
                 borderRadius: 6, border: "1px solid var(--border)",
                 background: "transparent", color: "var(--text-3)", cursor: "pointer",
               }}
@@ -187,7 +187,7 @@ export function OnboardingScreen() {
             <button
               type="button" onClick={handleFinish} disabled={submitting}
               style={{
-                flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600,
+                flex: 1, padding: "10px 0", fontSize: 15, fontWeight: 600,
                 borderRadius: 6, border: "none",
                 background: submitting ? "var(--bg-subtle)" : "#14b8a6",
                 color: submitting ? "var(--text-3)" : "#fff",
@@ -204,7 +204,7 @@ export function OnboardingScreen() {
               type="button" onClick={() => setStep((s) => s + 1)} disabled={!canAdvance()}
               style={{
                 flex: isSkippable ? undefined : 1,
-                padding: "10px 24px", fontSize: 13, fontWeight: 600,
+                padding: "10px 24px", fontSize: 15, fontWeight: 600,
                 borderRadius: 6, border: "none",
                 background: canAdvance() ? "#14b8a6" : "var(--bg-subtle)",
                 color: canAdvance() ? "#fff" : "var(--text-4)",
@@ -223,7 +223,7 @@ export function OnboardingScreen() {
           <div style={{ textAlign: "center", marginTop: 10 }}>
             <button
               type="button" onClick={handleFinish} disabled={submitting}
-              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-4)", fontSize: 12, padding: 0 }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-4)", fontSize: 14, padding: 0 }}
             >
               Skip for now
             </button>

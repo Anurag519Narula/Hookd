@@ -43,7 +43,7 @@ export function AuthScreen() {
   }
 
   const inputStyle: React.CSSProperties = {
-    width: "100%", padding: "9px 12px", fontSize: 13,
+    width: "100%", padding: "9px 12px", fontSize: 15,
     borderRadius: 6, border: "1px solid var(--border)",
     background: "var(--bg-input)", color: "var(--text)",
     outline: "none", transition: "border-color 0.15s ease",
@@ -95,7 +95,7 @@ export function AuthScreen() {
           <h1 style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em", marginBottom: 4 }}>
             Hookd
           </h1>
-          <p style={{ fontSize: 12, color: "var(--text-3)", textAlign: "center", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 14, color: "var(--text-3)", textAlign: "center", lineHeight: 1.5 }}>
             {mode === "login" ? "Welcome back. Sign in to continue." : "Create your account to get started."}
           </p>
         </div>
@@ -104,7 +104,7 @@ export function AuthScreen() {
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {mode === "signup" && (
             <div>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-2)", marginBottom: 5 }}>Name</label>
+              <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-2)", marginBottom: 5 }}>Name</label>
               <input
                 type="text" value={name} onChange={(e) => setName(e.target.value)}
                 placeholder="Your name" autoComplete="name" required={mode === "signup"}
@@ -116,7 +116,7 @@ export function AuthScreen() {
           )}
 
           <div>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-2)", marginBottom: 5 }}>Email</label>
+            <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-2)", marginBottom: 5 }}>Email</label>
             <input
               type="email" value={email} onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com" autoComplete="email" required
@@ -127,7 +127,7 @@ export function AuthScreen() {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-2)", marginBottom: 5 }}>Password</label>
+            <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-2)", marginBottom: 5 }}>Password</label>
             <div style={{ position: "relative" }}>
               <input
                 type={showPassword ? "text" : "password"}
@@ -158,7 +158,7 @@ export function AuthScreen() {
 
           {error && (
             <div style={{ padding: "8px 12px", borderRadius: 6, background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.2)" }}>
-              <p style={{ fontSize: 12, color: "var(--error)", margin: 0 }}>{error}</p>
+              <p style={{ fontSize: 14, color: "var(--error)", margin: 0 }}>{error}</p>
             </div>
           )}
 
@@ -166,7 +166,7 @@ export function AuthScreen() {
             id="auth-submit" type="submit" disabled={loading}
             style={{
               marginTop: 4, width: "100%", padding: "10px 0",
-              fontSize: 13, fontWeight: 600, borderRadius: 6, border: "none",
+              fontSize: 15, fontWeight: 600, borderRadius: 6, border: "none",
               background: loading ? "var(--bg-subtle)" : "#14b8a6",
               color: loading ? "var(--text-3)" : "#fff",
               cursor: loading ? "not-allowed" : "pointer",
@@ -180,14 +180,14 @@ export function AuthScreen() {
         </form>
 
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)", textAlign: "center" }}>
-          <p style={{ fontSize: 12, color: "var(--text-3)" }}>
+          <p style={{ fontSize: 14, color: "var(--text-3)" }}>
             {mode === "login" ? "Don't have an account? " : "Already have an account? "}
             <button
               id="auth-switch-mode"
               onClick={switchMode}
               style={{
                 background: "none", border: "none", cursor: "pointer",
-                color: "#14b8a6", fontWeight: 600, fontSize: 12, padding: 0,
+                color: "#14b8a6", fontWeight: 600, fontSize: 14, padding: 0,
               }}
             >
               {mode === "login" ? "Sign up" : "Sign in"}

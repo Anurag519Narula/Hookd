@@ -154,7 +154,7 @@ export function AmplifyScreen() {
                     <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", margin: "0 0 6px", letterSpacing: "-0.02em" }}>
                       What do you want to create?
                     </h2>
-                    <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0, lineHeight: 1.6, maxWidth: 360 }}>
+                    <p style={{ fontSize: 15, color: "var(--text-3)", margin: 0, lineHeight: 1.6, maxWidth: 360 }}>
                       Describe your idea or topic. Select platforms and get platform-native captions with trending hashtags.
                     </p>
                   </div>
@@ -178,7 +178,7 @@ export function AmplifyScreen() {
                     padding: "10px 14px",
                     background: "rgba(248,113,113,0.06)",
                     border: "1px solid rgba(248,113,113,0.2)",
-                    borderRadius: 6, fontSize: 12, color: "var(--error)", maxWidth: "70%",
+                    borderRadius: 6, fontSize: 14, color: "var(--error)", maxWidth: "70%",
                   }}>
                     {error}
                   </div>
@@ -221,7 +221,7 @@ export function AmplifyScreen() {
                   aria-label="Message input"
                   style={{
                     flex: 1, resize: "none",
-                    padding: "9px 12px", fontSize: 13, lineHeight: "20px",
+                    padding: "9px 12px", fontSize: 15, lineHeight: "20px",
                     color: "var(--text)", background: "var(--bg-input)",
                     border: "1px solid var(--border)",
                     borderRadius: 6, outline: "none", fontFamily: "inherit",
@@ -258,7 +258,7 @@ export function AmplifyScreen() {
                 </button>
               </div>
 
-              <p style={{ fontSize: 11, color: "var(--text-4)", margin: 0, textAlign: "center" }}>
+              <p style={{ fontSize: 13, color: "var(--text-4)", margin: 0, textAlign: "center" }}>
                 Enter to send · Shift+Enter for new line
               </p>
             </div>

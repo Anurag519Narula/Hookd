@@ -22,7 +22,7 @@ function SectionHeader({ label, status }: { label: string; status?: "active" | "
         transition: "all 0.3s ease",
       }} />
       <span style={{
-        fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
+        fontSize: 12, fontWeight: 700, letterSpacing: "0.12em",
         textTransform: "uppercase",
         color: status === "idle" ? "var(--text-4)" : "var(--text-3)",
       }}>
@@ -139,9 +139,9 @@ export function DevelopScreen() {
       <Navbar />
 
       <div style={{
-        maxWidth: 860,
+        maxWidth: 1100,
         margin: "0 auto",
-        padding: "32px 24px 80px",
+        padding: "32px 48px 80px",
         display: "flex",
         flexDirection: "column",
         gap: 0,
@@ -153,7 +153,7 @@ export function DevelopScreen() {
             onClick={() => navigate("/studio")}
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
-              fontSize: 11, fontWeight: 600, letterSpacing: "0.08em",
+              fontSize: 13, fontWeight: 600, letterSpacing: "0.08em",
               textTransform: "uppercase", color: "var(--text-3)",
               background: "none", border: "none", cursor: "pointer", padding: 0,
               marginBottom: 20, transition: "color 0.15s ease",
@@ -174,7 +174,7 @@ export function DevelopScreen() {
           }}>
             Script Planning
           </h1>
-          <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>
             Blueprint → Hooks → Script. Three steps before the camera rolls.
           </p>
         </div>
@@ -196,7 +196,7 @@ export function DevelopScreen() {
               rows={3}
               style={{
                 display: "block", width: "100%", padding: "16px 18px",
-                fontSize: 14, lineHeight: 1.7, color: "var(--text)",
+                fontSize: 16, lineHeight: 1.7, color: "var(--text)",
                 background: "var(--bg-input)", border: "none",
                 borderBottom: "1px solid var(--border)",
                 resize: "vertical", boxSizing: "border-box",
@@ -227,7 +227,7 @@ export function DevelopScreen() {
                       key={f}
                       onClick={() => setFormat(f)}
                       style={{
-                        padding: "5px 14px", fontSize: 12,
+                        padding: "5px 14px", fontSize: 14,
                         fontWeight: isActive ? 600 : 500,
                         borderRadius: 4, border: "none",
                         background: isActive ? "#14b8a6" : "transparent",
@@ -248,7 +248,7 @@ export function DevelopScreen() {
                 disabled={!canGenerate}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
-                  padding: "8px 18px", fontSize: 13, fontWeight: 600,
+                  padding: "8px 18px", fontSize: 15, fontWeight: 600,
                   borderRadius: 6, border: "none",
                   background: canGenerate ? "#14b8a6" : "var(--bg-hover)",
                   color: canGenerate ? "#fff" : "var(--text-4)",
@@ -299,11 +299,11 @@ export function DevelopScreen() {
               borderRadius: 6,
               display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
             }}>
-              <span style={{ fontSize: 12, color: "var(--error)", lineHeight: 1.5 }}>{error}</span>
+              <span style={{ fontSize: 14, color: "var(--error)", lineHeight: 1.5 }}>{error}</span>
               <button
                 onClick={() => void handleGenerateHooks()}
                 style={{
-                  padding: "4px 10px", fontSize: 11, fontWeight: 600,
+                  padding: "4px 10px", fontSize: 13, fontWeight: 600,
                   borderRadius: 4, border: "1px solid rgba(248,113,113,0.3)",
                   background: "transparent", color: "var(--error)",
                   cursor: "pointer", flexShrink: 0,
@@ -334,7 +334,7 @@ export function DevelopScreen() {
                     display: "inline-block", animation: "pulse-glow 1.4s ease-in-out infinite",
                     flexShrink: 0,
                   }} />
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-2)", letterSpacing: "-0.01em" }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-2)", letterSpacing: "-0.01em" }}>
                     Building your content blueprint…
                   </span>
                 </div>
@@ -345,10 +345,10 @@ export function DevelopScreen() {
                       display: "flex", alignItems: "center", gap: 8,
                       animation: `fadeInStep 0.4s ease ${i * 0.5}s both`,
                     }}>
-                      <span style={{ fontSize: 11, color: "var(--text-4)", fontVariantNumeric: "tabular-nums" }}>
+                      <span style={{ fontSize: 13, color: "var(--text-4)", fontVariantNumeric: "tabular-nums" }}>
                         {String(i + 1).padStart(2, "0")}
                       </span>
-                      <span style={{ fontSize: 12, color: "var(--text-3)" }}>{step}</span>
+                      <span style={{ fontSize: 14, color: "var(--text-3)" }}>{step}</span>
                     </div>
                   ))}
                 </div>
@@ -377,27 +377,27 @@ export function DevelopScreen() {
                   borderBottom: "1px solid var(--border)",
                   background: "rgba(20,184,166,0.04)",
                 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#14b8a6", marginBottom: 6 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#14b8a6", marginBottom: 6 }}>
                     Opening Hook — first 3 seconds
                   </div>
-                  <p style={{ fontSize: 14, color: "var(--text)", fontWeight: 500, lineHeight: 1.65, margin: 0, letterSpacing: "-0.01em" }}>
+                  <p style={{ fontSize: 16, color: "var(--text)", fontWeight: 500, lineHeight: 1.65, margin: 0, letterSpacing: "-0.01em" }}>
                     {insightsFromState.contentBlueprint.openingHook}
                   </p>
                 </div>
 
                 {/* Core message */}
                 <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--border)" }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
                     Core Message
                   </div>
-                  <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.65, margin: 0 }}>
+                  <p style={{ fontSize: 15, color: "var(--text-2)", lineHeight: 1.65, margin: 0 }}>
                     {insightsFromState.contentBlueprint.coreMessage}
                   </p>
                 </div>
 
                 {/* Key points — table layout */}
                 <div style={{ borderBottom: "1px solid var(--border)" }}>
-                  <div style={{ padding: "12px 18px 8px", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-3)" }}>
+                  <div style={{ padding: "12px 18px 8px", fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-3)" }}>
                     Key Points
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 1, background: "var(--border)" }}>
@@ -414,7 +414,7 @@ export function DevelopScreen() {
                           alignItems: "center", justifyContent: "flex-start",
                           gap: 4, paddingTop: 14,
                         }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: "#14b8a6", fontVariantNumeric: "tabular-nums" }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "#14b8a6", fontVariantNumeric: "tabular-nums" }}>
                             {String(i + 1).padStart(2, "0")}
                           </span>
                           <span style={{ fontSize: 9, color: "var(--text-4)", fontVariantNumeric: "tabular-nums", letterSpacing: "0.02em" }}>
@@ -422,14 +422,14 @@ export function DevelopScreen() {
                           </span>
                         </div>
                         <div style={{ padding: "12px 14px" }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 5, lineHeight: 1.4 }}>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 5, lineHeight: 1.4 }}>
                             {kp.point}
                           </div>
-                          <div style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.55, marginBottom: 4 }}>
+                          <div style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.55, marginBottom: 4 }}>
                             {kp.why}
                           </div>
                           <div style={{
-                            fontSize: 11, color: "#14b8a6", lineHeight: 1.5,
+                            fontSize: 13, color: "#14b8a6", lineHeight: 1.5,
                             paddingLeft: 8, borderLeft: "2px solid rgba(20,184,166,0.3)",
                           }}>
                             {kp.deliveryTip}
@@ -443,32 +443,32 @@ export function DevelopScreen() {
                 {/* CTA + production notes */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, background: "var(--border)" }}>
                   <div style={{ padding: "14px 16px", background: "var(--bg-card)" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
                       Closing CTA
                     </div>
-                    <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
+                    <p style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
                       {insightsFromState.contentBlueprint.closingCTA}
                     </p>
                   </div>
                   <div style={{ padding: "14px 16px", background: "var(--bg-card)" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
                       Visual Notes
                     </div>
-                    <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
+                    <p style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
                       {insightsFromState.contentBlueprint.visualNotes}
                     </p>
                   </div>
                   <div style={{ padding: "14px 16px", background: "var(--bg-card)" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 6 }}>
                       Audio Notes
                     </div>
-                    <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
+                    <p style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.6, margin: 0 }}>
                       {insightsFromState.contentBlueprint.audioNotes}
                     </p>
                     <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 10, color: "var(--text-4)" }}>Target:</span>
+                      <span style={{ fontSize: 12, color: "var(--text-4)" }}>Target:</span>
                       <span style={{
-                        fontSize: 10, fontWeight: 700, color: "#14b8a6",
+                        fontSize: 12, fontWeight: 700, color: "#14b8a6",
                         background: "rgba(20,184,166,0.08)",
                         border: "1px solid rgba(20,184,166,0.2)",
                         borderRadius: 3, padding: "1px 6px",
@@ -488,7 +488,7 @@ export function DevelopScreen() {
           <div style={{ marginBottom: 32 }}>
             <SectionHeader label="Choose your hook" status={hooksStatus} />
 
-            <p style={{ fontSize: 12, color: "var(--text-3)", margin: "0 0 14px", lineHeight: 1.6 }}>
+            <p style={{ fontSize: 14, color: "var(--text-3)", margin: "0 0 14px", lineHeight: 1.6 }}>
               {isGeneratingHooks
                 ? "Crafting 3 variants with different psychological triggers…"
                 : selectedHookIndex === null
@@ -532,7 +532,7 @@ export function DevelopScreen() {
                   borderTopColor: "#14b8a6", borderRadius: "50%",
                   display: "inline-block", animation: "spin 0.7s linear infinite", flexShrink: 0,
                 }} />
-                <span style={{ fontSize: 12, color: "#14b8a6" }}>
+                <span style={{ fontSize: 14, color: "#14b8a6" }}>
                   Building your 45–60 second script…
                 </span>
               </div>
@@ -564,10 +564,10 @@ export function DevelopScreen() {
             borderRadius: 8,
           }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 2 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 2 }}>
                 Script ready
               </div>
-              <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+              <div style={{ fontSize: 14, color: "var(--text-3)" }}>
                 Generate platform-native captions for every channel.
               </div>
             </div>
@@ -575,7 +575,7 @@ export function DevelopScreen() {
               onClick={handleGenerateCaptions}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 7,
-                padding: "10px 20px", fontSize: 13, fontWeight: 600,
+                padding: "10px 20px", fontSize: 15, fontWeight: 600,
                 borderRadius: 6, border: "none",
                 background: "#14b8a6", color: "#fff",
                 cursor: "pointer", transition: "background 0.15s ease",

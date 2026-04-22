@@ -54,7 +54,7 @@ export function ConversationSidebar({ sessions, activeId, onSelect, onNew, onDel
           border: "1px solid var(--border)", background: "var(--bg-card)",
           color: "var(--text-3)", cursor: "pointer",
           alignItems: "center", justifyContent: "center",
-          fontSize: 11, transition: "left 0.2s ease",
+          fontSize: 13, transition: "left 0.2s ease",
         }}
       >
         {isOpen ? "‹" : "›"}
@@ -92,7 +92,7 @@ export function ConversationSidebar({ sessions, activeId, onSelect, onNew, onDel
               width: "100%", padding: "7px 12px",
               borderRadius: 6, border: "1px solid var(--border)",
               background: "transparent", color: "var(--text-2)",
-              fontSize: 12, fontWeight: 600, cursor: "pointer",
+              fontSize: 14, fontWeight: 600, cursor: "pointer",
               transition: "all 0.15s ease",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
             }}
@@ -124,7 +124,7 @@ export function ConversationSidebar({ sessions, activeId, onSelect, onNew, onDel
               </div>
             ))
           ) : sorted.length === 0 ? (
-            <p style={{ padding: "12px 8px", fontSize: 12, color: "var(--text-4)", textAlign: "center" }}>
+            <p style={{ padding: "12px 8px", fontSize: 14, color: "var(--text-4)", textAlign: "center" }}>
               No conversations yet
             </p>
           ) : (
@@ -150,14 +150,14 @@ export function ConversationSidebar({ sessions, activeId, onSelect, onNew, onDel
                     }}
                   >
                     <span style={{
-                      fontSize: 12, fontWeight: isActive ? 600 : 400,
+                      fontSize: 14, fontWeight: isActive ? 600 : 400,
                       color: isActive ? "#14b8a6" : "var(--text)",
                       overflow: "hidden", textOverflow: "ellipsis",
                       whiteSpace: "nowrap", display: "block",
                     }}>
                       {session.title}
                     </span>
-                    <span style={{ fontSize: 10, color: "var(--text-4)" }}>
+                    <span style={{ fontSize: 12, color: "var(--text-4)" }}>
                       {relativeDate(session.updated_at)}
                     </span>
                   </button>
@@ -171,7 +171,7 @@ export function ConversationSidebar({ sessions, activeId, onSelect, onNew, onDel
                       border: "none", background: "transparent",
                       color: "var(--text-4)", cursor: "pointer",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 14, transition: "all 0.15s ease", marginRight: 4,
+                      fontSize: 16, transition: "all 0.15s ease", marginRight: 4,
                     }}
                     onMouseEnter={(e) => {
                       const b = e.currentTarget as HTMLButtonElement;
@@ -215,7 +215,7 @@ export function ConversationSidebar({ sessions, activeId, onSelect, onNew, onDel
             <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>
               Delete conversation?
             </h3>
-            <p style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 18, lineHeight: 1.6 }}>
+            <p style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 18, lineHeight: 1.6 }}>
               This will permanently delete this conversation and all its messages.
             </p>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
@@ -225,7 +225,7 @@ export function ConversationSidebar({ sessions, activeId, onSelect, onNew, onDel
                 style={{
                   padding: "6px 14px", borderRadius: 4,
                   border: "1px solid var(--border)", background: "transparent",
-                  color: "var(--text-2)", fontSize: 12, fontWeight: 500, cursor: "pointer",
+                  color: "var(--text-2)", fontSize: 14, fontWeight: 500, cursor: "pointer",
                 }}
               >
                 Cancel
@@ -236,7 +236,7 @@ export function ConversationSidebar({ sessions, activeId, onSelect, onNew, onDel
                 style={{
                   padding: "6px 14px", borderRadius: 4, border: "none",
                   background: "var(--error)", color: "#fff",
-                  fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  fontSize: 14, fontWeight: 600, cursor: "pointer",
                 }}
               >
                 Delete

@@ -19,7 +19,7 @@ function SectionHeader({ label, status }: { label: string; status?: "active" | "
         transition: "all 0.3s ease",
       }} />
       <span style={{
-        fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
+        fontSize: 12, fontWeight: 700, letterSpacing: "0.12em",
         textTransform: "uppercase",
         color: status === "idle" ? "var(--text-4)" : "var(--text-3)",
       }}>
@@ -123,8 +123,8 @@ export function StudioScreen() {
       <Navbar />
 
       <div style={{
-        maxWidth: 860, margin: "0 auto",
-        padding: "32px 24px 80px",
+        maxWidth: 1100, margin: "0 auto",
+        padding: "32px 48px 80px",
         display: "flex", flexDirection: "column", gap: 0,
       }}>
 
@@ -137,7 +137,7 @@ export function StudioScreen() {
           }}>
             Idea Validation
           </h1>
-          <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>
             Check your idea against real YouTube data before you film anything.
           </p>
         </div>
@@ -159,7 +159,7 @@ export function StudioScreen() {
               rows={4}
               style={{
                 display: "block", width: "100%", padding: "16px 18px",
-                fontSize: 14, lineHeight: 1.7, color: "var(--text)",
+                fontSize: 16, lineHeight: 1.7, color: "var(--text)",
                 background: "var(--bg-input)", border: "none",
                 borderBottom: "1px solid var(--border)",
                 resize: "vertical", boxSizing: "border-box",
@@ -176,7 +176,7 @@ export function StudioScreen() {
                 disabled={!canValidate}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
-                  padding: "8px 18px", fontSize: 13, fontWeight: 600,
+                  padding: "8px 18px", fontSize: 15, fontWeight: 600,
                   borderRadius: 6, border: "none",
                   background: canValidate ? "#14b8a6" : "var(--bg-hover)",
                   color: canValidate ? "#fff" : "var(--text-4)",
@@ -225,7 +225,7 @@ export function StudioScreen() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}>
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
-              <p style={{ fontSize: 13, color: "#f59e0b", margin: 0, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 15, color: "#f59e0b", margin: 0, lineHeight: 1.6 }}>
                 {quotaError}
               </p>
             </div>
@@ -259,10 +259,10 @@ export function StudioScreen() {
             borderRadius: 8,
           }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 2 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 2 }}>
                 Idea validated
               </div>
-              <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+              <div style={{ fontSize: 14, color: "var(--text-3)" }}>
                 Plan your script with hooks and beats.
               </div>
             </div>
@@ -270,7 +270,7 @@ export function StudioScreen() {
               onClick={handlePlanScript}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 7,
-                padding: "10px 20px", fontSize: 13, fontWeight: 600,
+                padding: "10px 20px", fontSize: 15, fontWeight: 600,
                 borderRadius: 6, border: "none",
                 background: "#14b8a6", color: "#fff",
                 cursor: "pointer", transition: "background 0.15s ease",

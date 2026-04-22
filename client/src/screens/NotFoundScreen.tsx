@@ -22,13 +22,13 @@ export function NotFoundScreen() {
         <h1 style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", margin: "0 0 8px", letterSpacing: "-0.02em" }}>
           Page not found
         </h1>
-        <p style={{ fontSize: 13, color: "var(--text-3)", margin: "0 0 24px", lineHeight: 1.6 }}>
+        <p style={{ fontSize: 15, color: "var(--text-3)", margin: "0 0 24px", lineHeight: 1.6 }}>
           This page doesn't exist or was moved.
         </p>
         <button
           onClick={() => navigate("/")}
           style={{
-            padding: "9px 20px", fontSize: 13, fontWeight: 600,
+            padding: "9px 20px", fontSize: 15, fontWeight: 600,
             borderRadius: 6, border: "none",
             background: "#14b8a6", color: "#fff", cursor: "pointer",
             transition: "background 0.15s ease",

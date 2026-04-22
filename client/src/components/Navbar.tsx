@@ -72,7 +72,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
               <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
             </svg>
           </div>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
             Hookd
           </span>
         </button>
@@ -86,7 +86,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
                 key={to}
                 to={to}
                 style={{
-                  fontSize: 13, fontWeight: active ? 600 : 400,
+                  fontSize: 15, fontWeight: active ? 600 : 400,
                   color: active ? "#14b8a6" : "var(--text-3)",
                   padding: "4px 10px 2px",
                   textDecoration: "none", transition: "all 0.15s ease",
@@ -159,7 +159,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
                   outlineOffset: 1,
                   cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 11, fontWeight: 700, color: "#fff",
+                  fontSize: 13, fontWeight: 700, color: "#fff",
                   flexShrink: 0,
                 }}
               >
@@ -174,11 +174,11 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
                   overflow: "hidden", zIndex: 200,
                 }}>
                   <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
-                    <p style={{ fontSize: 12, fontWeight: 600, color: "var(--text)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {displayName}
                     </p>
                     {user.name && (
-                      <p style={{ fontSize: 11, color: "var(--text-3)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {user.email}
                       </p>
                     )}
@@ -190,7 +190,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
                     style={{
                       display: "flex", alignItems: "center", gap: 8,
                       padding: "9px 14px", color: "var(--text-2)",
-                      fontSize: 12, fontWeight: 500, textDecoration: "none",
+                      fontSize: 14, fontWeight: 500, textDecoration: "none",
                       borderBottom: "1px solid var(--border)",
                       transition: "background 0.15s ease",
                     }}
@@ -207,7 +207,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
                       width: "100%", padding: "9px 14px",
                       display: "flex", alignItems: "center", gap: 8,
                       background: "none", border: "none", cursor: "pointer",
-                      color: "var(--text-2)", fontSize: 12, fontWeight: 500,
+                      color: "var(--text-2)", fontSize: 14, fontWeight: 500,
                       textAlign: "left", transition: "all 0.15s ease",
                     }}
                     onMouseEnter={(e) => {
@@ -244,7 +244,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
               to={to}
               onClick={() => setMenuOpen(false)}
               style={{
-                fontSize: 14, fontWeight: 500,
+                fontSize: 16, fontWeight: 500,
                 color: isActive(to) ? "#14b8a6" : "var(--text-2)",
                 padding: "9px 10px", borderRadius: 6,
                 textDecoration: "none", transition: "background 0.15s ease",
@@ -260,7 +260,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
               to="/settings"
               onClick={() => setMenuOpen(false)}
               style={{
-                fontSize: 14, fontWeight: 500,
+                fontSize: 16, fontWeight: 500,
                 color: isActive("/settings") ? "#14b8a6" : "var(--text-2)",
                 padding: "9px 10px", borderRadius: 6,
                 textDecoration: "none",
@@ -273,7 +273,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
             <button
               onClick={() => { setMenuOpen(false); logout(); }}
               style={{
-                fontSize: 14, fontWeight: 500, color: "var(--error)",
+                fontSize: 16, fontWeight: 500, color: "var(--error)",
                 padding: "9px 10px", borderRadius: 6, textAlign: "left",
                 background: "none", border: "none", cursor: "pointer",
               }}

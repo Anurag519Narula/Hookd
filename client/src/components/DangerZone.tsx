@@ -28,14 +28,14 @@ export function DangerZone() {
   if (!showConfirm) {
     return (
       <div>
-        <p style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 14, lineHeight: 1.65 }}>
+        <p style={{ fontSize: 14, color: "var(--text-3)", marginBottom: 14, lineHeight: 1.65 }}>
           Permanently removes your account, ideas, scripts, and conversations. Cannot be undone.
         </p>
         <button
           type="button"
           onClick={() => { setShowConfirm(true); setConfirmText(""); setError(""); }}
           style={{
-            padding: "7px 16px", fontSize: 12, fontWeight: 600,
+            padding: "7px 16px", fontSize: 14, fontWeight: 600,
             borderRadius: 4, border: "1px solid rgba(248,113,113,0.35)",
             background: "rgba(248,113,113,0.06)", color: "var(--error)",
             cursor: "pointer", transition: "all 0.15s ease",
@@ -65,14 +65,14 @@ export function DangerZone() {
         border: "1px solid rgba(248,113,113,0.2)",
         borderRadius: 6,
       }}>
-        <p style={{ fontSize: 12, color: "var(--error)", margin: 0, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 14, color: "var(--error)", margin: 0, lineHeight: 1.6 }}>
           This will permanently delete your account and all your content. This action <strong>cannot be undone</strong>.
         </p>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <label htmlFor="delete-confirm" style={{ fontSize: 12, fontWeight: 600, color: "var(--text-2)" }}>
-          Type <code style={{ fontFamily: "monospace", fontSize: 12, color: "var(--error)", background: "rgba(248,113,113,0.08)", padding: "1px 5px", borderRadius: 3 }}>DELETE</code> to confirm
+        <label htmlFor="delete-confirm" style={{ fontSize: 14, fontWeight: 600, color: "var(--text-2)" }}>
+          Type <code style={{ fontFamily: "monospace", fontSize: 14, color: "var(--error)", background: "rgba(248,113,113,0.08)", padding: "1px 5px", borderRadius: 3 }}>DELETE</code> to confirm
         </label>
         <input
           id="delete-confirm"
@@ -82,7 +82,7 @@ export function DangerZone() {
           placeholder="DELETE"
           autoFocus
           style={{
-            width: "100%", padding: "8px 12px", fontSize: 13,
+            width: "100%", padding: "8px 12px", fontSize: 15,
             color: "var(--text)", background: "var(--bg-input)",
             border: `1px solid ${confirmText === "DELETE" ? "rgba(248,113,113,0.5)" : "var(--border)"}`,
             borderRadius: 6, outline: "none", fontFamily: "monospace",
@@ -93,7 +93,7 @@ export function DangerZone() {
       </div>
 
       {error && (
-        <p style={{ fontSize: 12, color: "var(--error)", margin: 0 }}>{error}</p>
+        <p style={{ fontSize: 14, color: "var(--error)", margin: 0 }}>{error}</p>
       )}
 
       <div style={{ display: "flex", gap: 8 }}>
@@ -102,7 +102,7 @@ export function DangerZone() {
           onClick={() => { setShowConfirm(false); setConfirmText(""); setError(""); }}
           disabled={deleting}
           style={{
-            padding: "7px 14px", fontSize: 12, fontWeight: 500,
+            padding: "7px 14px", fontSize: 14, fontWeight: 500,
             borderRadius: 4, border: "1px solid var(--border)",
             background: "transparent", color: "var(--text-2)", cursor: "pointer",
           }}
@@ -114,7 +114,7 @@ export function DangerZone() {
           onClick={handleDelete}
           disabled={confirmText !== "DELETE" || deleting}
           style={{
-            padding: "7px 14px", fontSize: 12, fontWeight: 600,
+            padding: "7px 14px", fontSize: 14, fontWeight: 600,
             borderRadius: 4, border: "none",
             background: confirmText === "DELETE" && !deleting ? "var(--error)" : "rgba(248,113,113,0.2)",
             color: confirmText === "DELETE" && !deleting ? "#fff" : "rgba(248,113,113,0.4)",

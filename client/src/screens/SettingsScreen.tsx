@@ -18,7 +18,7 @@ const PLATFORMS: { id: Platform; label: string }[] = [
 function SectionHeader({ label }: { label: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)" }}>
+      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)" }}>
         {label}
       </span>
       <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
@@ -29,7 +29,7 @@ function SectionHeader({ label }: { label: string }) {
 function Field({ label, htmlFor, children }: { label: string; htmlFor?: string; children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-      <label htmlFor={htmlFor} style={{ fontSize: 12, fontWeight: 600, color: "var(--text-2)", letterSpacing: "-0.005em" }}>
+      <label htmlFor={htmlFor} style={{ fontSize: 14, fontWeight: 600, color: "var(--text-2)", letterSpacing: "-0.005em" }}>
         {label}
       </label>
       {children}
@@ -38,7 +38,7 @@ function Field({ label, htmlFor, children }: { label: string; htmlFor?: string; 
 }
 
 const inputStyle = {
-  width: "100%", padding: "9px 12px", fontSize: 13,
+  width: "100%", padding: "9px 12px", fontSize: 15,
   color: "var(--text)", background: "var(--bg-input)",
   border: "1px solid var(--border)", borderRadius: 6,
   outline: "none", transition: "border-color 0.15s ease",
@@ -88,7 +88,7 @@ export function SettingsScreen() {
     return (
       <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
         <Navbar />
-        <div style={{ maxWidth: 680, margin: "0 auto", padding: "32px 24px 80px", display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 48px 80px", display: "flex", flexDirection: "column", gap: 20 }}>
           {[160, 220, 140].map((h, i) => (
             <div key={i} className="shimmer-line" style={{ height: h, borderRadius: 8 }} />
           ))}
@@ -101,13 +101,13 @@ export function SettingsScreen() {
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <Navbar />
 
-      <div style={{ maxWidth: 680, margin: "0 auto", padding: "32px 24px 80px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 48px 80px" }}>
         {/* Page header */}
         <div style={{ marginBottom: 32 }}>
           <h1 style={{ fontSize: "clamp(20px, 3vw, 26px)", fontWeight: 700, letterSpacing: "-0.03em", color: "var(--text)", margin: "0 0 6px" }}>
             Settings
           </h1>
-          <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0 }}>
+          <p style={{ fontSize: 15, color: "var(--text-3)", margin: 0 }}>
             Manage your profile and content preferences.
           </p>
         </div>
@@ -136,7 +136,7 @@ export function SettingsScreen() {
                   />
                   <span style={{
                     position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
-                    fontSize: 10, fontWeight: 600, color: "var(--text-4)",
+                    fontSize: 12, fontWeight: 600, color: "var(--text-4)",
                     background: "var(--bg-hover)", border: "1px solid var(--border)",
                     borderRadius: 3, padding: "2px 6px", letterSpacing: "0.04em", textTransform: "uppercase",
                   }}>
@@ -204,7 +204,7 @@ export function SettingsScreen() {
                           }
                         }}
                       >
-                        <span style={{ fontSize: 13, fontWeight: active ? 600 : 500, flex: 1 }}>{label}</span>
+                        <span style={{ fontSize: 15, fontWeight: active ? 600 : 500, flex: 1 }}>{label}</span>
                         <span style={{
                           width: 16, height: 16, borderRadius: 3,
                           border: active ? "none" : "1.5px solid var(--border)",
@@ -231,7 +231,7 @@ export function SettingsScreen() {
             <button
               type="button" onClick={handleSave} disabled={saving}
               style={{
-                padding: "9px 20px", fontSize: 13, fontWeight: 600,
+                padding: "9px 20px", fontSize: 15, fontWeight: 600,
                 borderRadius: 6, border: "none",
                 background: saving ? "var(--bg-hover)" : "#14b8a6",
                 color: saving ? "var(--text-3)" : "#fff",
@@ -247,11 +247,11 @@ export function SettingsScreen() {
             {saveSuccess && (
               <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 12px", borderRadius: 6, background: "rgba(20,184,166,0.08)", border: "1px solid rgba(20,184,166,0.2)" }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <p style={{ fontSize: 12, color: "#14b8a6", margin: 0 }}>Changes saved.</p>
+                <p style={{ fontSize: 14, color: "#14b8a6", margin: 0 }}>Changes saved.</p>
               </div>
             )}
             {saveError && (
-              <p style={{ fontSize: 12, color: "var(--error)", margin: 0 }}>{saveError}</p>
+              <p style={{ fontSize: 14, color: "var(--error)", margin: 0 }}>{saveError}</p>
             )}
           </div>
 

@@ -83,6 +83,11 @@ initDb()
       void purgeExpired().then((n) => n > 0 && console.log(`[cache] purged ${n} expired rows`));
     }, 6 * 60 * 60 * 1000);
 
+    // ── Health check (for uptime monitoring / cron pings) ────────────────────
+    app.get("/health", (_req, res) => {
+      res.json({ status: "ok", ts: Date.now() });
+    });
+
     // ── Public routes ─────────────────────────────────────────────────────────
     app.use("/api/auth", authLimiter, authRouter);
     app.use("/api/trending", trendingLimiter, trendingRouter);

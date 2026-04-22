@@ -52,19 +52,19 @@ function ErrorState({ code, onRetry, onSignIn }: { code: string; onRetry: () => 
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "50vh", gap: 16, textAlign: "center", padding: "0 24px" }}>
       <div style={{ maxWidth: 360 }}>
         <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", margin: "0 0 6px" }}>{cfg.title}</p>
-        <p style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.6, margin: 0 }}>{cfg.body}</p>
+        <p style={{ fontSize: 15, color: "var(--text-3)", lineHeight: 1.6, margin: 0 }}>{cfg.body}</p>
       </div>
       <div style={{ display: "flex", gap: 8 }}>
         <button
           onClick={code === "AUTH_ERROR" ? onSignIn : onRetry}
-          style={{ padding: "8px 18px", fontSize: 13, fontWeight: 600, borderRadius: 6, border: "none", background: "#14b8a6", color: "#fff", cursor: "pointer" }}
+          style={{ padding: "8px 18px", fontSize: 15, fontWeight: 600, borderRadius: 6, border: "none", background: "#14b8a6", color: "#fff", cursor: "pointer" }}
         >
           {cfg.primary}
         </button>
         {cfg.secondary && (
           <button
             onClick={() => window.location.reload()}
-            style={{ padding: "8px 16px", fontSize: 13, fontWeight: 500, borderRadius: 6, border: "1px solid var(--border)", background: "transparent", color: "var(--text-2)", cursor: "pointer" }}
+            style={{ padding: "8px 16px", fontSize: 15, fontWeight: 500, borderRadius: 6, border: "1px solid var(--border)", background: "transparent", color: "var(--text-2)", cursor: "pointer" }}
           >
             {cfg.secondary}
           </button>
@@ -80,14 +80,14 @@ function EmptyState({ onCaptureFocus }: { onCaptureFocus?: () => void }) {
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "40vh", gap: 16, textAlign: "center", padding: "0 24px" }}>
       <div style={{ maxWidth: 360 }}>
         <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", margin: "0 0 6px" }}>Your vault is empty</p>
-        <p style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.65, margin: 0 }}>
+        <p style={{ fontSize: 15, color: "var(--text-3)", lineHeight: 1.65, margin: 0 }}>
           Capture ideas before they slip away. Type anything above — a hook, a topic, a rough thought.
         </p>
       </div>
       {onCaptureFocus && (
         <button
           onClick={onCaptureFocus}
-          style={{ padding: "8px 18px", fontSize: 13, fontWeight: 600, borderRadius: 6, border: "none", background: "#14b8a6", color: "#fff", cursor: "pointer" }}
+          style={{ padding: "8px 18px", fontSize: 15, fontWeight: 600, borderRadius: 6, border: "none", background: "#14b8a6", color: "#fff", cursor: "pointer" }}
         >
           Capture your first idea
         </button>
@@ -152,8 +152,8 @@ export function VaultScreen() {
 
       {/* ── Page header ── */}
       <div style={{
-        maxWidth: 900, margin: "0 auto",
-        padding: "32px 24px 24px",
+        maxWidth: 1100, margin: "0 auto",
+        padding: "32px 48px 24px",
         borderBottom: "1px solid var(--border)",
       }}>
         <h1 style={{
@@ -163,7 +163,7 @@ export function VaultScreen() {
         }}>
           Idea Vault
         </h1>
-        <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 15, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>
           Capture raw ideas. AI scores and tags each one so you know what's worth developing.
         </p>
       </div>
@@ -174,14 +174,14 @@ export function VaultScreen() {
         background: "var(--bg)",
         borderBottom: "1px solid var(--border)",
       }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", padding: "14px 24px 10px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "14px 48px 10px" }}>
           <CaptureBar onSubmit={handleCapture} />
         </div>
 
         {/* Filter + sort */}
         <div style={{
-          maxWidth: 900, margin: "0 auto",
-          padding: "0 24px 12px",
+          maxWidth: 1100, margin: "0 auto",
+          padding: "0 48px 12px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           gap: 12, flexWrap: "wrap",
         }}>
@@ -193,7 +193,7 @@ export function VaultScreen() {
                   key={chip}
                   onClick={() => setFilter(chip)}
                   style={{
-                    padding: "4px 10px", fontSize: 12,
+                    padding: "4px 10px", fontSize: 14,
                     fontWeight: active ? 600 : 400,
                     borderRadius: 4,
                     border: active ? "1px solid rgba(20,184,166,0.4)" : "1px solid var(--border)",
@@ -225,7 +225,7 @@ export function VaultScreen() {
             value={sort}
             onChange={(e) => setSort(e.target.value as SortOption)}
             style={{
-              padding: "4px 8px", fontSize: 12, fontWeight: 500,
+              padding: "4px 8px", fontSize: 14, fontWeight: 500,
               borderRadius: 4, border: "1px solid var(--border)",
               background: "var(--bg-card)", color: "var(--text-2)",
               cursor: "pointer", outline: "none",
@@ -237,7 +237,7 @@ export function VaultScreen() {
       </div>
 
       {/* ── Content ── */}
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 24px 80px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 48px 80px" }}>
 
         {vault.error && (
           <ErrorState
@@ -288,7 +288,7 @@ export function VaultScreen() {
                 <button
                   onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
                   style={{
-                    padding: "8px 20px", fontSize: 12, fontWeight: 600,
+                    padding: "8px 20px", fontSize: 14, fontWeight: 600,
                     borderRadius: 6, border: "1px solid var(--border)",
                     background: "transparent", color: "var(--text-2)",
                     cursor: "pointer", transition: "all 0.15s ease",
@@ -312,7 +312,7 @@ export function VaultScreen() {
         )}
 
         {!vault.loading && !vault.error && vault.ideas.length > 0 && filteredAndSorted.length === 0 && (
-          <div style={{ textAlign: "center", padding: "48px 24px", fontSize: 13, color: "var(--text-3)" }}>
+          <div style={{ textAlign: "center", padding: "48px 24px", fontSize: 15, color: "var(--text-3)" }}>
             No ideas match this filter.
           </div>
         )}
