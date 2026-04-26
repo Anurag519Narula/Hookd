@@ -1,4 +1,5 @@
 import type { ScriptFormat, PsychologicalTrigger } from "../types/index";
+import { getRelevantTemplates, formatTemplatesForPrompt } from "./hookTemplates";
 
 // Format constraints — Reels now targets 45-60s (≤300 words, 5 beats) for richer content
 const FORMAT_CONSTRAINTS: Record<ScriptFormat, { maxWords: number; beats: number; durationNote: string }> = {
@@ -29,8 +30,9 @@ Rules:
 - Always return ONLY valid JSON. No markdown, no code fences, no explanation outside the JSON.`;
 
 /**
- * Builds the prompt for generating 3 hook variants ONLY.
+ * Builds the prompt for generating 6 hook variants ONLY.
  * Beats and CTA are generated separately after the user picks a hook.
+ * Injects proven viral hook templates as structural inspiration.
  */
 export function buildHooksOnlyPrompt(
   idea: string,
@@ -48,26 +50,39 @@ export function buildHooksOnlyPrompt(
       ? `\nPLATFORM (Instagram Reels): Hook must stop a fast-scrolling viewer in 1 second. Casual, personal, direct.`
       : `\nPLATFORM (YouTube Shorts): Hook must immediately deliver on the title's promise. Slightly more informational.`;
 
-  const user = `Generate exactly 3 hook variants for the following idea. Each hook uses a DIFFERENT psychological trigger.
+  // Get relevant viral hook templates based on the idea content
+  const templates = getRelevantTemplates(idea, 12);
+  const templateBlock = formatTemplatesForPrompt(templates);
+
+  const user = `Generate exactly 6 hook variants for the following idea. Each hook uses a DIFFERENT psychological trigger.
 
 IDEA: ${idea}
 FORMAT: ${formatLabel}
 ${nicheContext ? `NICHE: ${nicheContext}` : ""}${langNote}${platformToneNote}
 
-TRIGGERS (use exactly 3 different ones from this list):
+TRIGGERS (use all 6 — one per hook variant):
 ${ALL_TRIGGERS.map((t) => `"${t}"`).join(", ")}
 
-Each hook must:
-- Be a single punchy opening line (1-2 sentences max)
-- Create immediate tension, curiosity, or recognition
-- Feel native to ${formatLabel} — not generic
+PROVEN VIRAL HOOK TEMPLATES (use these as structural inspiration — adapt the pattern to the idea, do NOT copy them verbatim):
+${templateBlock}
+
+INSTRUCTIONS:
+- Study the template patterns above. They are proven viral hooks from top-performing Instagram Reels and YouTube Shorts.
+- Adapt the STRUCTURE and RHYTHM of these templates to the specific idea — fill in with real, specific details from the idea.
+- Each hook must be a single punchy opening line (1-2 sentences max).
+- Create immediate tension, curiosity, or recognition.
+- Feel native to ${formatLabel} — not generic.
+- The hooks should feel like something a real creator would say on camera, not a copywriter's headline.
 
 Return ONLY a valid JSON object:
 {
   "hook_variants": [
     { "hook_text": "...", "trigger": "Curiosity Gap" },
     { "hook_text": "...", "trigger": "Identity Threat" },
-    { "hook_text": "...", "trigger": "Surprising Stat" }
+    { "hook_text": "...", "trigger": "Surprising Stat" },
+    { "hook_text": "...", "trigger": "Controversy" },
+    { "hook_text": "...", "trigger": "Personal Story Angle" },
+    { "hook_text": "...", "trigger": "Pattern Interrupt" }
   ]
 }
 
@@ -164,7 +179,7 @@ FORMAT: ${formatLabel}
 ${nicheContext ? `NICHE: ${nicheContext}` : ""}${langNote}${platformToneNote}
 
 REQUIREMENTS:
-- Produce exactly 3 hook variants, each using a DIFFERENT psychological trigger from this list:
+- Produce exactly 6 hook variants, each using a DIFFERENT psychological trigger from this list:
   ${ALL_TRIGGERS.map((t) => `"${t}"`).join(", ")}
 - Write exactly ${beats} body beats that follow the first hook's trigger angle.
 - Keep total word count (hook + beats + CTA) ≤ ${maxWords} words.
@@ -233,7 +248,7 @@ The first character must be "{".`;
 /**
  * Builds the user message for generating one new hook using a trigger
  * not already present in existingTriggers.
- * The system prompt (STUDIO_SYSTEM_PROMPT) stays the same — caller reuses it.
+ * Injects proven viral hook templates as structural inspiration.
  */
 export function buildHookRegeneratePrompt(
   idea: string,
@@ -245,6 +260,10 @@ export function buildHookRegeneratePrompt(
   const availableTriggers = ALL_TRIGGERS.filter((t) => !existingTriggers.includes(t));
   const feedbackNote = feedback ? `\nCREATOR FEEDBACK: ${feedback}` : "";
 
+  // Get a small set of templates for inspiration
+  const templates = getRelevantTemplates(idea, 6);
+  const templateBlock = formatTemplatesForPrompt(templates);
+
   return `Generate one new hook for the following idea using a trigger that has NOT been used yet.
 
 IDEA: ${idea}
@@ -252,10 +271,15 @@ FORMAT: ${formatLabel}
 ALREADY USED TRIGGERS: ${existingTriggers.map((t) => `"${t}"`).join(", ")}
 AVAILABLE TRIGGERS (pick one): ${availableTriggers.map((t) => `"${t}"`).join(", ")}${feedbackNote}
 
+PROVEN VIRAL HOOK TEMPLATES (adapt the pattern, don't copy):
+${templateBlock}
+
 REQUIREMENTS:
 - Choose exactly one trigger from the AVAILABLE TRIGGERS list.
+- Use the template patterns above as structural inspiration — adapt them to this specific idea.
 - Write a single hook line that immediately grabs attention using that trigger.
 - The hook must be platform-native for ${formatLabel} — punchy, specific, no filler.
+- It should sound like something a real creator would say on camera.
 
 Return ONLY a valid JSON object matching this exact shape:
 {

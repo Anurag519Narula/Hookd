@@ -28,7 +28,7 @@ export interface UseStudioResult {
   buildScriptFromHook: (hook: HookVariant, index: number) => Promise<void>;
   tryAnotherHook: (index: number) => Promise<void>;
   regenerateWithFeedback: (feedback: string) => Promise<void>;
-  saveToVault: (insights?: object | null) => Promise<void>;
+  saveToVault: (insights?: object | null, existingIdeaId?: string | null) => Promise<void>;
   reset: () => void;
 }
 
@@ -198,25 +198,25 @@ export function useStudio(): UseStudioResult {
 
   // ── Save to vault ──────────────────────────────────────────────────────────
 
-  const saveToVault = useCallback(async (insights?: object | null): Promise<void> => {
+  const saveToVault = useCallback(async (insights?: object | null, existingIdeaId?: string | null): Promise<void> => {
     if (!script || !currentIdea) return;
 
-    if (insights) {
-      console.log("💾 Saving idea to vault with insights", insights);
-    } else {
-      console.log("💾 Saving idea to vault without insights");
-    }
+    const payload = {
+      raw_text: currentIdea,
+      format_type: script.format,
+      hooks: script.hook_variants.map((h) => ({ hook_text: h.hook_text, trigger: h.trigger })),
+      status: "developed",
+      ...(insights && { insights }),
+    };
 
-    const res = await fetch("/api/ideas", {
-      method: "POST",
+    // If the idea already exists, update it instead of creating a duplicate
+    const url = existingIdeaId ? `/api/ideas/${existingIdeaId}` : "/api/ideas";
+    const method = existingIdeaId ? "PATCH" : "POST";
+
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({
-        raw_text: currentIdea,
-        format_type: script.format,
-        hooks: script.hook_variants.map((h) => ({ hook_text: h.hook_text, trigger: h.trigger })),
-        status: "developed",
-        ...(insights && { insights }),
-      }),
+      body: JSON.stringify(payload),
     });
 
     const body = await res.json().catch(() => ({}));

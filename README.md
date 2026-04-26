@@ -1,307 +1,130 @@
-# Hookd — Creator OS
+# Hookd — Your Content, Unblocked.
 
-AI-powered content creation platform for short-form creators. Five tools, one workflow: **Vault** (idea capture) → **Studio** (idea validation) → **Develop** (script planning) → **Amplify** (caption generation) → post.
+**Stop overthinking. Start creating.**
 
 ---
 
-## What it does
+## The Problem Nobody Talks About
 
-| Tool | What it does |
+You have ideas. Dozens of them. They hit you in the shower, on a walk, at 2 AM when you should be sleeping.
+
+But here's what actually happens:
+
+- You type it into your Notes app… and forget about it.
+- You film something, but the caption takes longer than the video.
+- You post on Instagram, then realize you have no idea what to write for LinkedIn.
+- You spend 40 minutes researching hashtags that may or may not work.
+- You see someone else post *your* idea — because they moved faster.
+
+The gap between having an idea and actually publishing it? That's where most creators lose.
+
+Not because they lack talent. Not because they lack ideas. But because the *process* between idea and post is exhausting, scattered, and lonely.
+
+**Hookd exists to close that gap.**
+
+---
+
+## What Is Hookd?
+
+Hookd is a Creator OS — a single place where your raw idea becomes a validated concept, a scroll-stopping hook, a ready-to-film script, and platform-perfect captions. All powered by AI that actually understands your niche, your voice, and your audience.
+
+Think of it as your creative partner who never sleeps, never judges a rough idea, and never writes generic "In today's fast-paced world…" nonsense.
+
+---
+
+## How It Works
+
+Hookd follows the natural creative workflow — the one you already use in your head, just faster and smarter.
+
+### 1. 💡 Capture — The Vault
+Got an idea? Type it. One line. That's it.
+
+Hookd instantly saves it and quietly figures out what kind of content it could be — a talking head? A listicle? A hot take? It even scores how much potential your idea has, so you always know which ones to chase first.
+
+No more lost ideas. No more "I had this great thought yesterday but I can't remember it."
+
+### 2. 🔍 Validate — The Studio
+Before you hit record, wouldn't it be nice to *know* if your idea has legs?
+
+Hookd pulls real data — actual YouTube view counts, Instagram hashtag volumes, trending patterns — and tells you straight up: is this a strong opportunity, or should you pivot?
+
+You get a full report: who's already covering this, what angles are untapped, which platforms it'll perform best on, and when to post it.
+
+No more guessing. No more filming a video that gets 47 views because the topic was already saturated.
+
+### 3. 🎣 Hook — The Opening Line That Stops The Scroll
+This is where Hookd gets its name.
+
+The first 3 seconds decide everything. Hookd generates multiple hook options for your idea, each built on a different psychological trigger — curiosity, controversy, surprise, personal story. These aren't random AI sentences. They're inspired by 180+ proven viral hook patterns from creators who've already cracked the code.
+
+You pick the one that feels right. Your voice, your choice.
+
+### 4. 🎬 Script — Ready To Film
+Once you've locked your hook, Hookd builds a complete timestamped script around it. Beat by beat. 45–60 seconds. With a clear call-to-action at the end.
+
+You can walk up to your camera, hit record, and just… talk. The structure is already there.
+
+### 5. 📣 Amplify — Captions That Actually Fit Each Platform
+Here's what most creators get wrong: they write one caption and copy-paste it everywhere.
+
+Instagram isn't LinkedIn. Reels aren't YouTube Shorts. Each platform has its own language, its own rhythm, its own rules.
+
+Hookd writes completely different captions for each platform — with the right tone, the right length, and the right hashtags backed by real data. Not 30 random hashtags. The *right* ones, sized for maximum reach.
+
+---
+
+## Who Is Hookd For?
+
+- **Short-form video creators** on Instagram, Reels, YouTube Shorts, and LinkedIn.
+- **Solo creators** who don't have a team to brainstorm, research, and write for them.
+- **Growing creators** who are tired of posting into the void and want data-backed decisions.
+- **Creators in every niche** — tech, fitness, food, travel, business, gaming, beauty, education, you name it.
+- **Indian creators** navigating the unique dynamics of Tier 1–3 audiences and Hinglish content (though Hookd works for any English-speaking creator worldwide).
+
+---
+
+## The Inspiration
+
+Hookd was born from a simple frustration: **creating content is a full-time job, but the tools available treat it like a side hobby.**
+
+There are apps for editing. Apps for scheduling. Apps for analytics. But nothing that helps with the *hardest* part — going from a blank page to something worth posting.
+
+We watched creators spend more time on captions than on filming. We saw brilliant ideas die in Notes apps. We noticed people copying what's trending instead of finding their own angle — because research takes too long.
+
+So we built the tool we wished existed. One that respects the creative process but removes the friction. One that uses AI not to replace your voice, but to amplify it.
+
+---
+
+## Why Hookd Is Different
+
+| What others do | What Hookd does |
 |---|---|
-| **Vault** | Capture raw ideas instantly — type, speak, or paste. AI auto-tags, scores potential (low/medium/high), and flags whether it's worth developing. Filter, sort, and manage your idea backlog. Ideas captured from Studio and Develop are auto-saved here. |
-| **Studio** | Validates your idea against real YouTube data before you film. Returns a comprehensive report: opportunity score, trend direction, audience fit, competitor insights, top angles, untapped angles, platform analysis, risks, recommendations, and a content blueprint. Leads directly into Develop. |
-| **Develop** | Script planning page. Shows the content blueprint from Studio at the top. Generates 3 hook variants each built on a different psychological trigger (Curiosity Gap, Identity Threat, Surprising Stat, etc.). Pick a hook — a full script with beats and timestamps is built around it. Leads directly into Amplify. |
-| **Amplify** | Conversational caption generation. Multi-turn sessions, individual platform-native captions for each selected platform (Instagram, LinkedIn, Reels, YouTube Shorts) with real-time hashtag intelligence. When navigating from Develop, the idea is auto-sent. Conversations persisted server-side. |
-| **Settings** | Creator profile — niche, sub-niche, language, platform priority. Stored server-side, used to personalise every Groq prompt. |
-
-**Onboarding:** New users complete a 4-step wizard (name → niche → sub-niche → platforms) before accessing the app.
+| Generic AI captions | Captions written with *your* niche, *your* voice, *your* platform rules |
+| "Here are some hashtags" | Real hashtag intelligence — actual post volumes, trend data, platform-specific strategy |
+| One-size-fits-all content | Completely different output for Instagram vs LinkedIn vs Reels vs YouTube Shorts |
+| "Write me a script" | A full creative pipeline — from raw idea to validated concept to hook to script to captions |
+| Guesswork | Real YouTube and Instagram data powering every recommendation |
 
 ---
 
-## The workflow
+## The Hookd Promise
 
-```
-Vault  →  Studio  →  Develop  →  Amplify  →  Post
-capture   validate   script      captions
-```
+We don't write your content for you. **We make sure you never stare at a blank screen again.**
 
-1. **Capture** — Drop any idea into the Vault. AI scores and tags it instantly.
-2. **Validate** — Click "Validate" on any idea card → opens Studio with idea pre-filled. Or go to Studio directly and type your idea.
-3. **Plan the script** — Click "Plan Your Script" → navigates to Develop with the content blueprint and insights passed via navigation state.
-4. **Generate captions** — Click "Generate Captions" → navigates to Amplify, idea is auto-sent, captions generate immediately.
-5. **Post** — Copy individual platform captions and post.
+Every idea gets captured. Every concept gets validated. Every hook is built to stop the scroll. Every script is ready to film. Every caption is native to its platform.
+
+You bring the creativity. We handle the chaos.
 
 ---
 
-## Tech stack
+## Documentation
 
-```
-client/    React 18 + Vite + TypeScript
-           React Router v7
-           Inline styles + CSS variables (no CSS framework)
-
-server/    Node.js + Express + TypeScript
-           ts-node + nodemon
-
-database   PostgreSQL via Supabase (connection pooler)
-
-AI         Groq API — llama-3.3-70b-versatile
-
-auth       JWT (bcryptjs + jsonwebtoken)
-
-APIs       YouTube Data API v3
-           RapidAPI — instagram-hashtags, top-instagram-hashtag
-```
-
----
-
-## Project structure
-
-```
-hookd/
-├── client/
-│   ├── src/
-│   │   ├── api/            # Typed fetch wrappers for every server endpoint
-│   │   ├── components/     # Shared UI components
-│   │   ├── context/        # AuthContext
-│   │   ├── hooks/          # Custom React hooks (useAmplify, useStudio, useVault, …)
-│   │   ├── screens/        # One file per route
-│   │   └── types/          # Shared TypeScript types
-│   └── vite.config.ts
-│
-└── server/
-    └── src/
-        ├── db/             # Pool + initDb (schema migrations)
-        ├── middleware/     # requireAuth JWT middleware
-        ├── prompts/        # Groq prompt builders (one file per feature)
-        ├── routes/         # Express routers (one file per resource)
-        ├── services/       # cache.ts, dbCache.ts, generator.ts, insights.ts, transcript.ts
-        └── types/          # Shared server-side types
-```
-
----
-
-## Routes
-
-| Path | Screen | Auth required | Notes |
-|---|---|---|---|
-| `/` | HomeScreen | ✓ | Landing/marketing page |
-| `/onboarding` | OnboardingScreen | ✓ | 4-step wizard; redirects away if already complete |
-| `/studio` | StudioScreen | ✓ + onboarding | Idea validation — generates full InsightReport |
-| `/develop` | DevelopScreen | ✓ + onboarding | Hook generation + script planning. Receives idea + insights via navigation state from Studio |
-| `/amplify` | AmplifyScreen | ✓ + onboarding | Conversational caption generation. Receives idea via navigation state from Develop |
-| `/vault` | VaultScreen | ✓ | Idea capture and management |
-| `/insights/:ideaId` | InsightScreen | ✓ | Read-only cached insight report for a saved idea |
-| `/settings` | SettingsScreen | ✓ | Creator profile |
-
----
-
-## Navigation state (no URL params)
-
-Data is passed between pages via React Router navigation state to keep URLs clean:
-
-| From | To | State passed |
-|---|---|---|
-| Studio | Develop | `{ idea, ideaId, insights: InsightReport }` |
-| Develop | Amplify | `{ idea, ideaId }` |
-| Vault (idea card) | Studio | `?ideaId=` query param (pre-fills idea from DB) |
-
----
-
-## API endpoints
-
-```
-POST   /api/auth/signup
-POST   /api/auth/login
-
-GET    /api/users/me
-PATCH  /api/users/me
-DELETE /api/users/me
-
-GET    /api/ideas
-POST   /api/ideas
-GET    /api/ideas/:id
-PATCH  /api/ideas/:id
-DELETE /api/ideas/:id
-
-GET    /api/insights
-
-POST   /api/studio/hooks
-POST   /api/studio/script
-POST   /api/studio/regenerate
-
-GET    /api/conversations
-GET    /api/conversations/:id
-POST   /api/conversations
-PATCH  /api/conversations/:id
-DELETE /api/conversations/:id
-
-POST   /api/amplify
-
-GET    /api/trending
-```
-
-`/api/trending` is public (no auth). All other routes require a valid JWT in the `Authorization: Bearer <token>` header.
-
----
-
-## Database schema
-
-```sql
-users (
-  id                  TEXT PRIMARY KEY,
-  email               TEXT UNIQUE NOT NULL,
-  password_hash       TEXT NOT NULL,
-  name                TEXT NOT NULL,
-  created_at          BIGINT NOT NULL,
-  niche               TEXT,
-  sub_niche           TEXT,
-  language            TEXT DEFAULT 'English',
-  platform_priority   JSONB DEFAULT '[]',
-  onboarding_complete BOOLEAN DEFAULT FALSE
-)
-
-ideas (
-  id                  TEXT PRIMARY KEY,
-  user_id             TEXT REFERENCES users(id) ON DELETE CASCADE,
-  raw_text            TEXT NOT NULL,
-  created_at          BIGINT NOT NULL,
-  tags                JSONB,
-  format_type         TEXT,
-  emotion_angle       TEXT,
-  potential_score     TEXT,
-  hooks               JSONB,
-  captions            JSONB,
-  selected_hook       TEXT,
-  status              TEXT NOT NULL DEFAULT 'raw',
-  insights            JSONB,
-  insights_cached_at  BIGINT
-)
-
-amplify_conversations (
-  id          TEXT PRIMARY KEY,
-  user_id     TEXT REFERENCES users(id) ON DELETE CASCADE,
-  title       TEXT NOT NULL,
-  messages    JSONB NOT NULL DEFAULT '[]',
-  created_at  BIGINT NOT NULL,
-  updated_at  BIGINT NOT NULL
-)
-
-api_cache (
-  cache_key   TEXT PRIMARY KEY,   -- SHA-256 hash of request params
-  namespace   TEXT NOT NULL,
-  payload     JSONB NOT NULL,
-  created_at  BIGINT NOT NULL,
-  expires_at  BIGINT NOT NULL     -- Unix ms; 7-day TTL by default
-)
-```
-
-Schema is managed via `initDb()` in `server/src/db/index.ts` using `CREATE TABLE IF NOT EXISTS` + `ALTER TABLE … ADD COLUMN IF NOT EXISTS` migrations that run on every server start.
-
----
-
-## Caching
-
-All expensive API calls are cached in the `api_cache` table with a 7-day TTL. Cache keys are SHA-256 hashes of the request parameters.
-
-| Namespace | What's cached |
+| Document | Description |
 |---|---|
-| `youtube_search` | YouTube Data API search results |
-| `hashtag_intelligence` | Per-platform hashtag strategy (YouTube + RapidAPI + Groq synthesis) |
-| `studio_hooks` | Hook variants for a given idea + profile |
-| `studio_script` | Script body for a given hook |
-| `insights` | Full idea validation report (InsightReport) |
-| `rapidapi_instagram_hashtags` | RapidAPI instagram-hashtags results |
-| `rapidapi_top_hashtags_global` | RapidAPI top-instagram-hashtag results |
-
-Expired rows are purged on server startup and every 6 hours via `setInterval`.
+| [Knowledge Base](docs/KNOWLEDGE_BASE.md) | Complete technical reference — architecture, data models, API surface, caching, security |
+| [V1 Execution Plan](docs/V1_PLAN.md) | Current build priorities — output quality, trust, retention, intelligence moat |
+| [V2 Roadmap](docs/V2_ROADMAP.md) | Parked features — social connections, advanced intelligence, monetization |
 
 ---
 
-## AI prompt architecture
-
-| File | Purpose | Output type |
-|---|---|---|
-| `amplify.ts` | Platform-explicit caption generation with per-platform hashtag intelligence | `CaptionResult` — individual captions per platform |
-| `studio.ts` | Hook variant generation + script-from-hook generation | `HookVariant[]` / `ScriptBody` |
-| `insightSynthesis.ts` | Full idea validation report with real YouTube data | `InsightReport` (13 sections including contentBlueprint) |
-| `ideaTagging.ts` | Auto-tags ideas on save | `{ tags, format_type, emotion_angle, potential_score }` |
-
-All prompts receive the creator profile (niche, sub-niche, language, platform priority) when available.
-
-### InsightReport sections
-
-The `InsightReport` returned by `/api/insights` contains:
-
-1. Trend direction + score + velocity
-2. Competition level + saturation warning
-3. Audience fit (score, primary audience, intent, best posting times/days)
-4. Summary + opportunity score
-5. Top angles (with reach and difficulty ratings)
-6. Untapped angles
-7. Platform analysis (Instagram Reels + YouTube Shorts)
-8. YouTube data (real view counts, top channels, common title patterns)
-9. **Content blueprint** (opening hook, core message, key points with timestamps, CTA, visual/audio notes, duration target) — passed to Develop page
-10. Competitor insights
-11. Risks
-12. Recommendations
-13. Key insight + verdict label + verdict reason
-
-### Caption length constraints
-
-| Setting | Output |
-|---|---|
-| Short | 1-2 lines |
-| Medium | 4-5 lines |
-| Long | 2-3 paragraphs |
-
----
-
-## Setup
-
-### Prerequisites
-
-- Node.js 18+
-- PostgreSQL database (Supabase recommended)
-- Groq API key
-- YouTube Data API v3 key
-- RapidAPI key with access to `instagram-hashtags` and `top-instagram-hashtag`
-
-### Environment variables
-
-Create `server/.env`:
-
-```env
-GROQ_API_KEY=...
-DATABASE_URL=postgresql://...
-JWT_SECRET=...
-YOUTUBE_API_KEY=...
-RAPIDAPI_KEY=...
-PORT=3001
-```
-
-### Install and run
-
-```bash
-# Install dependencies
-cd client && npm install
-cd ../server && npm install
-
-# Start server (port 3001)
-cd server && npm run dev
-
-# Start client (port 5173)
-cd client && npm run dev
-```
-
-The server runs `initDb()` on startup, creating all tables and running any pending column migrations automatically.
-
-### Run tests
-
-```bash
-# Client
-cd client && npm test
-
-# Server
-cd server && npm test
-```
+**Hookd — From idea to posted. Faster than you think.**

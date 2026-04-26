@@ -92,7 +92,7 @@ export function HookCard({
       {/* Trigger label row */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: 700,
           letterSpacing: "0.1em",
           textTransform: "uppercase",
@@ -102,7 +102,7 @@ export function HookCard({
         </span>
         {isSelected && (
           <span style={{
-            fontSize: 12,
+            fontSize: 10,
             fontWeight: 700,
             letterSpacing: "0.08em",
             textTransform: "uppercase",
@@ -118,7 +118,7 @@ export function HookCard({
           </span>
         )}
         {!isSelected && isHovered && (
-          <span style={{ fontSize: 12, fontWeight: 600, color: meta.color, letterSpacing: "0.06em" }}>
+          <span style={{ fontSize: 10, fontWeight: 600, color: meta.color, letterSpacing: "0.06em" }}>
             Click to select
           </span>
         )}
@@ -126,8 +126,8 @@ export function HookCard({
 
       {/* Hook text */}
       <p style={{
-        fontSize: 16,
-        lineHeight: 1.7,
+        fontSize: 13,
+        lineHeight: 1.6,
         color: isSelected ? "var(--text)" : "var(--text-2)",
         margin: 0,
         fontWeight: isSelected ? 500 : 400,

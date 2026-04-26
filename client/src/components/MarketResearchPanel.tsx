@@ -407,10 +407,10 @@ function ReportBody({ insights }: { insights: InsightReport }) {
         </div>
       </div>
 
-      {/* ── 3. YOUTUBE DATA ── */}
+      {/* ── 3. INSTAGRAM & YOUTUBE DATA ── */}
       {insights.youtubeData && (
         <div>
-          <SectionHeader label="YouTube Data" />
+          <SectionHeader label="Instagram & YouTube Data" />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1, background: "var(--border)", borderRadius: 8, overflow: "hidden" }}>
             {[
               { label: "Top Video", value: formatViews(insights.youtubeData.topVideoViews), sub: "views", accent: true },

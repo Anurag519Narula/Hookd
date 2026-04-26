@@ -1,5 +1,6 @@
 import Groq from "groq-sdk";
 import type { Hook } from "../types/index";
+import { getRelevantTemplates, formatTemplatesForPrompt } from "./hookTemplates";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY ?? "" });
 
@@ -9,7 +10,8 @@ Key Rules:
 1. Never use filler phrases like 'In today's world,' 'As a content creator,' or 'In this day and age.'
 2. Never start a hook with 'Have you ever.'
 3. Focus on the specific aspirations, challenges, and cultural touchpoints of audiences in India.
-4. If a niche or sub-niche is provided, the hooks MUST be deeply anchored in that specific professional or hobbyist world.`;
+4. If a niche or sub-niche is provided, the hooks MUST be deeply anchored in that specific professional or hobbyist world.
+5. Use the provided viral hook templates as structural inspiration — adapt the proven patterns to the specific idea.`;
 
 export interface GenerateHooksParams {
   raw_idea: string;
@@ -22,6 +24,10 @@ export async function generateHooks(params: GenerateHooksParams): Promise<Hook[]
   const { raw_idea, niche, sub_niche, language } = params;
 
   const nicheContext = sub_niche ? `${niche} (specifically ${sub_niche})` : niche;
+
+  // Get relevant viral hook templates based on the idea
+  const templates = getRelevantTemplates(raw_idea, 10);
+  const templateBlock = formatTemplatesForPrompt(templates);
 
   const prompt = `System: ${SYSTEM_INSTRUCTION}
 
@@ -40,8 +46,16 @@ Use exactly 5 of these 6 triggers (pick the 5 that best fit the idea):
 - Personal Story Angle: open with a specific personal moment
 - Pattern Interrupt: say something that breaks the reader's mental autopilot
 
+PROVEN VIRAL HOOK TEMPLATES (adapt the structure to this idea — do NOT copy verbatim):
+${templateBlock}
+
 Raw idea:
 ${raw_idea}
+
+INSTRUCTIONS:
+- Study the template patterns above. They are from top-performing Instagram Reels and YouTube Shorts.
+- Adapt the STRUCTURE and RHYTHM of these templates to the specific idea with real, specific details.
+- Each hook should sound like something a real creator would say on camera, not a copywriter's headline.
 
 Return ONLY a valid JSON array of exactly 5 objects. Each object must have:
 - "hook_text": the hook line (string)

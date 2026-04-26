@@ -49,7 +49,7 @@ router.post("/hooks", async (req: AuthenticatedRequest, res: Response) => {
       model: "llama-3.3-70b-versatile",
       messages: [{ role: "system", content: system }, { role: "user", content: user }],
       temperature: 0.85,
-      max_tokens: 512,
+      max_tokens: 1024,
       response_format: { type: "json_object" },
     });
 

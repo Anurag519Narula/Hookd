@@ -1,6 +1,128 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
+
+// ── Hook template pools for the showcase (subset from server hookTemplates) ───
+const SHOWCASE_POOLS: { category: string; signal: string; pool: string[] }[] = [
+  {
+    category: "Educational",
+    signal: "#14b8a6",
+    pool: [
+      "It took me 10 years to learn this but I'll teach it to you in less than 1 minute.",
+      "If I woke up (pain point) tomorrow, and wanted to (dream result) by (time) here's exactly what I would do.",
+      "Everyone tells you to (action) but nobody actually tells you how to do it. Here is a # second step by step tutorial.",
+      "Here's exactly how much (action/item) you need to (result).",
+      "If you're a (target audience) and you want (dream result) by (avenue) then listen to this video.",
+      "Here are some slightly unethical (industry/niche) hacks that you should know if you're (target audience).",
+      "I think I just found the biggest (niche/industry) cheat code.",
+      "In 60 seconds I'm going to teach you more about (thing) than you have ever learned in your entire life.",
+      "If I were starting over in my (age range) with no (item) here are the top # things I would do to (dream result).",
+      "30 seconds of (industry) advice I give my best friend if he/she were starting from scratch.",
+      "Here's how to develop a (skill) so strong that you physically can't stop (doing skill).",
+      "If you're (age range) these are the # things you need to do so you don't end up (pain point) by (age).",
+    ],
+  },
+  {
+    category: "Storytelling",
+    signal: "#818cf8",
+    pool: [
+      "I don't have a backup plan so this kind of needs to work.",
+      "X days/months/years into my (action), my worst nightmare became my reality.",
+      "This is probably the scariest thing I have ever done.",
+      "I started my (business) when I was (age) with (amount).",
+      "X years ago my (person) told me (quote).",
+      "In (time), I went from (before state) to (after state).",
+      "So I messed up.",
+      "This is the story of how I managed to do (achievement).",
+      "When I (action), people said (feedback).",
+      "I got (dream result) without (pain point/points) here's how.",
+      "It all started when (person) (action).",
+      "I am leaving my (salary) dream job at (company) to (action).",
+    ],
+  },
+  {
+    category: "Myth Busting",
+    signal: "#f59e0b",
+    pool: [
+      "They said, \"(famous cliché or quote)\" That's a lie.",
+      "More (target audience) need to hear this, (common belief) will not (result).",
+      "You are not bad at (action), you probably were just never taught how to (action).",
+      "This is why doing (action) makes you (pain point).",
+      "Let me de-influence you from (action).",
+      "Stop using (item) for (result).",
+      "Your life is boring because you don't (action).",
+      "If you (action) like this, then you're doing it wrong.",
+      "Don't make the mistake of (action), (action), (action).",
+      "You're using your (noun) wrong and I am going to show you how to use it the right way.",
+      "It's time to throw away your (item), you don't need it anymore.",
+      "Just because you do (action) doesn't make you a good (label).",
+    ],
+  },
+  {
+    category: "Authority",
+    signal: "#34d399",
+    pool: [
+      "My (before state) used to look like this and now they look like this.",
+      "Nobody believes me if I say I went from this to this.",
+      "Just # (item/action) took my client from (before) to (after).",
+      "Over the past (time) I've grown my (thing) from (before) to (after).",
+      "I went from this to this.",
+      "I (dream result) in the past (time frame), here's proof.",
+      "How to turn this into this in X simple steps.",
+      "My customer/client got (dream result) without (pain point).",
+      "I became a (achievement) at (age) and if I could give you X pieces of advice it would be…",
+      "After (dream result) here is one thing I learned the hard way so you don't have to.",
+      "10 YEARS it took me from (before state) to (after state).",
+      "I am only (metric) but I have became one of the best (title) in the world.",
+    ],
+  },
+  {
+    category: "Comparison",
+    signal: "#f472b6",
+    pool: [
+      "A lot of people ask me what's better (option #1) or (option #2) — I achieved (dream result) doing one of these and it's not even close.",
+      "This is (noun) before you (action), this is (noun) after you (action).",
+      "Cheap vs. Expensive (noun).",
+      "This (noun) and this (noun) have the same amount of (noun).",
+      "For this (item) you could have all of these (item).",
+      "This group didn't (action) and this group did.",
+      "Both these (noun) are exactly the same. But this one is (metric) and this one is (metric).",
+      "Would you feel more (trait) in this (noun) or this one?",
+      "This is what your (noun) looks like when you don't take (noun). And this is what it looks like when you do.",
+      "This is me after (action) in the (location) with (condition). And this is me just (action).",
+    ],
+  },
+  {
+    category: "Day in the Life",
+    signal: "#818cf8",
+    pool: [
+      "We all have the same 24 hours in a day so here I am putting my 24 hours to work.",
+      "Day 1 of starting over my whole entire life.",
+      "Come to work with me as a (title).",
+      "Day in the life of a (adjective) person.",
+      "Day # of turning from (before state) to (after state) and suddenly I don't want to be (after state) anymore.",
+      "Day # trying to make (amount) by the end of the year, by (method).",
+      "This is what an average day of a (title) looks like a week out from (event).",
+      "Day in the life of a future millionaire.",
+      "This is what my morning looks like while (situation).",
+      "Come with me to earn $ per day, with (avenue).",
+    ],
+  },
+];
+
+const TEMPLATE_COUNTS: Record<string, string> = {
+  Educational: "300+",
+  Storytelling: "120+",
+  "Myth Busting": "34+",
+  Authority: "45+",
+  Comparison: "30+",
+  "Day in the Life": "18+",
+};
+
+function shuffleAndPick<T>(arr: T[], count: number): T[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
 
 // ── Icons ──────────────────────────────────────────────────────────────────────
 const ArrowRight = () => (
@@ -11,15 +133,30 @@ const ArrowRight = () => (
 );
 
 // ── Reusable section label ─────────────────────────────────────────────────────
-function Label({ children }: { children: React.ReactNode }) {
+function Label({ children, step }: { children: React.ReactNode; step?: number }) {
   return (
-    <p style={{
-      fontSize: 11, fontWeight: 500, letterSpacing: "0.14em",
-      textTransform: "uppercase", color: "var(--text-3)",
-      margin: "0 0 24px",
-    }}>
-      {children}
-    </p>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "0 0 24px" }}>
+      {step && (
+        <span style={{
+          fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
+          color: "var(--accent)",
+          background: "rgba(20,184,166,0.1)",
+          border: "1px solid rgba(20,184,166,0.2)",
+          borderRadius: 4,
+          padding: "2px 7px",
+          flexShrink: 0,
+        }}>
+          {String(step).padStart(2, "0")}
+        </span>
+      )}
+      <p style={{
+        fontSize: 11, fontWeight: 500, letterSpacing: "0.14em",
+        textTransform: "uppercase", color: "var(--text-3)",
+        margin: 0,
+      }}>
+        {children}
+      </p>
+    </div>
   );
 }
 
@@ -65,6 +202,16 @@ function CompareRow({ left, right }: { left: string; right: string }) {
 // ── Main ───────────────────────────────────────────────────────────────────────
 export function HomeScreen() {
   const navigate = useNavigate();
+
+  // Randomize showcase hooks on each page load
+  const showcaseCards = useMemo(
+    () => SHOWCASE_POOLS.map((cat) => ({
+      category: cat.category,
+      signal: cat.signal,
+      hooks: shuffleAndPick(cat.pool, 3),
+    })),
+    []
+  );
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", overflowX: "hidden" }}>
@@ -168,7 +315,7 @@ export function HomeScreen() {
             overflow: "hidden",
           }}>
             {[
-              { value: "3×", label: "Hooks per idea" },
+              { value: "6×", label: "Hooks per idea" },
               { value: "4", label: "Platforms at once" },
               { value: "Live", label: "Real-time hashtag data" },
               { value: "<1min", label: "Generation time" },
@@ -199,18 +346,108 @@ export function HomeScreen() {
       {/* ── DIVIDER ── */}
       <div style={{ borderTop: "1px solid var(--border)", position: "relative", zIndex: 1 }} />
 
+      {/* ── TRENDING HOOKS ── */}
+      <section style={{
+        maxWidth: 1100, margin: "0 auto",
+        padding: "64px 40px",
+        position: "relative", zIndex: 1,
+      }}>
+        <Label step={1}>Proven viral patterns</Label>
+        <h2 style={{
+          fontSize: "clamp(24px, 3.5vw, 44px)",
+          fontWeight: 800, letterSpacing: "-0.04em",
+          lineHeight: 1.1, color: "var(--text)",
+          margin: "0 0 16px",
+        }}>
+          Hooks that actually stop the scroll.
+        </h2>
+        <p style={{
+          fontSize: 15, color: "var(--text-3)", lineHeight: 1.7,
+          margin: "0 0 40px",
+        }}>
+          Every hook Hookd generates is inspired by patterns from 1,000+ top-performing Reels and Shorts. Here's a taste.
+        </p>
+
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 1,
+          background: "var(--border)",
+          border: "1px solid var(--border)",
+          borderRadius: 10,
+          overflow: "hidden",
+        }} className="hooks-showcase-grid">
+          {showcaseCards.map((card) => (
+            <div
+              key={card.category}
+              style={{
+                background: "var(--bg-card)",
+                padding: "22px 24px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}
+            >
+              {/* Category label */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{
+                  width: 6, height: 6, borderRadius: "50%",
+                  background: card.signal, flexShrink: 0,
+                }} />
+                <span style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
+                  textTransform: "uppercase", color: "var(--text-3)",
+                }}>
+                  {card.category}
+                </span>
+              </div>
+
+              {/* Hook examples */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {card.hooks.map((hook, i) => (
+                  <div key={i} style={{
+                    fontSize: 13, color: i === 0 ? "var(--text)" : "var(--text-2)",
+                    lineHeight: 1.6,
+                    paddingLeft: 10,
+                    borderLeft: `2px solid ${i === 0 ? card.signal : `${card.signal}30`}`,
+                    fontWeight: i === 0 ? 500 : 400,
+                  }}>
+                    "{hook}"
+                  </div>
+                ))}
+              </div>
+
+              {/* Count badge */}
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                alignSelf: "flex-start",
+                padding: "3px 8px", borderRadius: 4,
+                background: `${card.signal}12`,
+                border: `1px solid ${card.signal}25`,
+              }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: card.signal }}>
+                  {TEMPLATE_COUNTS[card.category] ?? "10+"} templates
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── DIVIDER ── */}
+      <div style={{ borderTop: "1px solid var(--border)", position: "relative", zIndex: 1 }} />
+
       {/* ── HOW IT WORKS ── */}
       <section style={{
         maxWidth: 1100, margin: "0 auto",
         padding: "64px 40px",
         position: "relative", zIndex: 1,
       }}>
-        <Label>The workflow</Label>
+        <Label step={2}>The workflow</Label>
         <h2 style={{
           fontSize: "clamp(24px, 3.5vw, 44px)",
           fontWeight: 800, letterSpacing: "-0.04em",
           lineHeight: 1.1, color: "var(--text)",
-          margin: "0 0 48px", maxWidth: 500,
+          margin: "0 0 48px",
         }}>
           From random thought to viral post.
         </h2>
@@ -221,8 +458,8 @@ export function HomeScreen() {
         }} className="steps-grid">
           {[
             { num: "01", title: "Capture", body: "Drop any idea into the Vault the moment it hits. Type, speak, or paste. AI scores and tags it instantly." },
-            { num: "02", title: "Validate", body: "Open it in Studio. Check it against real YouTube data — opportunity score, trend direction, competition, untapped angles." },
-            { num: "03", title: "Plan the script", body: "Go to Develop. Pick from 3 hook variants built on psychological triggers. A full script with beats and timestamps is built around your choice." },
+            { num: "02", title: "Validate", body: "Open it in Studio. Check it against real Instagram and YouTube data — opportunity score, trend direction, competition, untapped angles." },
+            { num: "03", title: "Plan the script", body: "Go to Develop. Pick from 6 hook variants built on psychological triggers. A full script with beats and timestamps is built around your choice." },
             { num: "04", title: "Generate captions", body: "Hit Amplify. Platform-native captions for Instagram, LinkedIn, Reels, and YouTube Shorts — with trending hashtags — in under a minute." },
             { num: "05", title: "Post it.", body: "Copy, paste, post. Your vault and conversation history are always there when the next idea hits." },
           ].map((step) => (
@@ -259,12 +496,12 @@ export function HomeScreen() {
         padding: "64px 40px",
         position: "relative", zIndex: 1,
       }}>
-        <Label>Built for every creator</Label>
+        <Label step={3}>Built for every creator</Label>
         <h2 style={{
           fontSize: "clamp(24px, 3.5vw, 44px)",
           fontWeight: 800, letterSpacing: "-0.04em",
           lineHeight: 1.1, color: "var(--text)",
-          margin: "0 0 48px", maxWidth: 560,
+          margin: "0 0 48px",
         }}>
           Whatever your niche, the workflow is the same.
         </h2>
@@ -422,12 +659,12 @@ export function HomeScreen() {
         padding: "64px 40px",
         position: "relative", zIndex: 1,
       }}>
-        <Label>Why this works better</Label>
+        <Label step={4}>Why this works better</Label>
         <h2 style={{
           fontSize: "clamp(24px, 3.5vw, 44px)",
           fontWeight: 800, letterSpacing: "-0.04em",
           lineHeight: 1.1, color: "var(--text)",
-          margin: "0 0 48px", maxWidth: 600,
+          margin: "0 0 48px",
         }}>
           A blank prompt gets you a blank result.
         </h2>
@@ -474,10 +711,10 @@ export function HomeScreen() {
         </div>
 
         <CompareRow left="Writes about a topic, not your idea" right="Builds from your specific idea and niche profile" />
-        <CompareRow left="One output — no angles, no choice" right="3 hook variants with named psychological triggers" />
+        <CompareRow left="One output — no angles, no choice" right="6 hook variants with named psychological triggers" />
         <CompareRow left="Sounds the same on every platform" right="Platform-native captions with real Instagram hashtag data" />
         <CompareRow left="Forgets everything after the chat" right="Conversation history saved — pick up any session" />
-        <CompareRow left="No idea validation, just guesswork" right="Validates your idea against real YouTube trend data before you film" />
+        <CompareRow left="No idea validation, just guesswork" right="Validates your idea against real Instagram and YouTube trend data before you film" />
         <CompareRow left="You still have to figure out what to cover" right="Content blueprint tells you exactly what to cover and how" />
         </div>
       </section>
@@ -581,6 +818,9 @@ export function HomeScreen() {
           .usecases-grid {
             grid-template-columns: 1fr 1fr !important;
           }
+          .hooks-showcase-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
         }
         @media (max-width: 600px) {
           .steps-grid {
@@ -590,6 +830,9 @@ export function HomeScreen() {
             grid-template-columns: 1fr !important;
           }
           .usecases-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .hooks-showcase-grid {
             grid-template-columns: 1fr !important;
           }
         }

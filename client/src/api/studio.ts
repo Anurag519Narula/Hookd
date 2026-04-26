@@ -21,7 +21,7 @@ export interface StudioRegenerateRequest {
 
 // ── New hook-first API ─────────────────────────────────────────────────────────
 
-/** Step 1: Generate 3 hook variants only. Fast — no beats generated yet. */
+/** Step 1: Generate 6 hook variants only. Fast — no beats generated yet. */
 export async function generateHooks(
   request: StudioGenerateRequest
 ): Promise<{ hook_variants: HookVariant[]; cached: boolean }> {

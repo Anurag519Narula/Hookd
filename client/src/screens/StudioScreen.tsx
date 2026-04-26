@@ -138,7 +138,7 @@ export function StudioScreen() {
             Idea Validation
           </h1>
           <p style={{ fontSize: 15, color: "var(--text-3)", margin: 0, lineHeight: 1.6 }}>
-            Check your idea against real YouTube data before you film anything.
+            Check your idea against real Instagram and YouTube data before you film anything.
           </p>
         </div>
 

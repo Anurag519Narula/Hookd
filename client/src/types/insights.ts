@@ -39,7 +39,7 @@ export interface InsightReport {
     hashtagStrategy: string;
   }>;
 
-  // ── YouTube data (real numbers) ───────────────────────────────────────────
+  // ── YouTube & Instagram data (real numbers) ────────────────────────────────
   youtubeData: {
     topVideoViews: number; // highest view count found
     avgTopVideoViews: number; // average of top 5
