@@ -1,5 +1,11 @@
 import type { Script, ScriptFormat, HookVariant, ScriptBeat } from "../types/index";
+import type { ClarityQuestion } from "../types/insights";
 import { authHeaders } from "./auth";
+
+export interface ClarifyResponse {
+  isClear: boolean;
+  questions: ClarityQuestion[];
+}
 
 export interface StudioGenerateRequest {
   idea: string;
@@ -80,4 +86,18 @@ export async function regenerateScript(request: StudioRegenerateRequest): Promis
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((body as { error?: string }).error ?? "Failed to regenerate script");
   return body as Partial<Script>;
+}
+
+// ── Clarity assessment ─────────────────────────────────────────────────────────
+
+/** Assess whether an idea is specific enough for validation. */
+export async function clarifyIdea(idea: string): Promise<ClarifyResponse> {
+  const res = await fetch("/api/studio/clarify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ idea }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((body as { error?: string }).error ?? "Failed to assess idea clarity");
+  return body as ClarifyResponse;
 }

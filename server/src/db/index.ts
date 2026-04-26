@@ -79,6 +79,11 @@ export async function initDb(): Promise<void> {
     )
   `);
 
+  // Add metadata column for fuzzy cache lookup by niche and keywords
+  await pool.query(`
+    ALTER TABLE api_cache ADD COLUMN IF NOT EXISTS metadata JSONB
+  `);
+
   // Index for fast namespace-scoped lookups and TTL cleanup
   await pool.query(`
     CREATE INDEX IF NOT EXISTS api_cache_namespace_idx ON api_cache (namespace);

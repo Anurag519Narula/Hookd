@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import Groq from "groq-sdk";
 import { getCached, setCached } from "./dbCache";
+import hashtagBank from "../data/hashtagBank.json";
 
 // ── Timeout wrapper for all external fetch calls ──────────────────────────────
 async function fetchWithTimeout(url: string, options: Parameters<typeof fetch>[1] = {}, timeoutMs = 15000): Promise<ReturnType<typeof fetch>> {
@@ -22,6 +23,7 @@ export interface YouTubeResult {
   likeCount: string;
   channelTitle: string;
   publishedAt: string;
+  videoId?: string;
   tags?: string[];
   description?: string;
 }
@@ -273,6 +275,7 @@ async function searchYouTube(query: string, maxResults = 8): Promise<YouTubeResu
       likeCount: item.statistics?.likeCount ?? "0",
       channelTitle: item.snippet?.channelTitle ?? "",
       publishedAt: item.snippet?.publishedAt ?? "",
+      videoId: item.id ?? "",
       tags: item.snippet?.tags ?? [],
       description: (item.snippet?.description ?? "").slice(0, 500),
     }));
@@ -427,9 +430,21 @@ export async function fetchHashtagIntelligence(params: {
 
   const needsInstagram = platforms.some((p) => p === "instagram" || p === "reels");
   // Use the keyword-based RapidAPI for topic-specific Instagram hashtags
-  const instagramValidated = needsInstagram
-    ? await fetchTopInstagramHashtags(topic)
-    : [];
+  // Falls back to static hashtag bank if RapidAPI returns empty
+  let instagramValidated: Array<{ hashtag: string; postCount: number; tier: "high" | "mid" | "niche" | "micro" }> = [];
+  if (needsInstagram) {
+    instagramValidated = await fetchTopInstagramHashtags(topic);
+    // Fallback to static hashtag bank by niche
+    if (instagramValidated.length === 0 && niche) {
+      const nicheKey = niche.toLowerCase().replace(/\s+/g, "") as keyof typeof hashtagBank;
+      const staticTags = (hashtagBank as Record<string, string[]>)[nicheKey] ?? [];
+      instagramValidated = staticTags.map((tag) => ({
+        hashtag: tag,
+        postCount: 0,
+        tier: "niche" as const,
+      }));
+    }
+  }
 
   const groqHashtags = await synthesizeHashtagsWithGroq({
     topic,

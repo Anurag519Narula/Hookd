@@ -1,10 +1,14 @@
 import { Router, Response } from "express";
 import pool from "../db";
-import { fetchYouTubeTrends, fetchGoogleTrends } from "../services/insights";
+import { fetchYouTubeTrends, fetchGoogleTrends, fetchTopInstagramHashtags } from "../services/insights";
 import { synthesizeInsights } from "../prompts/insightSynthesis";
 import { getCached, setCached } from "../services/dbCache";
 import { checkLimit, incrementUsage } from "../services/usageLimits";
 import { AuthenticatedRequest } from "../middleware/auth";
+import { fuzzyCacheLookup } from "../services/fuzzyCacheLookup";
+import { generateAIEstimate } from "../services/aiEstimate";
+import type { YouTubeResult } from "../services/insights";
+import hashtagBank from "../data/hashtagBank.json";
 
 const router = Router();
 
@@ -67,13 +71,35 @@ router.get("/", async (req: AuthenticatedRequest, res: Response) => {
       return;
     }
 
-    // ── 4. Fetch fresh data ───────────────────────────────────────────────────
-    const [youtubeResults, trendData] = await Promise.all([
-      fetchYouTubeTrends(idea, niche || undefined),
-      fetchGoogleTrends(idea),
-    ]);
+    // ── 4. Fetch fresh data with fallback stack ─────────────────────────────
+    const nicheStr = niche || "";
+    const ideaKeywords = idea.trim().toLowerCase().split(/\s+/).filter((w: string) => w.length > 2).slice(0, 8);
 
-    const report = await synthesizeInsights({ idea, niche, youtubeResults, trendData });
+    // YouTube: live → fuzzy cache → empty
+    let youtubeResults: YouTubeResult[] = [];
+    try {
+      youtubeResults = await fetchYouTubeTrends(idea, niche || undefined);
+    } catch {
+      // Try fuzzy cache
+      const cached = await fuzzyCacheLookup<YouTubeResult[]>({
+        namespace: "youtube_search",
+        niche: nicheStr,
+        keywords: ideaKeywords,
+      });
+      if (cached) youtubeResults = cached;
+    }
+
+    const trendData = await fetchGoogleTrends(idea);
+
+    const hasAnyData = youtubeResults.length > 0 || trendData !== null;
+
+    let report;
+    if (hasAnyData) {
+      report = await synthesizeInsights({ idea, niche: nicheStr, youtubeResults, trendData });
+    } else {
+      // AI Estimate Mode — all external data failed
+      report = await generateAIEstimate(idea, nicheStr);
+    }
 
     const payload = {
       report,
@@ -86,8 +112,9 @@ router.get("/", async (req: AuthenticatedRequest, res: Response) => {
       cached: false,
     };
 
-    // ── 5. Store in caches ────────────────────────────────────────────────────
-    await setCached("insights", cacheParams, payload, IDEA_CACHE_TTL);
+    // ── 5. Store in caches (with metadata for fuzzy lookup) ───────────────
+    const cacheMetadata = { niche: nicheStr, keywords: ideaKeywords };
+    await setCached("insights", cacheParams, payload, IDEA_CACHE_TTL, cacheMetadata);
 
     if (ideaId) {
       await pool.query(

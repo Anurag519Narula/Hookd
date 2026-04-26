@@ -90,3 +90,28 @@ export interface StudioRegenerateRequest {
   feedback?: string;
   regenerate_target: "hook" | "script";
 }
+
+export interface TopVideo {
+  title: string;
+  videoId: string;
+  viewCount: string;
+  channelName: string;
+}
+
+export type PlatformTier = "Excellent" | "Strong" | "Moderate" | "Low";
+
+export interface PlatformScore {
+  platform: string;
+  tier: PlatformTier;
+  reason: string;
+}
+
+export interface ClarityQuestion {
+  question: string;
+  options: string[];
+}
+
+export interface ClarityResult {
+  isClear: boolean;
+  questions: ClarityQuestion[];
+}

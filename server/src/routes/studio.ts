@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
 import Groq from "groq-sdk";
 import { requireAuth, AuthenticatedRequest } from "../middleware/auth";
+import { sanitizeInput } from "../middleware/sanitize";
 import {
   buildHooksOnlyPrompt,
   buildScriptFromHookPrompt,
@@ -12,12 +13,32 @@ import {
 import { getCached, setCached } from "../services/dbCache";
 import { groqWithBackoff } from "../services/groqWithBackoff";
 import { checkLimit, incrementUsage } from "../services/usageLimits";
+import { assessIdeaClarity } from "../services/clarityAssessor";
+import { generateFallbackHooks } from "../services/hookFallback";
 import type { StudioGenerateRequest, StudioRegenerateRequest } from "../types/index";
 
 const router = Router();
 router.use(requireAuth);
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY ?? "" });
+
+// ── POST /api/studio/clarify ──────────────────────────────────────────────────
+router.post("/clarify", sanitizeInput, async (req: AuthenticatedRequest, res: Response) => {
+  const { idea } = req.body as { idea?: string };
+
+  if (!idea || typeof idea !== "string" || idea.trim() === "") {
+    return res.status(400).json({ error: "idea is required" });
+  }
+
+  try {
+    const result = await assessIdeaClarity(idea.trim());
+    return res.json(result);
+  } catch (err) {
+    console.error("POST /api/studio/clarify error:", err);
+    // Fail open — return clear so validation proceeds
+    return res.json({ isClear: true, questions: [] });
+  }
+});
 
 // ── POST /api/studio/hooks ────────────────────────────────────────────────────
 router.post("/hooks", async (req: AuthenticatedRequest, res: Response) => {
@@ -63,7 +84,15 @@ router.post("/hooks", async (req: AuthenticatedRequest, res: Response) => {
     return res.json({ ...result, cached: false });
   } catch (err) {
     console.error("POST /api/studio/hooks error:", err);
-    return res.status(502).json({ error: err instanceof Error ? err.message : "Unknown error" });
+    // Fallback: use template-based hooks when Groq fails
+    try {
+      const fallbackHooks = generateFallbackHooks(idea, format);
+      const fallbackResult = { hook_variants: fallbackHooks };
+      return res.json({ ...fallbackResult, cached: false });
+    } catch (fallbackErr) {
+      console.error("Hook fallback also failed:", fallbackErr);
+      return res.status(502).json({ error: err instanceof Error ? err.message : "Unknown error" });
+    }
   }
 });
 

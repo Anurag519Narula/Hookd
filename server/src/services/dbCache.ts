@@ -38,25 +38,28 @@ export async function getCached<T>(
 /**
  * Write a value to the DB cache.
  * Uses INSERT ... ON CONFLICT DO UPDATE so it's safe to call multiple times.
+ * Optional metadata (e.g. { niche, keywords }) enables fuzzy cache lookup.
  */
 export async function setCached(
   namespace: string,
   params: Record<string, unknown>,
   payload: unknown,
-  ttlMs = TTL_7_DAYS
+  ttlMs = TTL_7_DAYS,
+  metadata?: Record<string, unknown>
 ): Promise<void> {
   const key = buildCacheKey({ namespace, ...params });
   const now = Date.now();
   const expiresAt = now + ttlMs;
   try {
     await pool.query(
-      `INSERT INTO api_cache (cache_key, namespace, payload, created_at, expires_at)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO api_cache (cache_key, namespace, payload, created_at, expires_at, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (cache_key) DO UPDATE
          SET payload = EXCLUDED.payload,
              created_at = EXCLUDED.created_at,
-             expires_at = EXCLUDED.expires_at`,
-      [key, namespace, JSON.stringify(payload), now, expiresAt]
+             expires_at = EXCLUDED.expires_at,
+             metadata = EXCLUDED.metadata`,
+      [key, namespace, JSON.stringify(payload), now, expiresAt, metadata ? JSON.stringify(metadata) : null]
     );
   } catch (err) {
     // Cache write failure is non-fatal

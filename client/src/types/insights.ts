@@ -1,3 +1,23 @@
+export interface TopVideo {
+  title: string;
+  videoId: string;
+  viewCount: string;
+  channelName: string;
+}
+
+export type PlatformTier = "Excellent" | "Strong" | "Moderate" | "Low";
+
+export interface PlatformScore {
+  platform: string;
+  tier: PlatformTier;
+  reason: string;
+}
+
+export interface ClarityQuestion {
+  question: string;
+  options: string[];
+}
+
 export interface InsightReport {
   // ── Trend validation ──────────────────────────────────────────────────────
   trendDirection: "rising" | "peaked" | "declining" | "stable";
@@ -77,4 +97,8 @@ export interface InsightReport {
   keyInsight: string; // the single most important thing to know
   verdictLabel: "Strong opportunity" | "Good opportunity" | "Proceed with caution" | "Avoid for now";
   verdictReason: string;
+
+  // ── New fields for Research Panel & Platform Scorecard ─────────────────────
+  topVideos: TopVideo[];
+  platform_scores: PlatformScore[];
 }

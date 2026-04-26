@@ -3,9 +3,15 @@ import React from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
 import { MarketResearchPanel } from "../components/MarketResearchPanel";
+import { ClarifierInline } from "../components/ClarifierInline";
+import { ResearchPanel } from "../components/ResearchPanel";
+import { PlatformScorecard } from "../components/PlatformScorecard";
+import { StagedLoader } from "../components/StagedLoader";
 import { useCreatorProfile } from "../hooks/useCreatorProfile";
 import { getIdea, createIdea } from "../api/ideas";
 import { fetchInsights, type InsightResponse, QuotaExceededError } from "../api/insights";
+import { clarifyIdea } from "../api/studio";
+import type { ClarityQuestion } from "../types/insights";
 
 // ── Section header — shared design language ───────────────────────────────────
 function SectionHeader({ label, status }: { label: string; status?: "active" | "done" | "idle" }) {
@@ -40,7 +46,12 @@ export function StudioScreen() {
   const [insights, setInsights] = useState<InsightResponse | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [insightsFetched, setInsightsFetched] = useState(false);
+  const [insightsError, setInsightsError] = useState(false);
   const [quotaError, setQuotaError] = useState<string | null>(null);
+
+  // Clarifier state
+  const [clarifying, setClarifying] = useState(false);
+  const [clarityQuestions, setClarityQuestions] = useState<ClarityQuestion[] | null>(null);
 
   const { profile } = useCreatorProfile();
   const savedIdeaIdRef = React.useRef<string | null>(null);
@@ -59,25 +70,18 @@ export function StudioScreen() {
     return () => { cancelled = true; };
   }, [ideaId]);
 
-  async function handleValidate() {
-    if (!idea.trim() || insightsLoading) return;
-    setInsights(null);
-    setInsightsFetched(false);
-    setInsightsOpen(false);
-    setQuotaError(null);
-    if (!ideaId) {
-      createIdea(idea.trim())
-        .then((saved) => { savedIdeaIdRef.current = saved.id; })
-        .catch(() => {});
-    }
+  /** Run validation with the given query text */
+  function runValidation(queryText: string) {
     setInsightsLoading(true);
-    fetchInsights(idea, profile?.niche ?? "", ideaId ?? undefined)
+    setInsightsError(false);
+    fetchInsights(queryText, profile?.niche ?? "", ideaId ?? undefined)
       .then((result) => {
         setInsights(result);
         setInsightsFetched(true);
         setInsightsOpen(true);
       })
       .catch((err) => {
+        setInsightsError(true);
         if (err instanceof QuotaExceededError) {
           setQuotaError(err.serverMessage);
         }
@@ -85,14 +89,65 @@ export function StudioScreen() {
       .finally(() => setInsightsLoading(false));
   }
 
+  async function handleValidate() {
+    if (!idea.trim() || insightsLoading || clarifying) return;
+    setInsights(null);
+    setInsightsFetched(false);
+    setInsightsOpen(false);
+    setQuotaError(null);
+    setClarityQuestions(null);
+    setInsightsError(false);
+
+    // Save idea to Vault (fire-and-forget)
+    if (!ideaId) {
+      createIdea(idea.trim())
+        .then((saved) => { savedIdeaIdRef.current = saved.id; })
+        .catch(() => {});
+    }
+
+    // Assess clarity
+    setClarifying(true);
+    try {
+      const clarity = await clarifyIdea(idea.trim());
+      if (!clarity.isClear && clarity.questions.length > 0) {
+        setClarityQuestions(clarity.questions);
+        setClarifying(false);
+        return; // Wait for user to answer questions
+      }
+    } catch {
+      // Fail open — proceed to validation
+    }
+    setClarifying(false);
+
+    // Idea is clear — proceed directly
+    runValidation(idea.trim());
+  }
+
+  /** Called when user completes clarifying questions */
+  function handleClarifyComplete(answers: Record<number, string>) {
+    const answerTexts = Object.values(answers).filter(Boolean);
+    const expandedQuery = `${idea.trim()}\n\nAdditional context:\n${answerTexts.join("\n")}`;
+    setClarityQuestions(null);
+    runValidation(expandedQuery);
+  }
+
+  /** Called when user skips clarification */
+  function handleClarifySkip() {
+    setClarityQuestions(null);
+    runValidation(idea.trim());
+  }
+
   const handleGetInsights = useCallback(async () => {
     if (insightsFetched || insightsLoading) return;
     setInsightsLoading(true);
+    setInsightsError(false);
     try {
       const result = await fetchInsights(idea, profile?.niche ?? "", ideaId ?? undefined);
       setInsights(result);
       setInsightsFetched(true);
-    } catch { /* silently fail */ }
+    } catch {
+      setInsightsError(true);
+    }
     finally { setInsightsLoading(false); }
   }, [idea, profile?.niche, ideaId, insightsFetched, insightsLoading]);
 
@@ -114,7 +169,7 @@ export function StudioScreen() {
     });
   }
 
-  const canValidate = idea.trim().length > 0 && !insightsLoading;
+  const canValidate = idea.trim().length > 0 && !insightsLoading && !clarifying;
   const showReport = insightsLoading || insightsFetched;
   const canPlanScript = insightsFetched && insights !== null;
 
@@ -191,7 +246,7 @@ export function StudioScreen() {
                   if (canValidate) (e.currentTarget as HTMLButtonElement).style.background = "#14b8a6";
                 }}
               >
-                {insightsLoading ? (
+                {clarifying ? (
                   <>
                     <span style={{
                       width: 12, height: 12,
@@ -199,7 +254,7 @@ export function StudioScreen() {
                       borderTopColor: "#fff", borderRadius: "50%",
                       display: "inline-block", animation: "spin 0.7s linear infinite",
                     }} />
-                    Validating…
+                    Checking…
                   </>
                 ) : (
                   <>
@@ -212,6 +267,15 @@ export function StudioScreen() {
               </button>
             </div>
           </div>
+
+          {/* Clarifier inline questions */}
+          {clarityQuestions && clarityQuestions.length > 0 && (
+            <ClarifierInline
+              questions={clarityQuestions}
+              onComplete={handleClarifyComplete}
+              onSkip={handleClarifySkip}
+            />
+          )}
 
           {/* Quota error */}
           {quotaError && (
@@ -239,6 +303,25 @@ export function StudioScreen() {
               label="Validation Report"
               status={insightsLoading ? "active" : "done"}
             />
+
+            {/* Staged loader replaces spinner during validation */}
+            {insightsLoading && (
+              <StagedLoader isLoading={insightsLoading} isError={insightsError} />
+            )}
+
+            {/* Research Panel + Platform Scorecard (only on Studio page) */}
+            {insightsFetched && insights && (
+              <>
+                <ResearchPanel
+                  topVideos={insights.report.topVideos ?? []}
+                  youtubeData={insights.report.youtubeData}
+                  platformAnalysis={insights.report.platformAnalysis ?? []}
+                  sources={insights.sources}
+                />
+                <PlatformScorecard scores={insights.report.platform_scores ?? []} />
+              </>
+            )}
+
             <MarketResearchPanel
               topic={idea.slice(0, 80)}
               isOpen={insightsOpen}

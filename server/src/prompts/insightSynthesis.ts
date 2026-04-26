@@ -1,8 +1,25 @@
 import Groq from "groq-sdk";
 import type { YouTubeResult, TrendData } from "../services/insights";
 import { groqWithBackoff } from "../services/groqWithBackoff";
+import type { TopVideo, PlatformScore } from "../types/index";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY ?? "" });
+
+/**
+ * Extract TopVideo[] from YouTubeResult[] — zero additional API calls.
+ * Maps channelTitle → channelName, uses videoId from search response.
+ */
+export function extractTopVideos(youtubeResults: YouTubeResult[]): TopVideo[] {
+  return youtubeResults
+    .filter((r) => r.videoId && r.videoId.length > 0)
+    .slice(0, 5)
+    .map((r) => ({
+      title: r.title,
+      videoId: r.videoId!,
+      viewCount: r.viewCount,
+      channelName: r.channelTitle,
+    }));
+}
 
 // Keep server-side type in sync with client/src/types/insights.ts
 export interface InsightReport {
@@ -69,6 +86,8 @@ export interface InsightReport {
   keyInsight: string;
   verdictLabel: "Strong opportunity" | "Good opportunity" | "Proceed with caution" | "Avoid for now";
   verdictReason: string;
+  topVideos: TopVideo[];
+  platform_scores: PlatformScore[];
 }
 
 export async function synthesizeInsights(params: {
@@ -217,6 +236,24 @@ Return ONLY a valid JSON object matching this exact structure (no markdown, no c
     "durationTarget": "<e.g. '45-55 seconds' based on the topic complexity>"
   },
 
+  "platform_scores": [
+    {
+      "platform": "Instagram Reels",
+      "tier": "Excellent" | "Strong" | "Moderate" | "Low",
+      "reason": "<one-line justification referencing data or niche fit>"
+    },
+    {
+      "platform": "YouTube Shorts",
+      "tier": "Excellent" | "Strong" | "Moderate" | "Low",
+      "reason": "<one-line justification referencing data or niche fit>"
+    },
+    {
+      "platform": "TikTok",
+      "tier": "Excellent" | "Strong" | "Moderate" | "Low",
+      "reason": "<one-line justification referencing data or niche fit>"
+    }
+  ],
+
   "competitorInsights": [
     {
       "observation": "<what the top creators in this space are doing>",
@@ -241,6 +278,19 @@ Return ONLY a valid JSON object matching this exact structure (no markdown, no c
   "verdictLabel": "Strong opportunity" | "Good opportunity" | "Proceed with caution" | "Avoid for now",
   "verdictReason": "<1-2 sentences explaining the verdict, referencing actual data>"
 }
+
+TONE — GROUNDED OPTIMISM:
+Write as if you are a trusted advisor talking to a friend. Be specific, confident, and honest — never hype.
+- DO NOT use superlatives or hype phrases. The following are explicitly banned: "massive opportunity", "huge upside", "incredible potential", "amazing chance", "explosive growth", "insane demand", "game-changer", "goldmine", "untapped goldmine", and any similar exaggerated language.
+- If the niche is difficult, saturated, or declining, say so honestly. Then provide a concrete, specific path forward the creator can actually act on. Never sugarcoat bad data, but never leave the creator without a next step.
+- In the "summary" and "verdictReason" fields, reference specific data points: cite actual view counts, name top channels, mention title patterns you observed, or quote trend numbers. Do not make generic statements like "there is good demand" — instead say something like "the top 5 videos average 120K views, led by channels like X and Y, which suggests steady audience interest."
+- Keep language direct and grounded. Prefer "solid" over "incredible", "worth pursuing" over "huge opportunity", "growing steadily" over "exploding".
+
+PLATFORM SCORING:
+- Rate each platform in "platform_scores" using ONLY these four tier labels: "Excellent", "Strong", "Moderate", or "Low". Do NOT use numeric scores, decimals, or any other labels.
+- Base each rating on the available data: YouTube view counts, trend direction, competition level, niche fit, and audience behavior on that platform.
+- Each "reason" must be a single concise sentence that references specific data or niche characteristics — not a generic statement.
+- Include at least Instagram Reels, YouTube Shorts, and TikTok. Add other platforms only if clearly relevant to the niche.
 
 IMPORTANT:
 - keyPoints in contentBlueprint should have 4-6 items covering the full video structure
@@ -269,11 +319,14 @@ IMPORTANT:
       topVideoViews: topViews,
       avgTopVideoViews: avgViews,
       totalVideosFound: youtubeResults.length,
-      viewsRange: `${minViews.toLocaleString()} – ${topViews.toLocaleString()}`,
+      viewsRange: `${minViews.toLocaleString()} - ${topViews.toLocaleString()}`,
       topChannels: youtubeResults.slice(0, 4).map((v) => v.channelTitle),
       commonTitles: youtubeResults.slice(0, 4).map((v) => v.title),
     };
   }
+
+  // Populate topVideos from real YouTube data (zero additional API calls)
+  parsed.topVideos = extractTopVideos(youtubeResults);
 
   return parsed;
 }

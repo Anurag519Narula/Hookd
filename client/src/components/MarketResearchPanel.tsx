@@ -498,41 +498,7 @@ function ReportBody({ insights }: { insights: InsightReport }) {
         </div>
       )}
 
-      {/* ── 4. PLATFORM ANALYSIS ── */}
-      {insights.platformAnalysis.length > 0 && (
-        <div>
-          <SectionHeader label="Platform Analysis" />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
-            {insights.platformAnalysis.map((p, i) => {
-              const pc = p.potential === "high" ? "#34d399" : p.potential === "medium" ? "#f59e0b" : "#f87171";
-              return (
-                <div key={i} style={{
-                  background: "var(--bg-subtle)",
-                  border: "1px solid var(--border)",
-                  borderTop: `2px solid ${pc}`,
-                  borderRadius: 8,
-                  padding: "14px 16px",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>{p.platform}</span>
-                    <Badge label={p.potential} color={pc} />
-                  </div>
-                  <div style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 6 }}>
-                    <span style={{ fontWeight: 600 }}>Avg: </span>
-                    <span style={{ color: "var(--text)", fontWeight: 700 }}>{p.avgViewsForTopic}</span>
-                  </div>
-                  <div style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.55, marginBottom: 8 }}>
-                    {p.contentStyle}
-                  </div>
-                  <div style={{ fontSize: 13, color: "#14b8a6", lineHeight: 1.5, fontWeight: 500 }}>
-                    {p.hashtagStrategy}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* Platform Analysis removed — already shown in ResearchPanel ("Based on") */}
 
       {/* ── 5. TOP ANGLES ── */}
       {insights.topAngles.length > 0 && (
@@ -579,7 +545,7 @@ function ReportBody({ insights }: { insights: InsightReport }) {
       {insights.untappedAngles.length > 0 && (
         <div>
           <SectionHeader label="Untapped Angles" />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 10 }}>
             {insights.untappedAngles.map((a, i) => (
               <div key={i} style={{
                 background: "rgba(52,211,153,0.04)",
