@@ -7,6 +7,7 @@ import { ClarifierInline } from "../components/ClarifierInline";
 import { ResearchPanel } from "../components/ResearchPanel";
 import { PlatformScorecard } from "../components/PlatformScorecard";
 import { StagedLoader } from "../components/StagedLoader";
+import { SearchTrendsSection } from "../components/SearchTrendsSection";
 import { useCreatorProfile } from "../hooks/useCreatorProfile";
 import { getIdea, createIdea } from "../api/ideas";
 import { fetchInsights, type InsightResponse, QuotaExceededError } from "../api/insights";
@@ -316,8 +317,19 @@ export function StudioScreen() {
                   topVideos={insights.report.topVideos ?? []}
                   youtubeData={insights.report.youtubeData}
                   platformAnalysis={insights.report.platformAnalysis ?? []}
+                  signals={insights.signals}
                   sources={insights.sources}
                 />
+                {insights.googleTrends && (
+                  <SearchTrendsSection
+                    interest={insights.googleTrends.interest}
+                    avgInterest={insights.googleTrends.avgInterest}
+                    peakInterest={insights.googleTrends.peakInterest}
+                    timeline={insights.googleTrends.timeline}
+                    risingQueries={insights.googleTrends.risingQueries}
+                    topQueries={insights.googleTrends.topQueries}
+                  />
+                )}
                 <PlatformScorecard scores={insights.report.platform_scores ?? []} />
               </>
             )}

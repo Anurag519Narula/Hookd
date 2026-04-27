@@ -4,9 +4,9 @@ import pool from "../db";
 // With 30 API calls/month across all users, be conservative.
 // Cache hits don't count — only fresh external API calls burn quota.
 export const DAILY_LIMITS: Record<string, number> = {
-  insights:  2,   // idea validations per day (YouTube + Instagram + Groq + RapidAPI)
-  amplify:   5,   // caption generations per day (RapidAPI + Groq)
-  studio:    5,   // hook/script generations per day (Groq)
+  insights:  5,   // idea validations per day
+  amplify:   10,  // caption generations per day
+  studio:    10,  // hook/script generations per day
 };
 
 function todayUTC(): string {

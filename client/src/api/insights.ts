@@ -3,9 +3,67 @@ import { authHeaders } from "./auth";
 
 export interface InsightResponse {
   report: InsightReport;
+  signals?: {
+    trend: {
+      direction: string;
+      velocity: string;
+      score: number;
+      explanation: string;
+    };
+    competition: {
+      level: string;
+      totalVideos: number;
+      uniqueChannels: number;
+      explanation: string;
+    };
+    momentum: {
+      recentWinners: number;
+      uploadFrequency: number;
+      medianViewsPerDay: number;
+    };
+    opportunity: {
+      score: number;
+      explanation: string;
+    };
+    audienceFit: {
+      score: number;
+      explanation: string;
+    };
+    evidence: {
+      topVideoViews: number;
+      avgTopVideoViews: number;
+      viewsRange: string;
+      topChannels: string[];
+      recentVideoCount: number;
+      olderVideoCount: number;
+    };
+    googleTrends: {
+      available: boolean;
+      interest: number | null;
+      avgInterest: number | null;
+      peakInterest: number | null;
+      direction: string | null;
+      relatedQueries: string[];
+      risingQueries: string[];
+    };
+  };
+  googleTrends?: {
+    interest: number;
+    avgInterest: number | null;
+    peakInterest: number | null;
+    timeline: Array<{ date: string; value: number }>;
+    risingQueries: string[];
+    topQueries: string[];
+    relatedQueries: string[];
+  } | null;
+  trendingNow?: Array<{
+    query: string;
+    searchVolume: number;
+    increasePercentage: number;
+    categories: string[];
+  }> | null;
   sources: {
     youtubeCount: number;
-    redditCount: number;
     trendsAvailable: boolean;
     trendScore: number | null;
     relatedQueries: string[];

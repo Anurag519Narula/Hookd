@@ -32,6 +32,12 @@ export interface TrendData {
   keyword: string;
   interest: number;
   relatedQueries: string[];
+  // Extended fields from SerpAPI (optional — present when SerpAPI is available)
+  avgInterest?: number;
+  peakInterest?: number;
+  timeline?: Array<{ date: string; value: number }>;
+  risingQueries?: string[];
+  topQueries?: string[];
 }
 
 export interface HashtagIntelligence {
@@ -234,9 +240,9 @@ export async function fetchInstagramHashtagData(
 
 // ── YouTube Data API ───────────────────────────────────────────────────────────
 
-async function searchYouTube(query: string, maxResults = 8): Promise<YouTubeResult[]> {
+async function searchYouTube(query: string, maxResults = 8, order = "relevance"): Promise<YouTubeResult[]> {
   // DB cache — YouTube quota is precious, cache for 7 days
-  const cached = await getCached<YouTubeResult[]>("youtube_search", { query, maxResults });
+  const cached = await getCached<YouTubeResult[]>("youtube_search", { query, maxResults, order });
   if (cached) return cached;
 
   const apiKey = process.env.YOUTUBE_API_KEY;
@@ -246,7 +252,7 @@ async function searchYouTube(query: string, maxResults = 8): Promise<YouTubeResu
     const searchUrl =
       `https://www.googleapis.com/youtube/v3/search` +
       `?part=snippet&q=${encodeURIComponent(query)}&type=video` +
-      `&order=relevance&maxResults=${maxResults}&key=${apiKey}`;
+      `&order=${order}&maxResults=${maxResults}&key=${apiKey}`;
 
     const searchRes = await fetchWithTimeout(searchUrl, {}, 12000);
     if (!searchRes.ok) return [];
@@ -280,7 +286,7 @@ async function searchYouTube(query: string, maxResults = 8): Promise<YouTubeResu
       description: (item.snippet?.description ?? "").slice(0, 500),
     }));
 
-    await setCached("youtube_search", { query, maxResults }, results);
+    await setCached("youtube_search", { query, maxResults, order }, results);
     return results;
   } catch (err) {
     console.error("YouTube search error:", err);
@@ -295,15 +301,15 @@ export async function fetchYouTubeTrends(
   const keywords = extractKeywords(query);
   const searches: Promise<YouTubeResult[]>[] = [];
 
+  // Search 1: top relevant videos (best performers)
   searches.push(searchYouTube(keywords[0] ?? query, 8));
+
+  // Search 2: most recent uploads (recency signal — critical for "recent uploads" accuracy)
+  searches.push(searchYouTube(keywords[0] ?? query, 5, "date"));
 
   if (niche && niche.trim()) {
     const nicheQuery = `${keywords[0] ?? query} ${niche}`.trim();
     if (nicheQuery !== keywords[0]) searches.push(searchYouTube(nicheQuery, 5));
-  }
-
-  if (keywords[1] && keywords[1] !== keywords[0]) {
-    searches.push(searchYouTube(keywords[1], 5));
   }
 
   const allResults = (await Promise.all(searches)).flat();
@@ -317,7 +323,7 @@ export async function fetchYouTubeTrends(
 
   return deduped
     .sort((a, b) => parseInt(b.viewCount) - parseInt(a.viewCount))
-    .slice(0, 10);
+    .slice(0, 15); // increased from 10 to 15 to keep both recent and top videos
 }
 
 // ── Groq hashtag synthesis ─────────────────────────────────────────────────────
@@ -518,6 +524,84 @@ export async function fetchHashtagIntelligence(params: {
 
 // ── Google Trends ──────────────────────────────────────────────────────────────
 
-export async function fetchGoogleTrends(_keyword: string): Promise<TrendData | null> {
-  return null;
+export async function fetchGoogleTrends(keyword: string): Promise<TrendData | null> {
+  // DB cache — trends data cached for 2 days
+  const TTL_2_DAYS = 2 * 24 * 60 * 60 * 1000;
+  const cacheParams = { keyword: keyword.toLowerCase().trim() };
+  const cached = await getCached<TrendData>("google_trends", cacheParams);
+  if (cached) return cached;
+
+  if (!RAPIDAPI_KEY) return null;
+
+  try {
+    // Use RapidAPI Google Trends — interest over time (last 12 months)
+    const encodedKeyword = encodeURIComponent(keyword.trim());
+    const url = `https://google-trends8.p.rapidapi.com/trendings?keyword=${encodedKeyword}&geo=&time=today+12-m`;
+
+    const res = await fetchWithTimeout(url, {
+      headers: {
+        "x-rapidapi-key": RAPIDAPI_KEY,
+        "x-rapidapi-host": "google-trends8.p.rapidapi.com",
+      },
+    }, 10000);
+
+    if (!res.ok) {
+      console.error(`Google Trends API returned ${res.status}`);
+      return null;
+    }
+
+    const data = (await res.json()) as any;
+
+    // Extract interest value and related queries from the response
+    // Different APIs return different shapes — handle common patterns
+    let interest = 0;
+    let relatedQueries: string[] = [];
+
+    if (data?.interest_over_time) {
+      // Array of { date, value } — take the most recent value
+      const timeline = Array.isArray(data.interest_over_time)
+        ? data.interest_over_time
+        : data.interest_over_time?.timeline_data ?? [];
+      if (timeline.length > 0) {
+        const lastEntry = timeline[timeline.length - 1];
+        interest = parseInt(lastEntry?.value ?? lastEntry?.values?.[0]?.extracted_value ?? "0") || 0;
+      }
+    } else if (typeof data?.interest === "number") {
+      interest = data.interest;
+    } else if (Array.isArray(data)) {
+      // Some APIs return array of data points directly
+      if (data.length > 0) {
+        const last = data[data.length - 1];
+        interest = parseInt(last?.value ?? last?.interest ?? "0") || 0;
+      }
+    }
+
+    if (data?.related_queries) {
+      const queries = data.related_queries?.top ?? data.related_queries?.rising ?? data.related_queries ?? [];
+      relatedQueries = (Array.isArray(queries) ? queries : [])
+        .slice(0, 10)
+        .map((q: any) => q?.query ?? q?.topic?.title ?? q?.title ?? String(q))
+        .filter((q: string) => q && q.length > 0);
+    } else if (data?.related_topics) {
+      relatedQueries = (Array.isArray(data.related_topics) ? data.related_topics : [])
+        .slice(0, 10)
+        .map((q: any) => q?.topic?.title ?? q?.title ?? String(q))
+        .filter((q: string) => q && q.length > 0);
+    }
+
+    // If we got no meaningful data, return null
+    if (interest === 0 && relatedQueries.length === 0) return null;
+
+    const result: TrendData = {
+      keyword: keyword.trim(),
+      interest,
+      relatedQueries,
+    };
+
+    await setCached("google_trends", cacheParams, result, TTL_2_DAYS);
+    return result;
+  } catch (err) {
+    console.error("Google Trends API error:", err);
+    return null;
+  }
 }

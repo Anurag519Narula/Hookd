@@ -2,6 +2,7 @@ import Groq from "groq-sdk";
 import type { YouTubeResult, TrendData } from "../services/insights";
 import { groqWithBackoff } from "../services/groqWithBackoff";
 import type { TopVideo, PlatformScore } from "../types/index";
+import type { ComputedSignals } from "../services/computedSignals";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY ?? "" });
 
@@ -95,29 +96,21 @@ export async function synthesizeInsights(params: {
   niche: string;
   youtubeResults: YouTubeResult[];
   trendData: TrendData | null;
+  signals: ComputedSignals;
 }): Promise<InsightReport> {
-  const { idea, niche, youtubeResults, trendData } = params;
+  const { idea, niche, youtubeResults, trendData, signals } = params;
 
   // Build rich YouTube context with real numbers
   const hasYouTube = youtubeResults.length > 0;
-  const topViews = hasYouTube
-    ? Math.max(...youtubeResults.map((v) => parseInt(v.viewCount) || 0))
-    : 0;
-  const avgViews = hasYouTube
-    ? Math.round(
-        youtubeResults.slice(0, 5).reduce((s, v) => s + (parseInt(v.viewCount) || 0), 0) /
-          Math.min(5, youtubeResults.length)
-      )
-    : 0;
-  const minViews = hasYouTube
-    ? Math.min(...youtubeResults.map((v) => parseInt(v.viewCount) || 0))
-    : 0;
+  const topViews = signals.evidence.topVideoViews;
+  const avgViews = signals.evidence.avgTopVideoViews;
+  const minViews = hasYouTube ? Math.min(...youtubeResults.map((v) => parseInt(v.viewCount) || 0)) : 0;
 
   const youtubeContext = hasYouTube
     ? `REAL YOUTUBE DATA (${youtubeResults.length} videos found):
 Top video views: ${topViews.toLocaleString()}
 Average views (top 5): ${avgViews.toLocaleString()}
-Views range: ${minViews.toLocaleString()} – ${topViews.toLocaleString()}
+Views range: ${signals.evidence.viewsRange}
 
 Top performing videos:
 ${youtubeResults
@@ -132,8 +125,30 @@ ${youtubeResults
     : "No YouTube data available for this topic.";
 
   const trendsContext = trendData
-    ? `Google Trends interest: ${trendData.interest}/100\nRelated searches: ${trendData.relatedQueries.slice(0, 8).join(", ")}`
+    ? `Google Trends data (India, last 12 months):
+- Current interest: ${trendData.interest}/100
+${trendData.avgInterest ? `- Average interest: ${trendData.avgInterest}/100` : ""}
+${trendData.peakInterest ? `- Peak interest: ${trendData.peakInterest}/100` : ""}
+${trendData.risingQueries && trendData.risingQueries.length > 0 ? `- Rising search queries (people are increasingly searching for these): ${trendData.risingQueries.join(", ")}` : ""}
+${trendData.topQueries && trendData.topQueries.length > 0 ? `- Top related queries: ${trendData.topQueries.join(", ")}` : ""}
+${trendData.relatedQueries.length > 0 ? `- Related searches: ${trendData.relatedQueries.slice(0, 8).join(", ")}` : ""}`
     : "No Google Trends data available.";
+
+  // Pre-computed signals context — these are FACTS, not for the LLM to override
+  const signalsContext = `
+COMPUTED SIGNALS (these are mathematically computed from the data above — use them as-is, do NOT override):
+- Trend Direction: ${signals.trend.direction} — ${signals.trend.explanation}
+- Trend Velocity: ${signals.trend.velocity} (median ${signals.momentum.medianViewsPerDay.toLocaleString()} views/day)
+- Trend Score: ${signals.trend.score}/100
+- Competition: ${signals.competition.level} — ${signals.competition.explanation}
+- Opportunity Score: ${signals.opportunity.score}/100 — ${signals.opportunity.explanation}
+- Audience Fit Score: ${signals.audienceFit.score}/100 — ${signals.audienceFit.explanation}
+- Recent videos (last 6 months): ${signals.evidence.recentVideoCount}
+- Older videos: ${signals.evidence.olderVideoCount}
+- Recent winners (above-avg views): ${signals.momentum.recentWinners}
+- Unique channels: ${signals.competition.uniqueChannels}
+${signals.googleTrends.available ? `- Google Trends interest: ${signals.googleTrends.interest}/100 (${signals.googleTrends.direction})` : ""}
+${signals.googleTrends.risingQueries.length > 0 ? `- Rising search queries: ${signals.googleTrends.risingQueries.join(", ")}` : ""}`;
 
   const prompt = `You are a senior content strategy analyst specialising in short-form video (Reels, YouTube Shorts). You have deep knowledge of what makes content go viral, audience psychology, platform algorithms, and creator economics.
 
@@ -147,26 +162,30 @@ ${youtubeContext}
 
 ${trendsContext}
 
+${signalsContext}
+
 Your job is to produce a comprehensive, data-driven validation report. Be brutally honest. Reference actual numbers from the YouTube data. Do not give generic advice — every insight must be specific to this idea and this data.
+
+CRITICAL: The trendDirection, trendScore, trendVelocity, and competitionLevel fields below MUST match the computed signals above exactly. Do NOT invent your own values for these — they are pre-computed from real data.
 
 Return ONLY a valid JSON object matching this exact structure (no markdown, no code fences):
 
 {
-  "trendDirection": "rising" | "peaked" | "declining" | "stable",
-  "trendScore": <0-100, based on YouTube view counts and recency of top videos>,
-  "trendVelocity": "accelerating" | "steady" | "slowing" | "unknown",
-  "competitionLevel": "low" | "medium" | "high",
-  "saturationWarning": <true if top videos have 1M+ views AND there are many similar videos>,
+  "trendDirection": "${signals.trend.direction}",
+  "trendScore": ${signals.trend.score},
+  "trendVelocity": "${signals.trend.velocity === "high" ? "accelerating" : signals.trend.velocity === "medium" ? "steady" : signals.trend.velocity === "low" ? "slowing" : "unknown"}",
+  "competitionLevel": "${signals.competition.level}",
+  "saturationWarning": <true if competition is high AND top videos have 1M+ views>,
 
   "audienceFit": {
     "score": <0-100>,
-    "primaryAudience": "<specific demographic, e.g. '22-35 year old fitness beginners'>",
+    "primaryAudience": "<specific demographic based on the video titles and channels you see>",
     "audienceIntent": "entertainment" | "education" | "inspiration" | "problem-solving",
     "bestPostingTimes": ["<time range>", "<time range>"],
     "bestDays": ["<day>", "<day>", "<day>"]
   },
 
-  "summary": "<2-3 sentences. Be specific. Reference the actual view numbers you found.>",
+  "summary": "<2-3 sentences. Be specific. Reference the actual view numbers and computed signals.>",
   "opportunityScore": <0-100 composite score weighing trend, competition, audience fit>,
 
   "topAngles": [
@@ -190,14 +209,12 @@ Return ONLY a valid JSON object matching this exact structure (no markdown, no c
     {
       "platform": "Instagram Reels",
       "potential": "low" | "medium" | "high",
-      "avgViewsForTopic": "<realistic range based on data, e.g. '50K-300K'>",
       "contentStyle": "<what specifically works on this platform for this topic>",
       "hashtagStrategy": "<specific hashtag approach for this topic>"
     },
     {
       "platform": "YouTube Shorts",
       "potential": "low" | "medium" | "high",
-      "avgViewsForTopic": "<realistic range>",
       "contentStyle": "<what works>",
       "hashtagStrategy": "<approach>"
     }
@@ -209,11 +226,8 @@ Return ONLY a valid JSON object matching this exact structure (no markdown, no c
     "topVideoViews": ${topViews},
     "avgTopVideoViews": ${avgViews},
     "totalVideosFound": ${youtubeResults.length},
-    "viewsRange": "${minViews.toLocaleString()} – ${topViews.toLocaleString()}",
-    "topChannels": [${youtubeResults
-      .slice(0, 4)
-      .map((v) => `"${v.channelTitle}"`)
-      .join(", ")}],
+    "viewsRange": "${signals.evidence.viewsRange}",
+    "topChannels": [${signals.evidence.topChannels.map((c) => `"${c}"`).join(", ")}],
     "commonTitles": [<extract 3-4 title patterns from the data above, e.g. "How I...", "Why you should...">]
   }`
       : "null"
@@ -246,11 +260,6 @@ Return ONLY a valid JSON object matching this exact structure (no markdown, no c
       "platform": "YouTube Shorts",
       "tier": "Excellent" | "Strong" | "Moderate" | "Low",
       "reason": "<one-line justification referencing data or niche fit>"
-    },
-    {
-      "platform": "TikTok",
-      "tier": "Excellent" | "Strong" | "Moderate" | "Low",
-      "reason": "<one-line justification referencing data or niche fit>"
     }
   ],
 
@@ -262,7 +271,7 @@ Return ONLY a valid JSON object matching this exact structure (no markdown, no c
   ],
 
   "risks": [
-    "<specific risk 1 — e.g. 'Topic peaked 6 months ago, engagement dropping'>",
+    "<specific risk based on the computed signals and data>",
     "<specific risk 2>",
     "<specific risk 3>"
   ],
@@ -276,7 +285,7 @@ Return ONLY a valid JSON object matching this exact structure (no markdown, no c
 
   "keyInsight": "<the single most important thing the creator must know — be direct and specific>",
   "verdictLabel": "Strong opportunity" | "Good opportunity" | "Proceed with caution" | "Avoid for now",
-  "verdictReason": "<1-2 sentences explaining the verdict, referencing actual data>"
+  "verdictReason": "<1-2 sentences explaining the verdict, referencing actual data and computed signals>"
 }
 
 TONE — GROUNDED OPTIMISM:
@@ -290,9 +299,14 @@ PLATFORM SCORING:
 - Rate each platform in "platform_scores" using ONLY these four tier labels: "Excellent", "Strong", "Moderate", or "Low". Do NOT use numeric scores, decimals, or any other labels.
 - Base each rating on the available data: YouTube view counts, trend direction, competition level, niche fit, and audience behavior on that platform.
 - Each "reason" must be a single concise sentence that references specific data or niche characteristics — not a generic statement.
-- Include at least Instagram Reels, YouTube Shorts, and TikTok. Add other platforms only if clearly relevant to the niche.
+- Include ONLY Instagram Reels and YouTube Shorts. Do NOT include TikTok or any other platform.
 
 IMPORTANT:
+- trendDirection MUST be "${signals.trend.direction}" — this is computed, not your opinion
+- trendScore MUST be ${signals.trend.score} — this is computed, not your opinion
+- competitionLevel MUST be "${signals.competition.level}" — this is computed, not your opinion
+- Do NOT include "avgViewsForTopic" in platformAnalysis — we don't have real per-platform view data
+- Do NOT include TikTok in platform_scores — it is not available in this market
 - keyPoints in contentBlueprint should have 4-6 items covering the full video structure
 - topAngles should have 3-5 items
 - untappedAngles should have 2-3 items
@@ -313,16 +327,43 @@ IMPORTANT:
   const raw = completion.choices[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(raw) as InsightReport;
 
-  // Ensure youtubeData is populated from real data if Groq didn't fill it
-  if (hasYouTube && !parsed.youtubeData) {
+  // ── Override LLM values with computed signals (trust math, not LLM) ─────
+  parsed.trendDirection = signals.trend.direction;
+  parsed.trendScore = signals.trend.score;
+  parsed.trendVelocity = signals.trend.velocity === "high" ? "accelerating"
+    : signals.trend.velocity === "medium" ? "steady"
+    : signals.trend.velocity === "low" ? "slowing" : "unknown";
+  parsed.competitionLevel = signals.competition.level;
+  parsed.opportunityScore = signals.opportunity.score;
+  if (parsed.audienceFit) {
+    parsed.audienceFit.score = signals.audienceFit.score;
+  }
+
+  // Ensure youtubeData is populated from real data
+  if (hasYouTube) {
     parsed.youtubeData = {
       topVideoViews: topViews,
       avgTopVideoViews: avgViews,
       totalVideosFound: youtubeResults.length,
-      viewsRange: `${minViews.toLocaleString()} - ${topViews.toLocaleString()}`,
-      topChannels: youtubeResults.slice(0, 4).map((v) => v.channelTitle),
-      commonTitles: youtubeResults.slice(0, 4).map((v) => v.title),
+      viewsRange: signals.evidence.viewsRange,
+      topChannels: signals.evidence.topChannels,
+      commonTitles: parsed.youtubeData?.commonTitles ?? youtubeResults.slice(0, 4).map((v) => v.title),
     };
+  }
+
+  // Strip fake avgViewsForTopic from platformAnalysis
+  if (parsed.platformAnalysis) {
+    parsed.platformAnalysis = parsed.platformAnalysis.map((p) => {
+      const { avgViewsForTopic, ...rest } = p as any;
+      return rest;
+    });
+  }
+
+  // Remove TikTok from platform_scores if LLM included it
+  if (parsed.platform_scores) {
+    parsed.platform_scores = parsed.platform_scores.filter(
+      (p) => !p.platform.toLowerCase().includes("tiktok")
+    );
   }
 
   // Populate topVideos from real YouTube data (zero additional API calls)

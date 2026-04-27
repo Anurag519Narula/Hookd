@@ -11,28 +11,38 @@ const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
 /**
  * Score keyword overlap between query keywords and a cached entry's keywords.
- * Returns the count of query keywords found (case-insensitive) in the entry keywords.
+ * Returns a ratio (0–1) of query keywords found in the entry keywords.
  */
 export function scoreKeywordOverlap(
   queryKeywords: string[],
   entryKeywords: string[]
 ): number {
+  if (queryKeywords.length === 0 || entryKeywords.length === 0) return 0;
   const entrySet = new Set(entryKeywords.map((k) => k.toLowerCase()));
-  return queryKeywords.reduce(
-    (score, kw) => score + (entrySet.has(kw.toLowerCase()) ? 1 : 0),
+  const matches = queryKeywords.reduce(
+    (count, kw) => count + (entrySet.has(kw.toLowerCase()) ? 1 : 0),
     0
   );
+  return matches / queryKeywords.length; // ratio, not raw count
 }
+
+// Minimum overlap ratio required to consider a cache entry a valid match
+const MIN_OVERLAP_RATIO = 0.5;
+// Minimum number of matching keywords required
+const MIN_MATCHING_KEYWORDS = 2;
 
 /**
  * Query api_cache for the best fuzzy match by namespace, niche, and keyword overlap.
  * Returns the payload of the highest-scoring non-expired entry, or null.
+ * Requires at least 50% keyword overlap AND minimum 2 matching keywords.
  */
 export async function fuzzyCacheLookup<T>(
   options: FuzzyCacheOptions
 ): Promise<T | null> {
   const { namespace, niche, keywords, maxAge = FOURTEEN_DAYS_MS } = options;
   const cutoff = Date.now() - maxAge;
+
+  if (keywords.length < MIN_MATCHING_KEYWORDS) return null; // not enough keywords to match reliably
 
   try {
     const result = await pool.query(
@@ -53,7 +63,13 @@ export async function fuzzyCacheLookup<T>(
     for (const row of result.rows) {
       const entryKeywords: string[] = row.metadata?.keywords ?? [];
       const score = scoreKeywordOverlap(keywords, entryKeywords);
-      if (score > bestScore) {
+
+      // Count raw matches for minimum threshold
+      const entrySet = new Set(entryKeywords.map((k) => k.toLowerCase()));
+      const rawMatches = keywords.filter((kw) => entrySet.has(kw.toLowerCase())).length;
+
+      // Must meet BOTH thresholds
+      if (score >= MIN_OVERLAP_RATIO && rawMatches >= MIN_MATCHING_KEYWORDS && score > bestScore) {
         bestScore = score;
         bestPayload = row.payload as T;
       }

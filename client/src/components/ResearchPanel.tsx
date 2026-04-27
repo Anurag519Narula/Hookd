@@ -1,9 +1,18 @@
 import type { TopVideo, InsightReport } from "../types/insights";
 
+interface ComputedSignals {
+  trend: { direction: string; velocity: string; score: number; explanation: string };
+  competition: { level: string; totalVideos: number; uniqueChannels: number; explanation: string };
+  momentum: { recentWinners: number; uploadFrequency: number; medianViewsPerDay: number };
+  evidence: { topVideoViews: number; avgTopVideoViews: number; viewsRange: string; topChannels: string[]; recentVideoCount: number; olderVideoCount: number };
+  googleTrends: { available: boolean; interest: number | null; avgInterest: number | null; peakInterest: number | null; direction: string | null; relatedQueries: string[]; risingQueries: string[] };
+}
+
 interface ResearchPanelProps {
   topVideos: TopVideo[];
   youtubeData: InsightReport["youtubeData"];
   platformAnalysis: InsightReport["platformAnalysis"];
+  signals?: ComputedSignals;
   sources: {
     youtubeCount: number;
     trendsAvailable: boolean;
@@ -20,22 +29,18 @@ function formatViews(count: string | number): string {
   return n.toLocaleString();
 }
 
-const PLATFORM_ICONS: Record<string, string> = {
-  "instagram reels": "📱",
-  "youtube shorts": "▶️",
-  "tiktok": "🎵",
-  "linkedin": "💼",
+const SIGNAL_COLORS: Record<string, string> = {
+  rising: "#10b981", high: "#10b981",
+  stable: "#3b82f6", medium: "#f59e0b",
+  peaked: "#f59e0b", declining: "#ef4444",
+  low: "#ef4444", unknown: "var(--text-4)",
 };
 
-function getPlatformIcon(platform: string): string {
-  return PLATFORM_ICONS[platform.toLowerCase()] ?? "📊";
-}
-
-export function ResearchPanel({ topVideos, youtubeData, platformAnalysis, sources }: ResearchPanelProps) {
+export function ResearchPanel({ topVideos, youtubeData, platformAnalysis, signals, sources }: ResearchPanelProps) {
   const avgViews = youtubeData?.avgTopVideoViews ?? 0;
   const topChannels = youtubeData?.topChannels ?? [];
 
-  // Extract short-form platform data
+  // Extract short-form platform data (content style + hashtag strategy only — no fake avg views)
   const reelsData = platformAnalysis?.find((p) => p.platform.toLowerCase().includes("reels"));
   const shortsData = platformAnalysis?.find((p) => p.platform.toLowerCase().includes("shorts"));
 
@@ -44,14 +49,56 @@ export function ResearchPanel({ topVideos, youtubeData, platformAnalysis, source
       background: "var(--bg-card)", border: "1px solid var(--border)",
       borderRadius: 8, padding: "16px 20px", marginBottom: 12,
     }}>
+      {/* Data sources badge */}
       <div style={{
-        fontSize: 12, fontWeight: 700, letterSpacing: "0.1em",
-        textTransform: "uppercase", color: "var(--text-4)", marginBottom: 12,
+        display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap",
       }}>
-        Based on
+        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-4)" }}>
+          Based on
+        </span>
+        {sources.youtubeCount > 0 && <SourceBadge label="YouTube" active />}
+        {signals?.googleTrends?.available && <SourceBadge label="Google Trends" active />}
+        <SourceBadge label="AI Interpretation" active icon="🤖" />
       </div>
 
-      {/* Summary stats row */}
+      {/* Computed signals — real math, not LLM */}
+      {signals && (
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+          gap: 10, marginBottom: 14,
+          padding: "12px 0", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)",
+        }}>
+          <SignalCard
+            label="Trend"
+            value={signals.trend.direction}
+            color={SIGNAL_COLORS[signals.trend.direction] ?? "var(--text-3)"}
+          />
+          <SignalCard
+            label="Momentum"
+            value={signals.trend.velocity}
+            color={SIGNAL_COLORS[signals.trend.velocity] ?? "var(--text-3)"}
+          />
+          <SignalCard
+            label="Competition"
+            value={signals.competition.level}
+            color={SIGNAL_COLORS[signals.competition.level] ?? "var(--text-3)"}
+          />
+          <SignalCard
+            label="Recent uploads"
+            value={`${signals.evidence.recentVideoCount} in 6mo`}
+            color="var(--text)"
+          />
+          {signals.googleTrends.available && (
+            <SignalCard
+              label="Search interest"
+              value={`${signals.googleTrends.interest}/100`}
+              color={SIGNAL_COLORS[signals.googleTrends.direction ?? "unknown"] ?? "var(--text-3)"}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Evidence stats row */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 14 }}>
         {sources.youtubeCount > 0 && (
           <Stat label="Videos analyzed" value={String(sources.youtubeCount)} />
@@ -62,9 +109,12 @@ export function ResearchPanel({ topVideos, youtubeData, platformAnalysis, source
         {topChannels.length > 0 && (
           <Stat label="Top channels" value={topChannels.slice(0, 3).join(", ")} />
         )}
+        {signals && signals.momentum.medianViewsPerDay > 0 && (
+          <Stat label="Median views/day" value={formatViews(signals.momentum.medianViewsPerDay)} />
+        )}
       </div>
 
-      {/* Short-form platform cards */}
+      {/* Short-form platform cards — content style only, no fake avg views */}
       {(reelsData || shortsData) && (
         <div style={{
           display: "grid",
@@ -74,9 +124,8 @@ export function ResearchPanel({ topVideos, youtubeData, platformAnalysis, source
         }}>
           {reelsData && (
             <PlatformCard
-              icon={getPlatformIcon("instagram reels")}
+              icon="📱"
               name="Instagram Reels"
-              avgViews={reelsData.avgViewsForTopic}
               style={reelsData.contentStyle}
               hashtags={reelsData.hashtagStrategy}
               potential={reelsData.potential}
@@ -84,9 +133,8 @@ export function ResearchPanel({ topVideos, youtubeData, platformAnalysis, source
           )}
           {shortsData && (
             <PlatformCard
-              icon={getPlatformIcon("youtube shorts")}
+              icon="▶️"
               name="YouTube Shorts"
-              avgViews={shortsData.avgViewsForTopic}
               style={shortsData.contentStyle}
               hashtags={shortsData.hashtagStrategy}
               potential={shortsData.potential}
@@ -146,19 +194,43 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
+function SignalCard({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div style={{ textAlign: "center" }}>
+      <div style={{ fontSize: 11, color: "var(--text-4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+        {label}
+      </div>
+      <div style={{
+        fontSize: 15, fontWeight: 700, color,
+        textTransform: "capitalize",
+      }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function SourceBadge({ label, active, icon }: { label: string; active: boolean; icon?: string }) {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4,
+      padding: "2px 8px", fontSize: 11, fontWeight: 600,
+      borderRadius: 10,
+      background: active ? "rgba(20,184,166,0.08)" : "var(--bg)",
+      color: active ? "#14b8a6" : "var(--text-4)",
+      border: `1px solid ${active ? "rgba(20,184,166,0.2)" : "var(--border)"}`,
+    }}>
+      {icon ?? (active ? "✅" : "⬜")} {label}
+    </span>
+  );
+}
+
 const POTENTIAL_COLORS: Record<string, string> = {
-  high: "#10b981",
-  medium: "#f59e0b",
-  low: "#ef4444",
+  high: "#10b981", medium: "#f59e0b", low: "#ef4444",
 };
 
-function PlatformCard({ icon, name, avgViews, style, hashtags, potential }: {
-  icon: string;
-  name: string;
-  avgViews: string;
-  style: string;
-  hashtags: string;
-  potential: "low" | "medium" | "high";
+function PlatformCard({ icon, name, style, hashtags, potential }: {
+  icon: string; name: string; style: string; hashtags: string; potential: "low" | "medium" | "high";
 }) {
   const potentialColor = POTENTIAL_COLORS[potential] ?? "var(--text-3)";
   return (
@@ -171,14 +243,10 @@ function PlatformCard({ icon, name, avgViews, style, hashtags, potential }: {
         <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{name}</span>
         <span style={{
           marginLeft: "auto", fontSize: 11, fontWeight: 700,
-          textTransform: "uppercase", color: potentialColor,
-          letterSpacing: "0.05em",
+          textTransform: "uppercase", color: potentialColor, letterSpacing: "0.05em",
         }}>
           {potential} potential
         </span>
-      </div>
-      <div style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.5, marginBottom: 6 }}>
-        <span style={{ fontWeight: 600, color: "var(--text)" }}>Avg views:</span> {avgViews}
       </div>
       <div style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.5, marginBottom: 6 }}>
         <span style={{ fontWeight: 600, color: "var(--text)" }}>What works:</span> {style}

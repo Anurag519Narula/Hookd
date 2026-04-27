@@ -42,7 +42,8 @@ export async function initDb(): Promise<void> {
     ADD COLUMN IF NOT EXISTS user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
     ADD COLUMN IF NOT EXISTS selected_hook TEXT,
     ADD COLUMN IF NOT EXISTS insights JSONB,
-    ADD COLUMN IF NOT EXISTS insights_cached_at BIGINT
+    ADD COLUMN IF NOT EXISTS insights_cached_at BIGINT,
+    ADD COLUMN IF NOT EXISTS insights_idea_text TEXT
   `);
 
   // Migrate existing users table — add creator profile columns if missing
