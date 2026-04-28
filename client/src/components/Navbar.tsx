@@ -47,8 +47,8 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
   return (
     <nav style={{
       position: "sticky", top: 0, zIndex: 100,
-      background: dark ? "rgba(10,10,10,0.92)" : "rgba(250,250,250,0.92)",
-      backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+      background: dark ? "rgba(15,13,11,0.88)" : "rgba(244,238,230,0.82)",
+      backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
       borderBottom: "1px solid var(--border)",
     }}>
       <div style={{
@@ -65,7 +65,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
         >
           <div style={{
             width: 24, height: 24, borderRadius: 6,
-            background: "#14b8a6",
+            background: "var(--accent)",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="white">
@@ -87,7 +87,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
                 to={to}
                 style={{
                   fontSize: 15, fontWeight: active ? 600 : 400,
-                  color: active ? "#14b8a6" : "var(--text-3)",
+                  color: active ? "var(--accent)" : "var(--text-3)",
                   padding: "4px 10px 2px",
                   textDecoration: "none", transition: "all 0.15s ease",
                   borderBottom: active ? "1.5px solid #14b8a6" : "1.5px solid transparent",
@@ -153,9 +153,9 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
                 title={displayName}
                 style={{
                   width: 30, height: 30, borderRadius: "50%",
-                  background: "#14b8a6",
+                  background: "var(--accent)",
                   border: dropdownOpen ? "2px solid #14b8a6" : "2px solid transparent",
-                  outline: dropdownOpen ? "2px solid rgba(20,184,166,0.3)" : "none",
+                  outline: dropdownOpen ? "2px solid var(--accent-subtle)" : "none",
                   outlineOffset: 1,
                   cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center",
@@ -245,7 +245,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
               onClick={() => setMenuOpen(false)}
               style={{
                 fontSize: 16, fontWeight: 500,
-                color: isActive(to) ? "#14b8a6" : "var(--text-2)",
+                color: isActive(to) ? "var(--accent)" : "var(--text-2)",
                 padding: "9px 10px", borderRadius: 6,
                 textDecoration: "none", transition: "background 0.15s ease",
               }}
@@ -261,7 +261,7 @@ export function Navbar({ children, showBack: _showBack, onBack }: NavbarProps) {
               onClick={() => setMenuOpen(false)}
               style={{
                 fontSize: 16, fontWeight: 500,
-                color: isActive("/settings") ? "#14b8a6" : "var(--text-2)",
+                color: isActive("/settings") ? "var(--accent)" : "var(--text-2)",
                 padding: "9px 10px", borderRadius: 6,
                 textDecoration: "none",
               }}

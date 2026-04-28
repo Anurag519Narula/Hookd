@@ -110,7 +110,7 @@ export function StatCell({ label, value, sub, accent }: {
   return (
     <div style={{
       padding: "16px 18px",
-      background: accent ? "rgba(5,150,105,0.04)" : "var(--bg-card)",
+      background: accent ? "var(--accent-subtle)" : "var(--bg-card)",
     }}>
       <div style={{
         fontSize: 10, fontWeight: 600, letterSpacing: "0.14em",

@@ -140,8 +140,8 @@ function Label({ children, step }: { children: React.ReactNode; step?: number })
         <span style={{
           fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
           color: "var(--accent)",
-          background: "rgba(20,184,166,0.1)",
-          border: "1px solid rgba(20,184,166,0.2)",
+          background: "var(--accent-subtle)",
+          border: "1px solid rgba(20,184,166,0.1)",
           borderRadius: 4,
           padding: "2px 7px",
           flexShrink: 0,
@@ -187,8 +187,8 @@ function CompareRow({ left, right }: { left: string; right: string }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{
             width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
-            background: "rgba(20,184,166,0.15)",
-            border: "1px solid rgba(20,184,166,0.3)",
+            background: "rgba(20,184,166,0.08)",
+            border: "1px solid rgba(20,184,166,0.12)",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 10, color: "var(--accent)",
           }}>✓</span>
@@ -214,15 +214,29 @@ export function HomeScreen() {
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", overflowX: "hidden" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <Navbar />
 
       {/* ── HERO ── */}
       <section style={{
         maxWidth: 1100, margin: "0 auto",
-        padding: "72px 40px 80px",
+        padding: "96px 40px 96px",
         position: "relative", zIndex: 1,
+        overflow: "hidden",
       }}>
+        {/* Ambient glow — warm editorial atmosphere */}
+        <div style={{
+          position: "absolute", top: -120, right: -80,
+          width: 500, height: 500, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(162,126,90,0.06) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute", top: -80, left: -120,
+          width: 400, height: 400, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(126,139,120,0.04) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
         <div style={{
           display: "grid", gridTemplateColumns: "1fr 280px",
           gap: 64, alignItems: "end",
@@ -247,9 +261,7 @@ export function HomeScreen() {
             }}>
               You already have<br />
               <span style={{
-                background: "linear-gradient(90deg, var(--accent) 0%, #818cf8 100%)",
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
+                color: "var(--accent)",
               }}>
                 the idea.
               </span>
@@ -326,11 +338,9 @@ export function HomeScreen() {
                 display: "flex", alignItems: "center", gap: 12,
               }}>
                 <p style={{
-                  fontSize: 22, fontWeight: 800, letterSpacing: "-0.04em",
+                  fontSize: 22, fontWeight: 800,
                   margin: 0, flexShrink: 0,
-                  background: "linear-gradient(90deg, var(--accent), #818cf8)",
-                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
+                  color: "var(--accent)", letterSpacing: "-0.04em",
                 }}>
                   {stat.value}
                 </p>
@@ -736,7 +746,7 @@ export function HomeScreen() {
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <div style={{
                 width: 26, height: 26, borderRadius: 7,
-                background: "linear-gradient(135deg, var(--accent), #6366f1)",
+                background: "var(--accent)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="white">

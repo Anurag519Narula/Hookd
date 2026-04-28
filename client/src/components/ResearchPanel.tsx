@@ -4,7 +4,7 @@ import {
   ArrowSquareOut,
 } from "@phosphor-icons/react";
 import type { TopVideo, InsightReport, PlatformScore } from "../types/insights";
-import { SectionLabel, formatViews, scoreColor, ScoreBar, SIGNAL_COLORS } from "./ui";
+import { SectionLabel, formatViews, SIGNAL_COLORS } from "./ui";
 
 interface ComputedSignals {
   trend: { direction: string; velocity: string; score: number; explanation: string };
@@ -54,24 +54,6 @@ export function ResearchPanel({ topVideos, youtubeData, report, signals }: Resea
       </div>
 
       <div style={{ padding: "0 24px 24px" }}>
-
-        {/* Opportunity + Audience Fit scores */}
-        <div style={{
-          display: "grid", gridTemplateColumns: "1fr 1px 1fr",
-          gap: 0, background: "var(--border)", borderRadius: 10,
-          overflow: "hidden", marginTop: 20, marginBottom: 20,
-        }}>
-          <ScoreCell
-            label="Opportunity"
-            score={report.opportunityScore}
-          />
-          <div style={{ background: "var(--border)" }} />
-          <ScoreCell
-            label="Audience Fit"
-            score={report.audienceFit.score}
-            sub={report.audienceFit.primaryAudience}
-          />
-        </div>
 
         {/* Computed signals row */}
         {signals && (
@@ -296,43 +278,6 @@ export function ResearchPanel({ topVideos, youtubeData, report, signals }: Resea
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
-
-function ScoreCell({ label, score, sub }: { label: string; score: number; sub?: string }) {
-  const color = scoreColor(score);
-  return (
-    <div style={{ padding: "18px 20px", background: "var(--bg-card)" }}>
-      <div style={{
-        fontSize: 10, fontWeight: 600, letterSpacing: "0.14em",
-        textTransform: "uppercase", color: "var(--text-4)",
-        marginBottom: 10, fontFamily: "var(--font-mono)",
-      }}>
-        {label}
-      </div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 10 }}>
-        <span style={{
-          fontSize: 26, fontWeight: 800, color,
-          letterSpacing: "-0.04em", lineHeight: 1,
-          fontFamily: "var(--font-sans)",
-        }}>
-          {score}
-        </span>
-        <span style={{
-          fontSize: 12, color: "var(--text-4)", fontWeight: 500,
-          fontFamily: "var(--font-mono)",
-        }}>/100</span>
-      </div>
-      <ScoreBar score={score} color={color} height={4} />
-      {sub && (
-        <div style={{
-          fontSize: 13, color: "var(--text-3)", marginTop: 8,
-          lineHeight: 1.45, letterSpacing: "-0.005em",
-        }}>
-          {sub}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function SignalCell({ label, value, color }: { label: string; value: string; color: string }) {
   return (

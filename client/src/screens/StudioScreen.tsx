@@ -6,7 +6,7 @@ import {
   Sparkle, CircleNotch, ArrowRight,
   CheckCircle, Robot, WarningCircle,
   ArrowsClockwise, TrendUp, ShieldCheck,
-  Trophy, Users, Clock, Crown, Crosshair,
+  Trophy, Clock, Crown, Crosshair,
 } from "@phosphor-icons/react";
 import { Navbar } from "../components/Navbar";
 import { MarketResearchPanel } from "../components/MarketResearchPanel";
@@ -129,6 +129,54 @@ function SidebarItem({ icon, label, value }: {
           lineHeight: 1.5, letterSpacing: "-0.005em",
         }}>{value}</div>
       </div>
+    </div>
+  );
+}
+
+// ── Circle score graph ────────────────────────────────────────────────────────
+
+function CircleScore({ label, score }: { label: string; score: number }) {
+  const size = 72;
+  const stroke = 5;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (Math.min(100, Math.max(0, score)) / 100) * circumference;
+  const color = scoreColor(score);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+      <div style={{ position: "relative", width: size, height: size }}>
+        <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+          <circle
+            cx={size / 2} cy={size / 2} r={radius}
+            fill="none" stroke="var(--border)"
+            strokeWidth={stroke}
+          />
+          <circle
+            cx={size / 2} cy={size / 2} r={radius}
+            fill="none" stroke={color}
+            strokeWidth={stroke}
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            style={{ transition: "stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1)" }}
+          />
+        </svg>
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <span style={{
+            fontSize: 16, fontWeight: 800, color,
+            fontFamily: "var(--font-sans)", letterSpacing: "-0.03em",
+          }}>{score}</span>
+        </div>
+      </div>
+      <span style={{
+        fontSize: 10, fontWeight: 600, letterSpacing: "0.1em",
+        textTransform: "uppercase", color: "var(--text-4)",
+        fontFamily: "var(--font-mono)", textAlign: "center",
+      }}>{label}</span>
     </div>
   );
 }
@@ -383,23 +431,14 @@ export function StudioScreen() {
             >
               {/* ── HERO BAR ─────────────────────────────────────────────── */}
               <div style={{
-                display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
                 gap: 24, marginBottom: 24, flexWrap: "wrap",
               }}
               className="dashboard-hero-bar">
-                {/* Left: idea + sources */}
+                {/* Left: sources */}
                 <div style={{ flex: 1, minWidth: 280 }}>
-                  <h1 style={{
-                    fontSize: "clamp(20px, 2.5vw, 28px)", fontWeight: 800,
-                    letterSpacing: "-0.04em", color: "var(--text)", margin: "0 0 6px",
-                    lineHeight: 1.2, fontFamily: "var(--font-sans)",
-                    display: "-webkit-box", WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical" as any, overflow: "hidden",
-                  }}>
-                    {idea.trim().slice(0, 120)}{idea.trim().length > 120 ? "..." : ""}
-                  </h1>
                   <div style={{
-                    display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 8,
+                    display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap",
                   }}>
                     <span style={{
                       fontSize: 13, color: "var(--text-3)", letterSpacing: "-0.005em",
@@ -507,13 +546,32 @@ export function StudioScreen() {
                 {/* ════════ LEFT COLUMN (8 cols equivalent) ════════ */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
 
-                  {/* Verdict Card — full detail */}
+                  {/* Verdict Card */}
                   <VerdictCard insights={r} />
 
                   {/* Platform Scorecard */}
                   <PlatformScorecard scores={r.platform_scores ?? []} />
 
-                  {/* Google Trends — large chart card */}
+                  {/* Strategy & Angles */}
+                  <MarketResearchPanel
+                    isOpen={insightsOpen}
+                    onToggle={handleInsightsToggle}
+                    insights={r}
+                    isLoading={false}
+                  />
+
+                  {/* Evidence & Data */}
+                  <ResearchPanel
+                    topVideos={r.topVideos ?? []}
+                    youtubeData={r.youtubeData}
+                    platformAnalysis={r.platformAnalysis ?? []}
+                    platformScores={r.platform_scores ?? []}
+                    report={r}
+                    signals={sig}
+                    sources={insights.sources}
+                  />
+
+                  {/* Google Search Trends */}
                   {insights.googleTrends && (
                     <SearchTrendsSection
                       interest={insights.googleTrends.interest}
@@ -524,30 +582,11 @@ export function StudioScreen() {
                       topQueries={insights.googleTrends.topQueries}
                     />
                   )}
-
-                  {/* Strategy & Angles — tabbed */}
-                  <MarketResearchPanel
-                    isOpen={insightsOpen}
-                    onToggle={handleInsightsToggle}
-                    insights={r}
-                    isLoading={false}
-                  />
-
-                  {/* Evidence & Data — compact metrics */}
-                  <ResearchPanel
-                    topVideos={r.topVideos ?? []}
-                    youtubeData={r.youtubeData}
-                    platformAnalysis={r.platformAnalysis ?? []}
-                    platformScores={r.platform_scores ?? []}
-                    report={r}
-                    signals={sig}
-                    sources={insights.sources}
-                  />
                 </div>
 
                 {/* ════════ RIGHT COLUMN — STICKY SIDEBAR ════════ */}
                 <div style={{
-                  position: "sticky", top: 24,
+                  position: "sticky", top: 72,
                   display: "flex", flexDirection: "column", gap: 0,
                   background: "var(--bg-card)", border: "1px solid var(--border)",
                   borderRadius: 12, padding: "20px 20px 16px",
@@ -595,23 +634,6 @@ export function StudioScreen() {
                     }
                   />
 
-                  <SidebarItem
-                    icon={<Users size={15} weight="duotone" color="var(--text-3)" />}
-                    label="Audience Fit"
-                    value={
-                      <div>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-                          <span style={{
-                            fontSize: 18, fontWeight: 800, color: scoreColor(r.audienceFit.score),
-                            fontFamily: "var(--font-sans)", letterSpacing: "-0.03em",
-                          }}>{r.audienceFit.score}</span>
-                          <span style={{ fontSize: 11, color: "var(--text-4)", fontFamily: "var(--font-mono)" }}>/100</span>
-                        </div>
-                        <span style={{ fontSize: 13, color: "var(--text-3)" }}>{r.audienceFit.primaryAudience}</span>
-                      </div>
-                    }
-                  />
-
                   {topChannel && (
                     <SidebarItem
                       icon={<Trophy size={15} weight="duotone" color="var(--text-3)" />}
@@ -619,6 +641,16 @@ export function StudioScreen() {
                       value={topChannel}
                     />
                   )}
+
+                  {/* Opportunity + Audience Fit circle graphs */}
+                  <div style={{
+                    display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12,
+                    padding: "16px 0 12px",
+                    borderBottom: "1px solid var(--border)",
+                  }}>
+                    <CircleScore label="Opportunity" score={r.opportunityScore} />
+                    <CircleScore label="Audience Fit" score={r.audienceFit.score} />
+                  </div>
 
                   {/* Plan Script CTA in sidebar */}
                   {canPlanScript && (

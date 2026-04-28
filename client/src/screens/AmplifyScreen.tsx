@@ -28,7 +28,6 @@ export function AmplifyScreen() {
   const stateData = (location.state as { idea?: string; ideaId?: string }) ?? {};
   const ideaFromState = stateData.idea ?? "";
 
-  const hasNavigationState = location.state !== null;
   const didResetRef = useRef(false);
   useEffect(() => {
     if (!didResetRef.current) {

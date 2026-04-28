@@ -149,7 +149,6 @@ function TabbedReport({ insights }: { insights: InsightReport }) {
       <div style={{
         display: "flex", gap: 2, marginBottom: 20,
         borderBottom: "1px solid var(--border)", paddingBottom: 0,
-        overflowX: "auto",
       }}>
         {availableTabs.map((tab) => {
           const isActive = activeTab === tab.key;
