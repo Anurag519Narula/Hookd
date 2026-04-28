@@ -29,7 +29,7 @@ interface ResearchPanelProps {
   };
 }
 
-export function ResearchPanel({ topVideos, youtubeData, report, signals }: ResearchPanelProps) {
+export function ResearchPanel({ topVideos, youtubeData, signals }: ResearchPanelProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}

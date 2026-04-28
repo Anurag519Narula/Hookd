@@ -178,13 +178,17 @@ A single-row card showing which data sources powered this report:
 
 **Design:** borderRadius 8, header padding 14px 20px with bottom border, content padding 0 20px 14px. Tier badges use borderRadius 4 (rectangular, not pills). Only Instagram Reels and YouTube Shorts are shown (TikTok excluded — banned in India).
 
-### 4. Strategy & Angles (Accordion)
+### 4. Strategy & Angles (Tabbed Panel)
 **Component:** `MarketResearchPanel.tsx`
 **Purpose:** Actionable content strategy — what specifically to make.
 
-**Toggle header:** Teal icon (pulse chart SVG) + "Strategy & Angles" title + chevron. Shows "● Analyzing" badge during loading.
+**Toggle header:** Teal icon (Phosphor Pulse) + "Strategy & Angles" title + chevron. Shows "Analyzing" badge during loading.
 
-**Sections inside (in order):**
+**Tab bar:** Horizontal tabs — Angles / Untapped / Risks / Competitors / Action Plan. Only tabs with data are shown. No scroll overflow. Active tab has accent underline.
+
+**Tab content animates** with framer-motion fade transitions on tab switch.
+
+**Sections inside (by tab):**
 
 #### 4a. Top Angles
 Numbered cards (01, 02, 03...). First card has teal left border accent. Each shows:
@@ -232,21 +236,14 @@ Grid: `1fr 32px 1fr`.
 
 **Sections inside (in order):**
 
-#### 5a. Opportunity + Audience Fit Scores
-Two-column grid separated by 1px border. Each shows:
-- Label (12px uppercase)
-- Score value (24px/800 weight) + "/100" suffix (13px)
-- Score bar (3px height, color-coded, animated fill)
-- Audience fit also shows primary audience demographic text.
-
-#### 5b. Computed Signal Cards
+#### 5a. Computed Signal Cards
 Grid of signal cells (auto-fit, minmax 130px). Each cell:
 - Label (12px uppercase)
 - Value (15px/700, color-coded, capitalized)
 
 Signals shown: Trend, Momentum, Competition, Recent uploads (X in 6mo), Search interest (X/100, only if Google Trends available).
 
-#### 5c. YouTube Stats Grid
+#### 5b. YouTube Stats Grid
 4-column grid with 1px gap borders:
 - Top Video (views, teal accent background)
 - Avg Top 5 (views)
@@ -255,14 +252,14 @@ Signals shown: Trend, Momentum, Competition, Recent uploads (X in 6mo), Search i
 
 Each cell: 14px 16px padding, 12px uppercase label, 20px/800 value.
 
-#### 5d. Top Channels + Title Patterns
+#### 5c. Top Channels + Title Patterns
 Two-column grid:
 - Left: numbered channel list (top 4), #1 has teal accent
 - Right: title patterns with teal left border quotes (top 3)
 
 Both cards: `var(--bg-subtle)` background, borderRadius 8, padding 14px 16px.
 
-#### 5e. Top Performing Videos (Tiles)
+#### 5d. Top Performing Videos (Tiles)
 Responsive tile grid: `repeat(auto-fill, minmax(220px, 1fr))`.
 
 Each tile is a clickable `<a>` linking to `youtube.com/watch?v={videoId}`:
@@ -318,44 +315,46 @@ Navigates to `/develop` with `{ idea, ideaId, insights }` in React Router state.
 
 All validation report components share a unified design language defined in `components/ui.tsx`:
 
-### Typography Scale
-| Use | Size | Weight | Tracking | Color |
-|---|---|---|---|---|
-| Section headers | 12px | 700 | 0.12em | var(--text-3) |
-| Stat labels | 12px | 600 | 0.1em | var(--text-3) |
-| Large stat values | 20–24px | 800 | -0.03em | varies |
-| Signal values | 15px | 700 | — | color-coded |
-| Body text | 14–15px | 400–500 | — | var(--text-2) |
-| Badge text | 13px | 600 | 0.02em | varies |
+### Typography
+- Font: Outfit (sans-serif) + JetBrains Mono (monospace)
+- Section headers: 11px mono, 700 weight, 0.14em tracking, uppercase
+- Stat labels: 10px mono, 600 weight, 0.14em tracking, uppercase
+- Large stat values: 22px Outfit, 800 weight, -0.04em tracking
+- Signal values: 15px, 700 weight, color-coded, capitalized
+- Body text: 14–15px, 400–500 weight, var(--text-2)
+- Badge text: 12px, 600 weight, 0.01em tracking
 
 ### Color Palette
 | Semantic | Color | Usage |
 |---|---|---|
-| Primary accent | #14b8a6 | Buttons, links, teal badges, "Good opportunity" |
-| Positive | #34d399 | "Strong opportunity", rising trend, high reach, easy difficulty |
+| Primary accent | #14b8a6 (var(--accent)) | Buttons, links, badges, "Good opportunity" |
+| Positive | #14b8a6 | "Strong opportunity", rising trend, high reach, easy difficulty |
 | Warning | #f59e0b | "Proceed with caution", medium competition, peaked trend |
-| Danger | #f87171 | "Avoid for now", high competition, declining trend, risks |
-| Neutral | #94a3b8 | Stable trend, day/time badges, muted badges |
+| Danger | #c53030 | "Avoid for now", high competition, declining trend, risks |
+| Neutral | var(--text-3) | Stable trend, day/time badges, muted badges |
 
 ### Shared Components
 | Component | Props | Usage |
 |---|---|---|
-| `Badge` | label, color | Inline label with colored background/border |
-| `SectionLabel` | children | Uppercase header with divider line |
-| `ScoreBar` | score, color, height? | Horizontal fill bar (0–100) |
-| `StatCell` | label, value, sub?, accent? | Grid cell with label + large value |
+| `Badge` | label, color | Inline label with colored background/border (borderRadius 6) |
+| `SectionLabel` | children | Uppercase mono header with divider line |
+| `ScoreBar` | score, color, height? | Horizontal fill bar (0–100), animated on mount |
+| `StatCell` | label, value, sub?, accent? | Grid cell with mono label + large value |
+
+### Icons
+All icons use `@phosphor-icons/react` with duotone or bold weights. No emojis in code or markup.
 
 ### Card Patterns
-- Outer cards: borderRadius 8, `var(--bg-card)`, `1px solid var(--border)`
-- Inner cards: borderRadius 8, `var(--bg-subtle)`, `1px solid var(--border)`, padding 14px 16px
+- Outer cards: borderRadius 12, `var(--bg-card)`, `1px solid var(--border)`, `var(--shadow-lg)` on hover
+- Inner cards: borderRadius 10, `var(--bg-subtle)`, `1px solid var(--border)`, padding 16px 18px
 - Grid separators: 1px gap with `var(--border)` background
-- Accent cards: 8% opacity of accent color as background, matching border at 20–30% opacity
+- Accent cards: `var(--accent-subtle)` background, matching border at low opacity
 
 ### Spacing
-- Card padding: 14px 20px (headers), 0 20px 20px (body)
-- Inner card padding: 14px 16px
-- Section gap: 28px (between major sections inside accordion)
-- Component gap: 12px (between top-level cards)
+- Card padding: 16px 24px (headers), 0 24px 24px (body)
+- Inner card padding: 16px 18px
+- Section gap: 32px (between major sections inside tabbed panel)
+- Component gap: 16px (between top-level cards in left column)
 - Grid gaps: 12px (cards), 1px (stat grids)
 
 ---

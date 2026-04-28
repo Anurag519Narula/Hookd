@@ -89,7 +89,7 @@ Example: User types "ai for students"
 - X YouTube videos analyzed
 - Avg views across top 5
 - Top channel names
-- Instagram hashtag competition tier
+- Google Trends interest data
 - Top 3–5 videos with title + view count + clickable "Watch →" link
 
 **YouTube links:** Already have video IDs from `fetchYouTubeTrends` → `YouTubeResult` objects. URL is just `https://www.youtube.com/watch?v={videoId}`. Zero extra API calls.

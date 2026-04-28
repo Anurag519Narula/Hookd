@@ -48,7 +48,7 @@ Short-form video creators across all niches (tech, fitness, food, travel, busine
 ### 2.2 Studio (Idea Validation)
 
 **Route:** `/studio`
-**Purpose:** Validate an idea against real YouTube, Google Trends, and Instagram data before filming.
+**Purpose:** Validate an idea against real YouTube and Google Trends data before filming.
 
 **Validation flow:**
 1. User enters an idea (or it's pre-filled from Vault via `?ideaId=` param).
@@ -63,13 +63,30 @@ Short-form video creators across all niches (tech, fitness, food, travel, busine
 4. Computed Signals Engine (`computedSignals.ts`): pure math from YouTube + Google Trends data. Computes trend direction, velocity, score, competition level, opportunity score, audience fit score. No LLM involved.
 5. Groq synthesis: receives real data + computed signals as facts. LLM explains and generates angles/blueprint/risks — but numeric scores are force-overwritten with computed values after response.
 
-**Validation report UI order (after clicking Validate):**
-1. **Based on** badges — ✅ YouTube, ✅ Google Trends, 🤖 AI Interpretation
-2. **VerdictCard** — verdict label + reason + context badges (audience intent, competition, best days/times) + key insight
-3. **PlatformScorecard** — Instagram Reels + YouTube Shorts tier labels (Excellent/Strong/Moderate/Low) with reasons
-4. **Strategy & Angles** accordion — Top Angles → Untapped Angles → Action Plan → Risks → Competitor Insights
-5. **Evidence & Data** (ResearchPanel) — Opportunity/100 + Audience Fit/100, computed signal cards, YouTube stats grid, top channels, title patterns, video tiles with Watch → links
-6. **Google Search Trends** (SearchTrendsSection) — 12-month sparkline chart, interest stats, rising/top query chips
+**Validation report UI — dashboard layout (after clicking Validate):**
+
+The report renders in a premium dashboard layout with a hero bar, stat strip, and two-column grid:
+
+**Hero bar:** Source badges (YouTube, Google Trends, AI Interpretation) on the left + Revalidate / Plan Your Script CTAs on the right.
+
+**4-column stat strip:** Verdict label, Opportunity score (/100), Competition level, Trend direction — all color-coded.
+
+**Left column (main content):**
+1. **VerdictCard** — verdict label + reason + context badges (audience intent, competition, best days/times) + key insight
+2. **PlatformScorecard** — Instagram Reels + YouTube Shorts tier labels (Excellent/Strong/Moderate/Low) with reasons
+3. **Strategy & Angles** (tabbed panel) — Tabs: Angles / Untapped / Risks / Competitors / Action Plan. Only tabs with data are shown.
+4. **Evidence & Data** (ResearchPanel) — computed signal cards, YouTube stats grid, top channels, title patterns, video tiles with Watch → links
+5. **Google Search Trends** (SearchTrendsSection) — 12-month sparkline chart, interest stats, rising/top query chips
+
+**Right column (sticky sidebar):**
+- Quick Summary (key insight)
+- Best Platform (with tier badge)
+- Best Time to Post
+- Top Channel Spotted
+- Opportunity + Audience Fit circle graphs (/100)
+- Plan Your Script CTA button
+
+The sidebar sticks to the viewport while scrolling (top: 72px to clear the navbar). On tablet/mobile, the layout collapses to a single column.
 
 **Computed signals (all from real data, no LLM):**
 - Trend direction: recent (6mo) vs older video view ratios
@@ -148,6 +165,7 @@ Short-form video creators across all niches (tech, fitness, food, travel, busine
 - Each conversation has a title, messages array (JSONB), and timestamps.
 - The sidebar shows all past conversations; users can switch between them or start new ones.
 - Full conversation history is sent to Groq on each turn for multi-turn context.
+- Navigating to Amplify (from navbar or from Develop) always starts a fresh conversation — never resumes the last one.
 
 ### 2.5 Settings (Creator Profile)
 
@@ -179,6 +197,9 @@ Loads the idea by ID and renders its cached InsightReport with rich UI component
 - React 18 + TypeScript
 - Vite (dev server + build)
 - React Router v7 (client-side routing)
+- Framer Motion (animations, accordion transitions, staggered reveals)
+- @phosphor-icons/react (icon library — replaces inline SVGs and emojis)
+- Recharts (sparkline charts for Google Trends)
 - Inline styles + CSS variables (no CSS framework — fully custom design system)
 - Vitest + React Testing Library + fast-check (property-based testing) for tests
 
@@ -526,23 +547,27 @@ React Router v7 with navigation state for inter-page data passing.
 | `useTrending` | Fetch trending hashtags |
 
 ### Design System
-- No CSS framework. All styles are inline with CSS variables.
+- Inline styles + CSS variables. Outfit font (sans) + JetBrains Mono (mono).
+- Additional dependencies: framer-motion (animations), @phosphor-icons/react (icons), recharts (charts).
 - Shared design system in `components/ui.tsx`: Badge, SectionLabel, ScoreBar, StatCell, formatViews, scoreColor, compColor, reachColor, diffColor, SIGNAL_COLORS, TIER_COLORS.
 - Dark/light theme via `data-theme` attribute on `<html>`.
-- CSS variables for colors: `--bg`, `--bg-card`, `--bg-subtle`, `--text`, `--text-2`, `--text-3`, `--text-4`, `--accent`, `--border`, `--error`, etc.
-- Responsive breakpoints at 860px and 600px.
-- Animations: `fade-up`, `pulse-glow` keyframes.
+- Light theme: warm latte palette (#F4EEE6 base, #FAF7F2 cards, #EFE7DD subtle). Layered gradient background. Architectural grid overlay. Paper grain texture.
+- Dark theme: warm espresso blacks (#0F0D0B base, #1A1714 cards).
+- CSS variables for colors: `--bg`, `--bg-card`, `--bg-subtle`, `--bg-muted`, `--text`, `--text-2`, `--text-3`, `--text-4`, `--accent`, `--border`, `--error`, etc.
+- Navbar uses `var(--accent)` for all active states — no hardcoded colors.
+- Responsive breakpoints at 1100px (tablet collapse), 640px (mobile), and 680px (navbar).
+- Animations: `fade-up`, `breathe`, `barFill`, `spin` keyframes. Framer-motion for staggered reveals and accordion transitions.
 
 ### Validation Report Components
 | Component | Purpose |
 |---|---|
 | `VerdictCard` | Verdict label + reason + context badges + key insight (always visible) |
-| `PlatformScorecard` | Platform tier labels (Excellent/Strong/Moderate/Low) with reasons |
-| `MarketResearchPanel` | Accordion: Top Angles → Untapped Angles → Action Plan → Risks → Competitor Insights |
-| `ResearchPanel` | Evidence: Opportunity/Audience scores, computed signals, YouTube stats, video tiles |
+| `PlatformScorecard` | Platform tier labels (Excellent/Strong/Moderate/Low) with Phosphor icons |
+| `MarketResearchPanel` | Tabbed panel: Angles / Untapped / Risks / Competitors / Action Plan (tabs only show when data exists) |
+| `ResearchPanel` | Evidence: computed signals, YouTube stats, top channels, title patterns, video tiles |
 | `SearchTrendsSection` | Google Trends: 12-month sparkline chart, interest stats, rising/top query chips |
 | `ClarifierInline` | Inline clarifying questions with chip options + free text |
-| `StagedLoader` | Sequential progress stages during validation |
+| `StagedLoader` | Sequential progress stages during validation (Phosphor icons) |
 
 ### Auth Context
 - `AuthProvider` wraps the entire app.

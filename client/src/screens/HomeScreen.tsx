@@ -468,7 +468,7 @@ export function HomeScreen() {
         }} className="steps-grid">
           {[
             { num: "01", title: "Capture", body: "Drop any idea into the Vault the moment it hits. Type, speak, or paste. AI scores and tags it instantly." },
-            { num: "02", title: "Validate", body: "Open it in Studio. Check it against real Instagram and YouTube data — opportunity score, trend direction, competition, untapped angles." },
+            { num: "02", title: "Validate", body: "Open it in Studio. Check it against real YouTube and Google Trends data — opportunity score, trend direction, competition, untapped angles." },
             { num: "03", title: "Plan the script", body: "Go to Develop. Pick from 6 hook variants built on psychological triggers. A full script with beats and timestamps is built around your choice." },
             { num: "04", title: "Generate captions", body: "Hit Amplify. Platform-native captions for Instagram, LinkedIn, Reels, and YouTube Shorts — with trending hashtags — in under a minute." },
             { num: "05", title: "Post it.", body: "Copy, paste, post. Your vault and conversation history are always there when the next idea hits." },
@@ -722,9 +722,9 @@ export function HomeScreen() {
 
         <CompareRow left="Writes about a topic, not your idea" right="Builds from your specific idea and niche profile" />
         <CompareRow left="One output — no angles, no choice" right="6 hook variants with named psychological triggers" />
-        <CompareRow left="Sounds the same on every platform" right="Platform-native captions with real Instagram hashtag data" />
+        <CompareRow left="Sounds the same on every platform" right="Platform-native captions with real hashtag data" />
         <CompareRow left="Forgets everything after the chat" right="Conversation history saved — pick up any session" />
-        <CompareRow left="No idea validation, just guesswork" right="Validates your idea against real Instagram and YouTube trend data before you film" />
+        <CompareRow left="No idea validation, just guesswork" right="Validates your idea against real YouTube and Google Trends data before you film" />
         <CompareRow left="You still have to figure out what to cover" right="Content blueprint tells you exactly what to cover and how" />
         </div>
       </section>

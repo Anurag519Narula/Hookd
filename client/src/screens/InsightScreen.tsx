@@ -114,7 +114,7 @@ export function InsightScreen() {
           {sources && (
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <span style={{ fontSize: 13, color: "var(--text-4)" }}>
-                Based on {sources.youtubeCount} YouTube videos and Instagram data
+                Based on {sources.youtubeCount} YouTube videos and Google Trends
                 {sources.trendsAvailable ? ` · Trends score: ${sources.trendScore}/100` : ""}
               </span>
               {cached && (
@@ -140,7 +140,7 @@ export function InsightScreen() {
               borderRadius: 6,
             }}>
               <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#14b8a6", display: "inline-block", animation: "pulse-glow 1.4s ease-in-out infinite" }} />
-              <p style={{ fontSize: 14, color: "#14b8a6", margin: 0 }}>Pulling real-time data from Instagram and YouTube…</p>
+              <p style={{ fontSize: 14, color: "#14b8a6", margin: 0 }}>Pulling real-time data from YouTube and Google Trends…</p>
             </div>
             <InsightSkeleton />
           </div>
@@ -205,7 +205,7 @@ export function InsightScreen() {
             {/* Instagram & YouTube Data */}
             {report.youtubeData && (
               <div>
-                <SectionHeader label="Instagram & YouTube Data" />
+                <SectionHeader label="YouTube Data" />
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1, background: "var(--border)", borderRadius: 8, overflow: "hidden" }}>
                   {[
                     { label: "Top Video", value: `${(report.youtubeData.topVideoViews / 1000).toFixed(0)}K` },
