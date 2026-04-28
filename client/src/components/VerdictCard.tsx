@@ -27,7 +27,6 @@ export function VerdictCard({ insights }: VerdictCardProps) {
         border: "1px solid var(--border)",
         borderRadius: 12,
         overflow: "hidden",
-        marginBottom: 12,
       }}
     >
       {/* Verdict header */}

@@ -25,7 +25,7 @@ export function PlatformScorecard({ scores }: PlatformScorecardProps) {
       transition={{ duration: 0.5, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
       style={{
         background: "var(--bg-card)", border: "1px solid var(--border)",
-        borderRadius: 12, overflow: "hidden", marginBottom: 12,
+        borderRadius: 12, overflow: "hidden",
       }}
     >
       <div style={{

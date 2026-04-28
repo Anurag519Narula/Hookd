@@ -24,7 +24,7 @@ export function SearchTrendsSection({
       transition={{ duration: 0.5, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
       style={{
         background: "var(--bg-card)", border: "1px solid var(--border)",
-        borderRadius: 12, overflow: "hidden", marginBottom: 12,
+        borderRadius: 12, overflow: "hidden",
       }}
     >
       {/* Header */}

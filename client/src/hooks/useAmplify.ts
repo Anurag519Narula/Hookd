@@ -126,6 +126,7 @@ export function useAmplify(): UseAmplifyResult {
     setActiveSessionId(null);
     setMessages([]);
     setError(null);
+    setInitialized(true);
   }, []);
 
   const loadSession = useCallback(async (id: string): Promise<void> => {

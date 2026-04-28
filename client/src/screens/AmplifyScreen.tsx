@@ -31,7 +31,7 @@ export function AmplifyScreen() {
   const hasNavigationState = location.state !== null;
   const didResetRef = useRef(false);
   useEffect(() => {
-    if (!hasNavigationState && !didResetRef.current) {
+    if (!didResetRef.current) {
       didResetRef.current = true;
       startNewSession();
     }
