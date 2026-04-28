@@ -222,7 +222,7 @@ function AnglesTab({ insights }: { insights: InsightReport }) {
             <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 4, lineHeight: 1.4, letterSpacing: "-0.01em" }}>
               {a.angle}
             </div>
-            <div style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.65 }}>{a.why}</div>
+            <div style={{ fontSize: 15, color: "var(--text-2)", lineHeight: 1.65 }}>{a.why}</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 5, alignItems: "flex-end", flexShrink: 0 }}>
             <Badge label={`${a.estimatedReach} reach`} color={reachColor(a.estimatedReach)} />
@@ -250,9 +250,9 @@ function UntappedTab({ insights }: { insights: InsightReport }) {
           <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 10, lineHeight: 1.4, letterSpacing: "-0.01em" }}>
             {a.angle}
           </div>
-          <div style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.65, marginBottom: 10 }}>{a.opportunity}</div>
+          <div style={{ fontSize: 15, color: "var(--text-2)", lineHeight: 1.65, marginBottom: 10 }}>{a.opportunity}</div>
           <div style={{
-            fontSize: 13, color: "var(--text-3)", lineHeight: 1.55,
+            fontSize: 14, color: "var(--text-3)", lineHeight: 1.55,
             paddingTop: 10, borderTop: "1px solid rgba(5,150,105,0.08)",
           }}>{a.whyNobodyIsDoing}</div>
         </div>
@@ -270,7 +270,7 @@ function RisksTab({ insights }: { insights: InsightReport }) {
           background: "rgba(220,38,38,0.02)", border: "1px solid rgba(220,38,38,0.1)", borderRadius: 10,
         }}>
           <WarningIcon size={14} weight="bold" color="#dc2626" style={{ flexShrink: 0, marginTop: 2 }} />
-          <span style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.65 }}>{r}</span>
+          <span style={{ fontSize: 15, color: "var(--text-2)", lineHeight: 1.65 }}>{r}</span>
         </div>
       ))}
     </div>
@@ -288,7 +288,7 @@ function CompetitorsTab({ insights }: { insights: InsightReport }) {
               textTransform: "uppercase", color: "var(--text-4)",
               marginBottom: 8, fontFamily: "var(--font-mono)",
             }}>What they do</div>
-            <p style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.65, margin: 0 }}>{c.observation}</p>
+            <p style={{ fontSize: 15, color: "var(--text-2)", lineHeight: 1.65, margin: 0 }}>{c.observation}</p>
           </div>
           <div style={{
             width: 32, height: 32, borderRadius: "50%",
@@ -333,7 +333,7 @@ function PlanTab({ insights }: { insights: InsightReport }) {
             display: "flex", alignItems: "center", justifyContent: "center",
             flexShrink: 0, marginTop: 1, fontFamily: "var(--font-mono)",
           }}>{i + 1}</span>
-          <span style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.65 }}>{rec}</span>
+          <span style={{ fontSize: 15, color: "var(--text-2)", lineHeight: 1.65 }}>{rec}</span>
         </div>
       ))}
     </div>

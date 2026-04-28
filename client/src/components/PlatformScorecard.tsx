@@ -68,7 +68,7 @@ export function PlatformScorecard({ scores }: PlatformScorecardProps) {
                 {s.tier}
               </span>
               <span style={{
-                fontSize: 14, color: "var(--text-2)", flex: 1,
+                fontSize: 15, color: "var(--text-2)", flex: 1,
                 lineHeight: 1.55, letterSpacing: "-0.005em",
               }}>
                 {s.reason}

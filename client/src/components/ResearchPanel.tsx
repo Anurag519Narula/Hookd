@@ -151,7 +151,7 @@ export function ResearchPanel({ topVideos, youtubeData, signals }: ResearchPanel
                           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                         }}>{i + 1}</span>
                         <span style={{
-                          fontSize: 14, color: i === 0 ? "var(--text)" : "var(--text-2)",
+                          fontSize: 15, color: i === 0 ? "var(--text)" : "var(--text-2)",
                           fontWeight: i === 0 ? 600 : 400,
                           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                           letterSpacing: "-0.005em",
@@ -176,7 +176,7 @@ export function ResearchPanel({ topVideos, youtubeData, signals }: ResearchPanel
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {youtubeData.commonTitles.slice(0, 3).map((t, i) => (
                       <div key={i} style={{
-                        fontSize: 14, color: "var(--text-2)", lineHeight: 1.55,
+                        fontSize: 15, color: "var(--text-2)", lineHeight: 1.55,
                         paddingLeft: 12, borderLeft: "2px solid rgba(5,150,105,0.2)",
                         letterSpacing: "-0.005em",
                       }}>{t}</div>

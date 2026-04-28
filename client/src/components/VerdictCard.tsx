@@ -66,7 +66,7 @@ export function VerdictCard({ insights }: VerdictCardProps) {
         </div>
 
         <p style={{
-          fontSize: 15, color: "var(--text-2)", lineHeight: 1.7,
+          fontSize: 16, color: "var(--text-2)", lineHeight: 1.7,
           margin: 0, maxWidth: "65ch",
         }}>
           {insights.verdictReason}
@@ -102,7 +102,7 @@ export function VerdictCard({ insights }: VerdictCardProps) {
             Key Insight
           </div>
           <p style={{
-            fontSize: 15, color: "var(--text)", fontWeight: 500,
+            fontSize: 16, color: "var(--text)", fontWeight: 500,
             lineHeight: 1.7, margin: 0, maxWidth: "65ch",
           }}>
             {insights.keyInsight}

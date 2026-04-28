@@ -125,7 +125,7 @@ function SidebarItem({ icon, label, value }: {
           marginBottom: 4, fontFamily: "var(--font-mono)",
         }}>{label}</div>
         <div style={{
-          fontSize: 14, color: "var(--text)", fontWeight: 500,
+          fontSize: 15, color: "var(--text)", fontWeight: 500,
           lineHeight: 1.5, letterSpacing: "-0.005em",
         }}>{value}</div>
       </div>
@@ -441,7 +441,7 @@ export function StudioScreen() {
                     display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap",
                   }}>
                     <span style={{
-                      fontSize: 13, color: "var(--text-3)", letterSpacing: "-0.005em",
+                      fontSize: 14, color: "var(--text-3)", letterSpacing: "-0.005em",
                     }}>Validated using real market signals</span>
                     <span style={{ color: "var(--border-strong)" }}>·</span>
                     {insights.sources.youtubeCount > 0 && (
@@ -599,7 +599,7 @@ export function StudioScreen() {
                   }}>Quick Summary</div>
 
                   <p style={{
-                    fontSize: 14, color: "var(--text-2)", lineHeight: 1.6,
+                    fontSize: 15, color: "var(--text-2)", lineHeight: 1.6,
                     marginBottom: 12, letterSpacing: "-0.005em",
                     paddingBottom: 12, borderBottom: "1px solid var(--border)",
                   }}>

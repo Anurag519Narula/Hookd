@@ -113,7 +113,7 @@ export function InsightScreen() {
           </h1>
           {sources && (
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 13, color: "var(--text-4)" }}>
+              <span style={{ fontSize: 14, color: "var(--text-4)" }}>
                 Based on {sources.youtubeCount} YouTube videos and Google Trends
                 {sources.trendsAvailable ? ` · Trends score: ${sources.trendScore}/100` : ""}
               </span>

@@ -180,7 +180,7 @@ function CompareRow({ left, right }: { left: string; right: string }) {
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 10, color: "var(--text-4)",
           }}>✕</span>
-          <span style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.5 }}>{left}</span>
+          <span style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.5 }}>{left}</span>
         </div>
       </div>
       <div style={{ padding: "14px 24px" }}>
@@ -192,7 +192,7 @@ function CompareRow({ left, right }: { left: string; right: string }) {
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 10, color: "var(--accent)",
           }}>✓</span>
-          <span style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.5, fontWeight: 500 }}>{right}</span>
+          <span style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.5, fontWeight: 500 }}>{right}</span>
         </div>
       </div>
     </div>
@@ -415,7 +415,7 @@ export function HomeScreen() {
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {card.hooks.map((hook, i) => (
                   <div key={i} style={{
-                    fontSize: 13, color: i === 0 ? "var(--text)" : "var(--text-2)",
+                    fontSize: 14, color: i === 0 ? "var(--text)" : "var(--text-2)",
                     lineHeight: 1.6,
                     paddingLeft: 10,
                     borderLeft: `2px solid ${i === 0 ? card.signal : `${card.signal}30`}`,
@@ -489,7 +489,7 @@ export function HomeScreen() {
               }}>
                 {step.title}
               </p>
-              <p style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.7, margin: 0 }}>
+              <p style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.7, margin: 0 }}>
                 {step.body}
               </p>
             </div>
@@ -612,7 +612,7 @@ export function HomeScreen() {
 
               {/* Idea — the input */}
               <p style={{
-                fontSize: 13, color: "var(--text)", lineHeight: 1.65,
+                fontSize: 14, color: "var(--text)", lineHeight: 1.65,
                 margin: 0, fontWeight: 500, letterSpacing: "-0.01em",
               }}>
                 "{card.idea}"
@@ -757,7 +757,7 @@ export function HomeScreen() {
                 Hookd
               </span>
             </div>
-            <p style={{ fontSize: 13, color: "var(--text-4)", margin: 0, maxWidth: 260, lineHeight: 1.6 }}>
+            <p style={{ fontSize: 14, color: "var(--text-4)", margin: 0, maxWidth: 260, lineHeight: 1.6 }}>
               Turn raw ideas into content that actually gets seen.
             </p>
           </div>
@@ -778,7 +778,7 @@ export function HomeScreen() {
                 { label: "Vault", path: "/vault" },
               ].map(({ label, path }) => (
                 <a key={label} href={path} style={{
-                  display: "block", fontSize: 13, color: "var(--text-3)",
+                  display: "block", fontSize: 14, color: "var(--text-3)",
                   textDecoration: "none", marginBottom: 8,
                   transition: "color var(--transition)",
                 }}

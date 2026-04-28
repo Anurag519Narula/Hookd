@@ -235,7 +235,7 @@ export function DevelopScreen() {
                     {["Analysing validation report", "Mapping key points", "Structuring hook and CTA"].map((s, i) => (
                       <div key={s} style={{ display: "flex", alignItems: "center", gap: 8, animation: `fadeInStep 0.4s ease ${i * 0.5}s both` }}>
                         <span style={{ fontSize: 12, color: "var(--text-4)", fontVariantNumeric: "tabular-nums" }}>{String(i + 1).padStart(2, "0")}</span>
-                        <span style={{ fontSize: 13, color: "var(--text-3)" }}>{s}</span>
+                        <span style={{ fontSize: 14, color: "var(--text-3)" }}>{s}</span>
                       </div>
                     ))}
                     <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
@@ -391,7 +391,7 @@ export function DevelopScreen() {
           {showHooks && (
             <div style={{ marginBottom: 28 }}>
               <SectionHeader label="Choose your hook" status={hooksStatus} />
-              <p style={{ fontSize: 13, color: "var(--text-3)", margin: "0 0 12px", lineHeight: 1.6 }}>
+              <p style={{ fontSize: 14, color: "var(--text-3)", margin: "0 0 12px", lineHeight: 1.6 }}>
                 {isGeneratingHooks ? "Crafting 6 variants…" : selectedHookIndex === null ? "Click a hook to select it." : isGeneratingScript ? "Building script…" : "Script generated. Select a different hook to rebuild."}
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }} className="hook-grid">
@@ -423,7 +423,7 @@ export function DevelopScreen() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 8 }}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", marginBottom: 2 }}>Script ready</div>
-                <div style={{ fontSize: 13, color: "var(--text-3)" }}>Generate platform-native captions.</div>
+                <div style={{ fontSize: 14, color: "var(--text-3)" }}>Generate platform-native captions.</div>
               </div>
               <button onClick={handleGenerateCaptions} style={{
                 display: "inline-flex", alignItems: "center", gap: 7,
