@@ -1,55 +1,57 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 /* ── CSS Variables ─────────────────────────────────────────────────────────── */
 :root {
-  --bg: #f7f6f3;
+  --bg: #fafaf9;
   --bg-card: #ffffff;
   --bg-input: #ffffff;
-  --bg-subtle: #f0ede8;
-  --bg-hover: #e8e4de;
-  --border: #e2ddd7;
-  --border-strong: #c8c3bc;
-  --text: #111110;
-  --text-2: #4a4845;
-  --text-3: #8a8580;
-  --text-4: #b5b0aa;
-  --accent: #0d9488;
-  --accent-hover: #0b7a70;
-  --accent-subtle: #e6f7f5;
-  --accent-text: #0d9488;
+  --bg-subtle: #f5f5f4;
+  --bg-hover: #e7e5e4;
+  --border: #e7e5e4;
+  --border-strong: #d6d3d1;
+  --text: #1c1917;
+  --text-2: #44403c;
+  --text-3: #78716c;
+  --text-4: #a8a29e;
+  --accent: #059669;
+  --accent-hover: #047857;
+  --accent-subtle: #ecfdf5;
+  --accent-text: #059669;
   --error: #dc2626;
   --error-subtle: #fef2f2;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
-  --shadow-lg: 0 12px 40px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 2px rgba(28,25,23,0.04);
+  --shadow-md: 0 4px 12px rgba(28,25,23,0.06), 0 1px 3px rgba(28,25,23,0.04);
+  --shadow-lg: 0 12px 32px rgba(28,25,23,0.08), 0 4px 8px rgba(28,25,23,0.04);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
-  --transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
 }
 
 [data-theme="dark"] {
-  --bg: #080808;
-  --bg-card: #111111;
-  --bg-input: #0e0e0e;
-  --bg-subtle: #161616;
-  --bg-hover: #1e1e1e;
-  --border: #2a2a2a;
-  --border-strong: #3a3a3a;
-  --text: #f5f4f2;
-  --text-2: #c4c0bb;
-  --text-3: #8a8680;
-  --text-4: #555250;
-  --accent: #14b8a6;
-  --accent-hover: #0d9488;
-  --accent-subtle: #0a1f1d;
-  --accent-text: #14b8a6;
+  --bg: #0c0a09;
+  --bg-card: #1c1917;
+  --bg-input: #171412;
+  --bg-subtle: #1c1917;
+  --bg-hover: #292524;
+  --border: #292524;
+  --border-strong: #44403c;
+  --text: #fafaf9;
+  --text-2: #d6d3d1;
+  --text-3: #a8a29e;
+  --text-4: #78716c;
+  --accent: #34d399;
+  --accent-hover: #10b981;
+  --accent-subtle: #052e16;
+  --accent-text: #34d399;
   --error: #f87171;
   --error-subtle: #1f1010;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
-  --shadow-lg: 0 12px 40px rgba(0,0,0,0.7);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.6);
 }
 
 /* ── Reset ─────────────────────────────────────────────────────────────────── */
@@ -58,7 +60,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -84,7 +86,7 @@ img { max-width: 100%; }
 }
 
 .shimmer-line {
-  border-radius: 6px;
+  border-radius: 8px;
   background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-hover) 50%, var(--bg-subtle) 75%);
   background-size: 1200px 100%;
   animation: shimmer 1.8s ease-in-out infinite;
@@ -102,27 +104,39 @@ img { max-width: 100%; }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.96); }
+  from { opacity: 0; transform: scale(0.97); }
   to   { opacity: 1; transform: scale(1); }
 }
 
-.fade-up { animation: fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both; }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes barFill {
+  from { width: 0%; }
+}
+
+.fade-up { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .fade-in { animation: fadeIn 0.4s ease both; }
-.scale-in { animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.scale-in { animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
-/* ── Glow pulse for loading ────────────────────────────────────────────────── */
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
-  50% { box-shadow: 0 0 0 6px rgba(13, 148, 136, 0.12); }
-}
-
-/* ── Gradient text ─────────────────────────────────────────────────────────── */
-.gradient-text {
-  background: linear-gradient(135deg, var(--accent) 0%, #6366f1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+/* ── Stagger cascade utility ───────────────────────────────────────────────── */
+.stagger-1 { animation-delay: 60ms; }
+.stagger-2 { animation-delay: 120ms; }
+.stagger-3 { animation-delay: 180ms; }
+.stagger-4 { animation-delay: 240ms; }
+.stagger-5 { animation-delay: 300ms; }
+.stagger-6 { animation-delay: 360ms; }
 
 /* ── Navbar responsive ─────────────────────────────────────────────────────── */
 .nav-links-desktop { display: flex !important; }
@@ -134,22 +148,12 @@ img { max-width: 100%; }
   .nav-hamburger { display: flex !important; }
 }
 
-/* ── Noise texture overlay ─────────────────────────────────────────────────── */
-.noise-bg::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* ── Body noise ────────────────────────────────────────────────────────────── */
+/* ── Noise texture overlay (fixed, pointer-events-none) ────────────────────── */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 9999;
 }
@@ -186,4 +190,32 @@ body::after {
 /* ── Utility: bg-input ─────────────────────────────────────────────────────── */
 .bg-input {
   background: var(--bg-input);
+}
+
+/* ── Tactile button feedback ───────────────────────────────────────────────── */
+.btn-tactile:active {
+  transform: scale(0.98) translateY(1px);
+}
+
+/* ── Score bar fill animation ──────────────────────────────────────────────── */
+.score-bar-fill {
+  animation: barFill 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Gradient text ─────────────────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent) 0%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Noise bg helper ───────────────────────────────────────────────────────── */
+.noise-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
 }

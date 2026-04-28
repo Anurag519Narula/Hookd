@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { CircleNotch, Check, Warning } from "@phosphor-icons/react";
 
 interface StagedLoaderProps {
   isLoading: boolean;
@@ -7,41 +8,32 @@ interface StagedLoaderProps {
 }
 
 const STAGES = [
-  "Understanding your idea…",
-  "Checking real trends…",
-  "Generating strategy…",
+  "Understanding your idea",
+  "Checking real trends",
+  "Generating strategy",
 ];
 
-const STAGE_INTERVALS = [2000, 4000]; // ms between stage transitions
+const STAGE_INTERVALS = [2000, 4000];
 
 export function StagedLoader({ isLoading, isError, onComplete }: StagedLoaderProps) {
   const [stageIndex, setStageIndex] = useState(0);
   const [done, setDone] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Advance stages on timed intervals
   useEffect(() => {
     if (!isLoading || isError || done) return;
-
     if (stageIndex < STAGES.length - 1) {
       timerRef.current = setTimeout(() => {
         setStageIndex((prev) => prev + 1);
       }, STAGE_INTERVALS[stageIndex] ?? 2000);
     }
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [isLoading, isError, stageIndex, done]);
 
-  // When loading finishes, rapidly complete remaining stages
   useEffect(() => {
     if (isLoading || done) return;
-
     if (stageIndex < STAGES.length - 1) {
-      const rapidTimer = setTimeout(() => {
-        setStageIndex(STAGES.length - 1);
-      }, 300);
+      const rapidTimer = setTimeout(() => setStageIndex(STAGES.length - 1), 300);
       return () => clearTimeout(rapidTimer);
     } else {
       setDone(true);
@@ -49,21 +41,20 @@ export function StagedLoader({ isLoading, isError, onComplete }: StagedLoaderPro
     }
   }, [isLoading, stageIndex, done, onComplete]);
 
-  // Reset when loading starts
   useEffect(() => {
-    if (isLoading) {
-      setStageIndex(0);
-      setDone(false);
-    }
+    if (isLoading) { setStageIndex(0); setDone(false); }
   }, [isLoading]);
 
   if (isError) {
     return (
       <div style={{
-        padding: "20px", textAlign: "center",
-        color: "#ef4444", fontSize: 15,
+        padding: "28px 24px", display: "flex", alignItems: "center",
+        justifyContent: "center", gap: 10,
       }}>
-        Something went wrong. Please try again.
+        <Warning size={18} weight="bold" color="#dc2626" />
+        <span style={{ fontSize: 15, color: "#dc2626", fontWeight: 500 }}>
+          Something went wrong. Please try again.
+        </span>
       </div>
     );
   }
@@ -72,19 +63,16 @@ export function StagedLoader({ isLoading, isError, onComplete }: StagedLoaderPro
 
   return (
     <div style={{
-      padding: "24px 20px", display: "flex", flexDirection: "column",
-      alignItems: "center", gap: 16,
+      padding: "32px 24px", display: "flex", flexDirection: "column",
+      alignItems: "center", gap: 20,
     }}>
       {/* Spinner */}
-      <div style={{
-        width: 28, height: 28,
-        border: "3px solid rgba(20,184,166,0.2)",
-        borderTopColor: "#14b8a6", borderRadius: "50%",
-        animation: "spin 0.8s linear infinite",
-      }} />
+      <div style={{ animation: "spin 0.9s linear infinite", lineHeight: 0 }}>
+        <CircleNotch size={24} weight="bold" color="var(--accent)" />
+      </div>
 
       {/* Stage messages */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "center" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center" }}>
         {STAGES.map((stage, i) => {
           const isActive = i === stageIndex;
           const isPast = i < stageIndex;
@@ -93,21 +81,23 @@ export function StagedLoader({ isLoading, isError, onComplete }: StagedLoaderPro
               fontSize: 14,
               color: isActive ? "var(--text)" : isPast ? "var(--text-4)" : "transparent",
               fontWeight: isActive ? 600 : 400,
-              transition: "all 0.3s ease",
-              display: "flex", alignItems: "center", gap: 6,
+              transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+              display: "flex", alignItems: "center", gap: 8,
+              letterSpacing: "-0.01em",
             }}>
-              {isPast && (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+              {isPast && <Check size={14} weight="bold" color="#059669" />}
+              {isActive && (
+                <span style={{
+                  width: 6, height: 6, borderRadius: "50%",
+                  background: "var(--accent)",
+                  animation: "breathe 1.5s ease-in-out infinite",
+                }} />
               )}
               {stage}
             </div>
           );
         })}
       </div>
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

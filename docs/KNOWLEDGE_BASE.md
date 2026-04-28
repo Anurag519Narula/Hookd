@@ -48,29 +48,43 @@ Short-form video creators across all niches (tech, fitness, food, travel, busine
 ### 2.2 Studio (Idea Validation)
 
 **Route:** `/studio`
-**Purpose:** Validate an idea against real YouTube and Instagram data before filming.
+**Purpose:** Validate an idea against real YouTube, Google Trends, and Instagram data before filming.
 
-**How it works:**
-- User enters an idea (or it's pre-filled from Vault).
-- The server fetches real YouTube Data API v3 results (up to 10 deduplicated videos across multiple keyword searches).
-- The server fetches Instagram hashtag data via RapidAPI (`instagram-hashtags` endpoint).
-- All data is fed into a Groq prompt that produces a comprehensive `InsightReport` (13 sections).
-- The report includes real view counts, channel names, title patterns — not generic advice.
+**Validation flow:**
+1. User enters an idea (or it's pre-filled from Vault via `?ideaId=` param).
+2. On "Validate" click: idea is saved to Vault (fire-and-forget), then clarity is assessed.
+3. **Idea Clarifier:** `POST /api/studio/clarify` — Groq call to check if idea is specific enough. If vague, shows 1–3 domain-focused clarifying questions inline with clickable chip options + free text. If clear, skips to validation.
+4. After clarification (or skip), the expanded query is sent to `GET /api/insights`.
 
-**InsightReport sections:**
-1. Trend direction (rising/peaked/declining/stable), score (0–100), velocity
-2. Competition level + saturation warning
-3. Audience fit (score, primary audience demographic, intent, best posting times/days)
-4. Executive summary + opportunity score (0–100 composite)
-5. Top angles (3–5) with estimated reach and difficulty ratings
-6. Untapped angles (2–3) with gap analysis
-7. Platform analysis (Instagram Reels + YouTube Shorts potential, avg views, content style, hashtag strategy)
-8. YouTube data (real numbers: top video views, average of top 5, total found, view range, top channels, common title patterns)
-9. Content blueprint (opening hook, core message, key points with timestamps, CTA, visual/audio notes, duration target)
-10. Competitor insights (observations + gaps)
-11. Risks (3–4 specific risks)
-12. Recommendations (4–5 actionable steps)
-13. Key insight + verdict label ("Strong opportunity" / "Good opportunity" / "Proceed with caution" / "Avoid for now") + verdict reason
+**Data pipeline (insights route):**
+1. Cache check: idea-level (ideas table) → exact hash (api_cache) → keyword-normalized (intent match).
+2. YouTube Data API v3: two searches per idea — `order=relevance` (top performers) + `order=date` (recent uploads). Up to 15 deduplicated videos.
+3. SerpAPI Google Trends (geo: India): Interest Over Time (12-month timeline) + Related Queries (rising + top). Falls back to RapidAPI Google Trends. Smart keyword extraction from idea text (strips filler, tries multiple candidates).
+4. Computed Signals Engine (`computedSignals.ts`): pure math from YouTube + Google Trends data. Computes trend direction, velocity, score, competition level, opportunity score, audience fit score. No LLM involved.
+5. Groq synthesis: receives real data + computed signals as facts. LLM explains and generates angles/blueprint/risks — but numeric scores are force-overwritten with computed values after response.
+
+**Validation report UI order (after clicking Validate):**
+1. **Based on** badges — ✅ YouTube, ✅ Google Trends, 🤖 AI Interpretation
+2. **VerdictCard** — verdict label + reason + context badges (audience intent, competition, best days/times) + key insight
+3. **PlatformScorecard** — Instagram Reels + YouTube Shorts tier labels (Excellent/Strong/Moderate/Low) with reasons
+4. **Strategy & Angles** accordion — Top Angles → Untapped Angles → Action Plan → Risks → Competitor Insights
+5. **Evidence & Data** (ResearchPanel) — Opportunity/100 + Audience Fit/100, computed signal cards, YouTube stats grid, top channels, title patterns, video tiles with Watch → links
+6. **Google Search Trends** (SearchTrendsSection) — 12-month sparkline chart, interest stats, rising/top query chips
+
+**Computed signals (all from real data, no LLM):**
+- Trend direction: recent (6mo) vs older video view ratios
+- Trend velocity: median views/day (high/medium/low)
+- Trend score (0–100): 40% recency + 40% views/day + 20% upload frequency, boosted by Google Trends
+- Competition: video count × channel diversity × dominance ratio
+- Opportunity (0–100): 30% trend + 25% inverse competition + 25% view strength + 20% momentum
+- Audience fit (0–100): 45% demand + 30% diversity + 25% consistency
+
+**Caching:**
+- 3-layer cache: idea-level (ideas table) → exact hash (api_cache) → keyword-normalized (intent match)
+- Keyword normalization: strips stop words, sorts alphabetically, dedupes — "rich habits of Indians" and "money habits wealthy Indians" can share cache
+- YouTube results cached 7 days per query+order combo
+- SerpAPI Google Trends cached 7 days per keyword
+- Fuzzy cache requires ≥50% keyword overlap + ≥2 matching keywords (prevents cross-contamination)
 
 **Navigation:** From Studio, the user clicks "Plan Your Script" → navigates to Develop with `{ idea, ideaId, insights: InsightReport }` passed via React Router navigation state.
 
@@ -219,6 +233,7 @@ PostgreSQL (Supabase). Connection pool limited to 3 connections (Supabase free t
 | status | TEXT DEFAULT 'raw' | raw → tagged → developed → used |
 | insights | JSONB | Cached InsightReport |
 | insights_cached_at | BIGINT | When insights were cached |
+| insights_idea_text | TEXT | Exact idea text that generated the cached insights |
 
 ### amplify_conversations
 | Column | Type | Notes |
@@ -238,6 +253,7 @@ PostgreSQL (Supabase). Connection pool limited to 3 connections (Supabase free t
 | payload | JSONB NOT NULL | Cached response |
 | created_at | BIGINT NOT NULL | Unix ms |
 | expires_at | BIGINT NOT NULL | Unix ms, 7-day TTL default |
+| metadata | JSONB | Optional metadata for fuzzy cache lookup (niche, keywords) |
 
 ### usage_limits
 | Column | Type | Notes |
@@ -296,7 +312,8 @@ PostgreSQL (Supabase). Connection pool limited to 3 connections (Supabase free t
 ### Studio (Hook + Script generation)
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| POST | /api/studio/hooks | Yes | Generate 3 hook variants |
+| POST | /api/studio/clarify | Yes | Assess idea clarity, return clarifying questions if vague |
+| POST | /api/studio/hooks | Yes | Generate 3 hook variants (falls back to template-based hooks on Groq failure) |
 | POST | /api/studio/script | Yes | Generate script from selected hook |
 | POST | /api/studio/regenerate | Yes | Regenerate hook or script with feedback |
 
@@ -352,7 +369,7 @@ All AI calls use Groq's `llama-3.3-70b-versatile` model.
 | File | Purpose | Output |
 |---|---|---|
 | `ideaTagging.ts` | Auto-tag ideas on save | `{ tags, format_type, emotion_angle, potential_score }` |
-| `insightSynthesis.ts` | Full idea validation with real YouTube data | `InsightReport` (13 sections) |
+| `insightSynthesis.ts` | Full idea validation with real YouTube data + computed signals | `InsightReport` (LLM explains, computed signals override scores) |
 | `studio.ts` | Hook variant generation + script-from-hook | `{ hook_variants }` or `{ beats, cta, word_count }` |
 | `hooks.ts` | Legacy hook generation (5 hooks with viral templates) | `Hook[]` |
 | `hookTemplates.ts` | 180+ viral hook templates with keyword-based category scoring | Template selection for prompt injection |
@@ -362,6 +379,16 @@ All AI calls use Groq's `llama-3.3-70b-versatile` model.
 | `linkedin.ts` | LinkedIn post prompt | Formatted post text |
 | `reels.ts` | Instagram Reels script prompt (beat map: Hook → Stakes → Build → Wait What → Payoff → Exit) | Structured script |
 | `youtubeShorts.ts` | YouTube Shorts script prompt (Hook → Core → Payoff → CTA → Hashtags) | Structured script |
+
+### Service Files (new)
+| File | Purpose |
+|---|---|
+| `computedSignals.ts` | Pure math engine: trend/competition/opportunity/audience scores from YouTube + Google Trends data |
+| `googleTrends.ts` | SerpAPI integration: interest over time, related queries, trending now (India) |
+| `clarityAssessor.ts` | Groq call to assess idea clarity + generate domain-focused clarifying questions |
+| `fuzzyCacheLookup.ts` | Fuzzy cache matcher by niche + keyword overlap (≥50% + ≥2 matches required) |
+| `aiEstimate.ts` | Groq-only fallback InsightReport when all external APIs fail |
+| `hookFallback.ts` | Deterministic template-based hook generation when Groq is rate-limited |
 
 ### Psychological Triggers (used in hook generation)
 1. Curiosity Gap — tease something without revealing it
@@ -400,16 +427,22 @@ All AI calls use Groq's `llama-3.3-70b-versatile` model.
 ### Cached Namespaces
 | Namespace | What's cached | TTL |
 |---|---|---|
-| `youtube_search` | YouTube Data API search results | 7 days |
+| `youtube_search` | YouTube Data API search results (per query + order) | 7 days |
 | `hashtag_intelligence` | Per-platform hashtag strategy (YouTube + RapidAPI + Groq) | 7 days |
 | `studio_hooks` | Hook variants for idea + profile | 7 days |
 | `studio_script` | Script body for hook | 7 days |
-| `insights` | Full InsightReport | 7 days |
+| `insights` | Full InsightReport (exact idea+niche hash) | 7 days |
+| `insights_normalized` | Full InsightReport (keyword-normalized intent match) | 7 days |
+| `serpapi_google_trends` | SerpAPI Google Trends (interest timeline + related queries) | 7 days |
+| `serpapi_trending_now_india` | SerpAPI Trending Now (India) | 24 hours |
+| `google_trends` | RapidAPI Google Trends fallback | 2 days |
 | `rapidapi_instagram_hashtags` | RapidAPI instagram-hashtags results | 7 days |
 | `rapidapi_top_hashtags_global` | RapidAPI top-instagram-hashtag results | 2 days |
 
-### Idea-Level Cache
-InsightReports are also cached directly on the `ideas` table (`insights` JSONB column + `insights_cached_at` timestamp). This allows instant loading of previously validated ideas without hitting the `api_cache` table.
+### Three-Layer Insight Cache
+1. **Idea-level** — cached on `ideas` table (`insights` JSONB + `insights_cached_at` + `insights_idea_text`). Only serves if idea text matches exactly.
+2. **Exact hash** — SHA-256 of `{ idea, niche }` in `api_cache`. No cross-contamination possible.
+3. **Keyword-normalized** — strips stop words, sorts alphabetically, dedupes. "rich habits of Indians" and "money habits wealthy Indians" can share cache. Stored in `insights_normalized` namespace.
 
 ---
 
@@ -424,6 +457,7 @@ InsightReports are also cached directly on the `ideas` table (`insights` JSONB c
 ### Input Sanitization
 - Global middleware sanitizes all request bodies recursively.
 - Prompt injection detection: regex patterns catch common jailbreak attempts.
+- Topic guardrails: regex patterns block harmful content categories (illegal business/scams, harmful health advice, sexual exploitation, hate/extremism, plagiarism spam). Returns 400 with "We can't help optimize harmful or deceptive ideas. Try a different angle."
 - Field-level max lengths enforced (prompt: 2000 chars, name: 80, email: 254, etc.).
 - Injection attempts are logged with IP and rejected with 400.
 - Query parameters are also sanitized for GET requests.
@@ -439,9 +473,9 @@ InsightReports are also cached directly on the `ideas` table (`insights` JSONB c
 ### Per-User Daily Limits (DB-backed)
 | Action | Daily Limit | Notes |
 |---|---|---|
-| insights | 2 | Idea validations (YouTube + Instagram + Groq + RapidAPI) |
-| amplify | 5 | Caption generations (RapidAPI + Groq) |
-| studio | 5 | Hook/script generations (Groq) |
+| insights | 5 | Idea validations (YouTube + Google Trends + Groq) |
+| amplify | 10 | Caption generations (RapidAPI + Groq) |
+| studio | 10 | Hook/script generations (Groq) |
 
 Cache hits do not count against limits — only fresh external API calls burn quota.
 
@@ -493,10 +527,22 @@ React Router v7 with navigation state for inter-page data passing.
 
 ### Design System
 - No CSS framework. All styles are inline with CSS variables.
+- Shared design system in `components/ui.tsx`: Badge, SectionLabel, ScoreBar, StatCell, formatViews, scoreColor, compColor, reachColor, diffColor, SIGNAL_COLORS, TIER_COLORS.
 - Dark/light theme via `data-theme` attribute on `<html>`.
 - CSS variables for colors: `--bg`, `--bg-card`, `--bg-subtle`, `--text`, `--text-2`, `--text-3`, `--text-4`, `--accent`, `--border`, `--error`, etc.
 - Responsive breakpoints at 860px and 600px.
 - Animations: `fade-up`, `pulse-glow` keyframes.
+
+### Validation Report Components
+| Component | Purpose |
+|---|---|
+| `VerdictCard` | Verdict label + reason + context badges + key insight (always visible) |
+| `PlatformScorecard` | Platform tier labels (Excellent/Strong/Moderate/Low) with reasons |
+| `MarketResearchPanel` | Accordion: Top Angles → Untapped Angles → Action Plan → Risks → Competitor Insights |
+| `ResearchPanel` | Evidence: Opportunity/Audience scores, computed signals, YouTube stats, video tiles |
+| `SearchTrendsSection` | Google Trends: 12-month sparkline chart, interest stats, rising/top query chips |
+| `ClarifierInline` | Inline clarifying questions with chip options + free text |
+| `StagedLoader` | Sequential progress stages during validation |
 
 ### Auth Context
 - `AuthProvider` wraps the entire app.
@@ -531,8 +577,10 @@ Defined in `src/types/index.ts`:
 |---|---|---|
 | Groq (Llama 3.3 70B) | All AI generation | Free tier: ~30 req/min, ~14,400 req/day |
 | YouTube Data API v3 | Real video data for idea validation + hashtag extraction | Quota-limited (10,000 units/day default) |
+| SerpAPI Google Trends | Interest over time (12-month, India), related queries (rising + top), trending now | 250 searches/month free tier, 7-day cache per keyword |
 | RapidAPI instagram-hashtags | Topic-specific Instagram hashtag data with post counts | Pay-per-request (~30/month budget) |
 | RapidAPI top-instagram-hashtag | Globally trending Instagram hashtags | Pay-per-request |
+| RapidAPI Google Trends | Fallback for SerpAPI when unavailable | Shared RapidAPI key |
 | YouTube Innertube API | YouTube video transcript extraction (unofficial) | No quota cost |
 
 ---
@@ -544,7 +592,8 @@ GROQ_API_KEY          — Groq API key (required)
 DATABASE_URL          — PostgreSQL connection string (required)
 JWT_SECRET            — JWT signing secret (required in production)
 YOUTUBE_API_KEY       — YouTube Data API v3 key
-RAPIDAPI_KEY          — RapidAPI key (instagram-hashtags + top-instagram-hashtag)
+RAPIDAPI_KEY          — RapidAPI key (instagram-hashtags + top-instagram-hashtag + Google Trends fallback)
+SERPAPI_KEY            — SerpAPI key (Google Trends: interest over time, related queries, trending now)
 PORT                  — Server port (default: 3001)
 ALLOWED_ORIGINS       — Comma-separated CORS origins (default: http://localhost:5173)
 NODE_ENV              — "production" or "development"
@@ -560,9 +609,13 @@ NODE_ENV              — "production" or "development"
 4. **Per-platform caption generation** — Each platform gets a completely different caption with platform-native rules.
 5. **Viral hook template injection** — Proven viral patterns injected into prompts as structural inspiration.
 6. **DB-backed usage limits** — Daily limits tracked per-user in the database. Cache hits don't count.
-7. **Aggressive caching** — Every expensive API call cached for 7 days. InsightReports cached on both `api_cache` table and directly on the idea row.
-8. **Prompt injection defense** — All user input scanned for common LLM jailbreak patterns.
+7. **Three-layer caching** — Idea-level → exact hash → keyword-normalized intent match. Prevents quota waste while avoiding cross-contamination.
+8. **Prompt injection defense** — All user input scanned for common LLM jailbreak patterns + topic guardrails for harmful content.
 9. **Startup validation** — Server validates required env vars before starting. Missing vars cause `process.exit(1)`.
+10. **Computed signals over LLM scores** — Trend, competition, opportunity, and audience fit scores are computed from real API data (pure math). LLM only explains/summarizes — never generates numeric scores.
+11. **SerpAPI + RapidAPI complementary** — SerpAPI for rich Google Trends data (timeline, related queries), RapidAPI as fallback. Both cached aggressively.
+12. **Shared UI design system** — `ui.tsx` exports Badge, SectionLabel, ScoreBar, StatCell, color helpers. All report components import from single source of truth.
+13. **Answer → Action → Evidence** — Validation report ordered by user priority: verdict first, actionable angles second, raw data proof third.
 
 ---
 

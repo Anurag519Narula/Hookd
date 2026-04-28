@@ -1,4 +1,10 @@
-import type { TopVideo, InsightReport } from "../types/insights";
+import { motion } from "framer-motion";
+import {
+  ChartBar, Play, FilmStrip,
+  ArrowSquareOut,
+} from "@phosphor-icons/react";
+import type { TopVideo, InsightReport, PlatformScore } from "../types/insights";
+import { SectionLabel, formatViews, scoreColor, ScoreBar, SIGNAL_COLORS } from "./ui";
 
 interface ComputedSignals {
   trend: { direction: string; velocity: string; score: number; explanation: string };
@@ -12,6 +18,8 @@ interface ResearchPanelProps {
   topVideos: TopVideo[];
   youtubeData: InsightReport["youtubeData"];
   platformAnalysis: InsightReport["platformAnalysis"];
+  platformScores: PlatformScore[];
+  report: InsightReport;
   signals?: ComputedSignals;
   sources: {
     youtubeCount: number;
@@ -21,238 +29,326 @@ interface ResearchPanelProps {
   };
 }
 
-function formatViews(count: string | number): string {
-  const n = typeof count === "string" ? parseInt(count) : count;
-  if (isNaN(n)) return "0";
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return n.toLocaleString();
-}
-
-const SIGNAL_COLORS: Record<string, string> = {
-  rising: "#10b981", high: "#10b981",
-  stable: "#3b82f6", medium: "#f59e0b",
-  peaked: "#f59e0b", declining: "#ef4444",
-  low: "#ef4444", unknown: "var(--text-4)",
-};
-
-export function ResearchPanel({ topVideos, youtubeData, platformAnalysis, signals, sources }: ResearchPanelProps) {
-  const avgViews = youtubeData?.avgTopVideoViews ?? 0;
-  const topChannels = youtubeData?.topChannels ?? [];
-
-  // Extract short-form platform data (content style + hashtag strategy only — no fake avg views)
-  const reelsData = platformAnalysis?.find((p) => p.platform.toLowerCase().includes("reels"));
-  const shortsData = platformAnalysis?.find((p) => p.platform.toLowerCase().includes("shorts"));
-
+export function ResearchPanel({ topVideos, youtubeData, report, signals }: ResearchPanelProps) {
   return (
-    <div style={{
-      background: "var(--bg-card)", border: "1px solid var(--border)",
-      borderRadius: 8, padding: "16px 20px", marginBottom: 12,
-    }}>
-      {/* Data sources badge */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap",
-      }}>
-        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-4)" }}>
-          Based on
-        </span>
-        {sources.youtubeCount > 0 && <SourceBadge label="YouTube" active />}
-        {signals?.googleTrends?.available && <SourceBadge label="Google Trends" active />}
-        <SourceBadge label="AI Interpretation" active icon="🤖" />
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+      style={{
+        background: "var(--bg-card)", border: "1px solid var(--border)",
+        borderRadius: 12, overflow: "hidden", marginBottom: 12,
+      }}
+    >
+      {/* Header */}
+      <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <ChartBar size={15} weight="bold" color="var(--text-4)" />
+          <span style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+            textTransform: "uppercase", color: "var(--text-4)",
+            fontFamily: "var(--font-mono)",
+          }}>Evidence & Data</span>
+          <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+        </div>
       </div>
 
-      {/* Computed signals — real math, not LLM */}
-      {signals && (
+      <div style={{ padding: "0 24px 24px" }}>
+
+        {/* Opportunity + Audience Fit scores */}
         <div style={{
-          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-          gap: 10, marginBottom: 14,
-          padding: "12px 0", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)",
+          display: "grid", gridTemplateColumns: "1fr 1px 1fr",
+          gap: 0, background: "var(--border)", borderRadius: 10,
+          overflow: "hidden", marginTop: 20, marginBottom: 20,
         }}>
-          <SignalCard
-            label="Trend"
-            value={signals.trend.direction}
-            color={SIGNAL_COLORS[signals.trend.direction] ?? "var(--text-3)"}
+          <ScoreCell
+            label="Opportunity"
+            score={report.opportunityScore}
           />
-          <SignalCard
-            label="Momentum"
-            value={signals.trend.velocity}
-            color={SIGNAL_COLORS[signals.trend.velocity] ?? "var(--text-3)"}
+          <div style={{ background: "var(--border)" }} />
+          <ScoreCell
+            label="Audience Fit"
+            score={report.audienceFit.score}
+            sub={report.audienceFit.primaryAudience}
           />
-          <SignalCard
-            label="Competition"
-            value={signals.competition.level}
-            color={SIGNAL_COLORS[signals.competition.level] ?? "var(--text-3)"}
-          />
-          <SignalCard
-            label="Recent uploads"
-            value={`${signals.evidence.recentVideoCount} in 6mo`}
-            color="var(--text)"
-          />
-          {signals.googleTrends.available && (
-            <SignalCard
-              label="Search interest"
-              value={`${signals.googleTrends.interest}/100`}
-              color={SIGNAL_COLORS[signals.googleTrends.direction ?? "unknown"] ?? "var(--text-3)"}
-            />
-          )}
         </div>
-      )}
 
-      {/* Evidence stats row */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 14 }}>
-        {sources.youtubeCount > 0 && (
-          <Stat label="Videos analyzed" value={String(sources.youtubeCount)} />
-        )}
-        {avgViews > 0 && (
-          <Stat label="Avg views (top 5)" value={formatViews(avgViews)} />
-        )}
-        {topChannels.length > 0 && (
-          <Stat label="Top channels" value={topChannels.slice(0, 3).join(", ")} />
-        )}
-        {signals && signals.momentum.medianViewsPerDay > 0 && (
-          <Stat label="Median views/day" value={formatViews(signals.momentum.medianViewsPerDay)} />
-        )}
-      </div>
-
-      {/* Short-form platform cards — content style only, no fake avg views */}
-      {(reelsData || shortsData) && (
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: reelsData && shortsData ? "1fr 1fr" : "1fr",
-          gap: 10, marginBottom: 14,
-          borderTop: "1px solid var(--border)", paddingTop: 12,
-        }}>
-          {reelsData && (
-            <PlatformCard
-              icon="📱"
-              name="Instagram Reels"
-              style={reelsData.contentStyle}
-              hashtags={reelsData.hashtagStrategy}
-              potential={reelsData.potential}
+        {/* Computed signals row */}
+        {signals && (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+            gap: 1, background: "var(--border)", borderRadius: 10,
+            overflow: "hidden", marginBottom: 20,
+          }}>
+            <SignalCell label="Trend" value={signals.trend.direction} color={SIGNAL_COLORS[signals.trend.direction]} />
+            <SignalCell label="Momentum" value={signals.trend.velocity} color={SIGNAL_COLORS[signals.trend.velocity]} />
+            <SignalCell label="Competition" value={signals.competition.level} color={SIGNAL_COLORS[signals.competition.level]} />
+            <SignalCell
+              label="Recent uploads"
+              value={signals.evidence.recentVideoCount > 0 ? `${signals.evidence.recentVideoCount} in 6mo` : "None in 6mo"}
+              color={signals.evidence.recentVideoCount > 0 ? "var(--text)" : "var(--text-4)"}
             />
-          )}
-          {shortsData && (
-            <PlatformCard
-              icon="▶️"
-              name="YouTube Shorts"
-              style={shortsData.contentStyle}
-              hashtags={shortsData.hashtagStrategy}
-              potential={shortsData.potential}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Top videos with clickable links */}
-      {topVideos.length > 0 && (
-        <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-3)", marginBottom: 8 }}>
-            Top performing videos in this space
+            {signals.googleTrends.available && (
+              <SignalCell
+                label="Search interest"
+                value={`${signals.googleTrends.interest}/100`}
+                color={SIGNAL_COLORS[signals.googleTrends.direction ?? "unknown"]}
+              />
+            )}
           </div>
-          {topVideos.slice(0, 5).map((v, i) => (
-            <div key={i} style={{
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              padding: "6px 0",
-              borderBottom: i < Math.min(topVideos.length, 5) - 1 ? "1px solid var(--border)" : "none",
+        )}
+
+        {/* YouTube stats grid */}
+        {youtubeData && (
+          <div style={{ marginBottom: 20 }}>
+            <SectionLabel>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Play size={12} weight="fill" /> YouTube Data
+              </span>
+            </SectionLabel>
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+              gap: 1, background: "var(--border)", borderRadius: 10, overflow: "hidden",
             }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontSize: 14, color: "var(--text)", lineHeight: 1.4,
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              {[
+                { label: "Top Video", value: formatViews(youtubeData.topVideoViews), sub: "views", accent: true },
+                { label: "Avg Top 5", value: formatViews(youtubeData.avgTopVideoViews), sub: "views", accent: false },
+                { label: "Analyzed", value: youtubeData.totalVideosFound.toLocaleString(), sub: "videos", accent: false },
+                { label: "Range", value: youtubeData.viewsRange, sub: "views", accent: false, small: true },
+              ].map((stat, i) => (
+                <div key={i} style={{
+                  padding: "16px 18px",
+                  background: stat.accent ? "rgba(5,150,105,0.04)" : "var(--bg-card)",
                 }}>
-                  {v.title}
+                  <div style={{
+                    fontSize: 10, fontWeight: 600, letterSpacing: "0.14em",
+                    textTransform: "uppercase", color: "var(--text-4)",
+                    marginBottom: 8, fontFamily: "var(--font-mono)",
+                  }}>
+                    {stat.label}
+                  </div>
+                  <div style={{
+                    fontSize: (stat as any).small ? 14 : 22, fontWeight: 800,
+                    color: stat.accent ? "var(--accent)" : "var(--text)",
+                    letterSpacing: "-0.04em", lineHeight: 1.2,
+                    fontFamily: "var(--font-sans)",
+                  }}>
+                    {stat.value}
+                  </div>
+                  <div style={{
+                    fontSize: 11, color: "var(--text-4)", marginTop: 3,
+                    fontFamily: "var(--font-mono)", letterSpacing: "0.04em",
+                  }}>{stat.sub}</div>
                 </div>
-                <div style={{ fontSize: 12, color: "var(--text-4)" }}>
-                  {v.channelName} · {formatViews(v.viewCount)} views
-                </div>
-              </div>
-              <a
-                href={`https://www.youtube.com/watch?v=${v.videoId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  fontSize: 13, color: "#14b8a6", textDecoration: "none",
-                  fontWeight: 600, flexShrink: 0, marginLeft: 12,
-                }}
-              >
-                Watch →
-              </a>
+              ))}
             </div>
-          ))}
+
+            {/* Channels + title patterns */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 14 }}>
+              {youtubeData.topChannels.length > 0 && (
+                <div style={{
+                  background: "var(--bg-subtle)", border: "1px solid var(--border)",
+                  borderRadius: 10, padding: "16px 18px",
+                }}>
+                  <div style={{
+                    fontSize: 10, fontWeight: 600, letterSpacing: "0.14em",
+                    textTransform: "uppercase", color: "var(--text-4)",
+                    marginBottom: 12, fontFamily: "var(--font-mono)",
+                  }}>
+                    Top Channels
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {youtubeData.topChannels.slice(0, 4).map((ch, i) => (
+                      <div key={ch} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{
+                          width: 18, height: 18, borderRadius: 5,
+                          background: i === 0 ? "rgba(5,150,105,0.1)" : "var(--bg-hover)",
+                          color: i === 0 ? "var(--accent)" : "var(--text-4)",
+                          fontSize: 10, fontWeight: 700, fontFamily: "var(--font-mono)",
+                          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                        }}>{i + 1}</span>
+                        <span style={{
+                          fontSize: 14, color: i === 0 ? "var(--text)" : "var(--text-2)",
+                          fontWeight: i === 0 ? 600 : 400,
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          letterSpacing: "-0.005em",
+                        }}>{ch}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {youtubeData.commonTitles?.length > 0 && (
+                <div style={{
+                  background: "var(--bg-subtle)", border: "1px solid var(--border)",
+                  borderRadius: 10, padding: "16px 18px",
+                }}>
+                  <div style={{
+                    fontSize: 10, fontWeight: 600, letterSpacing: "0.14em",
+                    textTransform: "uppercase", color: "var(--text-4)",
+                    marginBottom: 12, fontFamily: "var(--font-mono)",
+                  }}>
+                    Title Patterns
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {youtubeData.commonTitles.slice(0, 3).map((t, i) => (
+                      <div key={i} style={{
+                        fontSize: 14, color: "var(--text-2)", lineHeight: 1.55,
+                        paddingLeft: 12, borderLeft: "2px solid rgba(5,150,105,0.2)",
+                        letterSpacing: "-0.005em",
+                      }}>{t}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Top videos as tiles */}
+        {topVideos.length > 0 && (
+          <div>
+            <SectionLabel>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <FilmStrip size={12} weight="bold" /> Top Performing Videos
+              </span>
+            </SectionLabel>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+              gap: 12,
+            }}>
+              {topVideos.slice(0, 5).map((v, i) => (
+                <a
+                  key={i}
+                  href={`https://www.youtube.com/watch?v=${v.videoId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "flex", flexDirection: "column",
+                    padding: "16px 18px", borderRadius: 10,
+                    background: i === 0 ? "rgba(5,150,105,0.03)" : "var(--bg-subtle)",
+                    border: i === 0 ? "1px solid rgba(5,150,105,0.15)" : "1px solid var(--border)",
+                    textDecoration: "none",
+                    transition: "border-color 0.2s ease, background 0.2s ease, transform 0.2s ease",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(5,150,105,0.3)";
+                    e.currentTarget.style.background = "rgba(5,150,105,0.04)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = i === 0 ? "rgba(5,150,105,0.15)" : "var(--border)";
+                    e.currentTarget.style.background = i === 0 ? "rgba(5,150,105,0.03)" : "var(--bg-subtle)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  <div style={{
+                    fontSize: 22, fontWeight: 800,
+                    color: i === 0 ? "var(--accent)" : "var(--text)",
+                    letterSpacing: "-0.04em", lineHeight: 1.2, marginBottom: 4,
+                    fontFamily: "var(--font-sans)",
+                  }}>
+                    {formatViews(v.viewCount)}
+                  </div>
+                  <div style={{
+                    fontSize: 11, color: "var(--text-4)", marginBottom: 12,
+                    fontFamily: "var(--font-mono)", letterSpacing: "0.04em",
+                  }}>views</div>
+
+                  <div style={{
+                    fontSize: 14, fontWeight: 500, color: "var(--text)", lineHeight: 1.45,
+                    marginBottom: 10, flex: 1, letterSpacing: "-0.005em",
+                    display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any,
+                    overflow: "hidden",
+                  }}>
+                    {v.title}
+                  </div>
+
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    paddingTop: 10, borderTop: "1px solid var(--border)",
+                  }}>
+                    <span style={{
+                      fontSize: 13, color: "var(--text-3)",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    }}>
+                      {v.channelName}
+                    </span>
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: 4,
+                      fontSize: 13, color: "var(--accent)", fontWeight: 600,
+                      flexShrink: 0, marginLeft: 8,
+                    }}>
+                      Watch <ArrowSquareOut size={13} weight="bold" />
+                    </span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function ScoreCell({ label, score, sub }: { label: string; score: number; sub?: string }) {
+  const color = scoreColor(score);
+  return (
+    <div style={{ padding: "18px 20px", background: "var(--bg-card)" }}>
+      <div style={{
+        fontSize: 10, fontWeight: 600, letterSpacing: "0.14em",
+        textTransform: "uppercase", color: "var(--text-4)",
+        marginBottom: 10, fontFamily: "var(--font-mono)",
+      }}>
+        {label}
+      </div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 10 }}>
+        <span style={{
+          fontSize: 26, fontWeight: 800, color,
+          letterSpacing: "-0.04em", lineHeight: 1,
+          fontFamily: "var(--font-sans)",
+        }}>
+          {score}
+        </span>
+        <span style={{
+          fontSize: 12, color: "var(--text-4)", fontWeight: 500,
+          fontFamily: "var(--font-mono)",
+        }}>/100</span>
+      </div>
+      <ScoreBar score={score} color={color} height={4} />
+      {sub && (
+        <div style={{
+          fontSize: 13, color: "var(--text-3)", marginTop: 8,
+          lineHeight: 1.45, letterSpacing: "-0.005em",
+        }}>
+          {sub}
         </div>
       )}
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function SignalCell({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div>
-      <div style={{ fontSize: 13, color: "var(--text-4)" }}>{label}</div>
-      <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>{value}</div>
-    </div>
-  );
-}
-
-function SignalCard({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 11, color: "var(--text-4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+    <div style={{ padding: "16px 18px", background: "var(--bg-card)", textAlign: "center" }}>
+      <div style={{
+        fontSize: 10, fontWeight: 600, letterSpacing: "0.14em",
+        textTransform: "uppercase", color: "var(--text-4)",
+        marginBottom: 8, fontFamily: "var(--font-mono)",
+      }}>
         {label}
       </div>
       <div style={{
-        fontSize: 15, fontWeight: 700, color,
-        textTransform: "capitalize",
+        fontSize: 15, fontWeight: 700, color, textTransform: "capitalize",
+        fontFamily: "var(--font-sans)", letterSpacing: "-0.01em",
       }}>
         {value}
-      </div>
-    </div>
-  );
-}
-
-function SourceBadge({ label, active, icon }: { label: string; active: boolean; icon?: string }) {
-  return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: 4,
-      padding: "2px 8px", fontSize: 11, fontWeight: 600,
-      borderRadius: 10,
-      background: active ? "rgba(20,184,166,0.08)" : "var(--bg)",
-      color: active ? "#14b8a6" : "var(--text-4)",
-      border: `1px solid ${active ? "rgba(20,184,166,0.2)" : "var(--border)"}`,
-    }}>
-      {icon ?? (active ? "✅" : "⬜")} {label}
-    </span>
-  );
-}
-
-const POTENTIAL_COLORS: Record<string, string> = {
-  high: "#10b981", medium: "#f59e0b", low: "#ef4444",
-};
-
-function PlatformCard({ icon, name, style, hashtags, potential }: {
-  icon: string; name: string; style: string; hashtags: string; potential: "low" | "medium" | "high";
-}) {
-  const potentialColor = POTENTIAL_COLORS[potential] ?? "var(--text-3)";
-  return (
-    <div style={{
-      padding: "12px 14px", borderRadius: 6,
-      border: "1px solid var(--border)", background: "var(--bg)",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-        <span style={{ fontSize: 16 }}>{icon}</span>
-        <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{name}</span>
-        <span style={{
-          marginLeft: "auto", fontSize: 11, fontWeight: 700,
-          textTransform: "uppercase", color: potentialColor, letterSpacing: "0.05em",
-        }}>
-          {potential} potential
-        </span>
-      </div>
-      <div style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.5, marginBottom: 6 }}>
-        <span style={{ fontWeight: 600, color: "var(--text)" }}>What works:</span> {style}
-      </div>
-      <div style={{ fontSize: 12, color: "var(--text-4)", lineHeight: 1.5 }}>
-        <span style={{ fontWeight: 600, color: "var(--text-3)" }}>Hashtags:</span> {hashtags}
       </div>
     </div>
   );

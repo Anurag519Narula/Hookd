@@ -29,7 +29,7 @@
 
 These directly affect whether a user says "damn this is useful" or closes the tab.
 
-### 1A. Idea Clarifier (Interactive)
+### 1A. Idea Clarifier (Interactive) ✅ DONE
 
 **Problem:** Vague input like "cricket page" or "weekly news" poisons downstream research — weak search queries → weak trend signals → generic report. APIs are limited (30 Instagram calls/month), so don't waste them on vague ideas.
 
@@ -79,7 +79,7 @@ Example: User types "ai for students"
 
 **Vault behavior:** Ideas saved immediately on entry (fire-and-forget tagging still works). Validation only happens when user explicitly triggers it AND idea is concrete.
 
-### 1B. Research / Evidence Panel (with YouTube Links)
+### 1B. Research / Evidence Panel (with YouTube Links) ✅ DONE
 
 **Problem:** Users think it's random AI nonsense without visible proof.
 
@@ -99,7 +99,7 @@ Example: User types "ai for students"
 - Frontend: render as clickable cards in the research panel
 - Links open in new tab
 
-### 1C. Platform Scorecard
+### 1C. Platform Scorecard ✅ DONE
 
 **Problem:** Platform analysis buried in section 7 of a 13-section report = invisible feature.
 
@@ -117,7 +117,7 @@ Fit labels: Excellent / Strong / Moderate / Low
 
 **Implementation:** Add `platform_scores` to InsightReport output. New prompt section that rates each platform with a tier label + one-line reason.
 
-### 1D. Emotional Output Copy
+### 1D. Emotional Output Copy ✅ DONE
 
 **Problem:** Reports read like data dumps, not actionable intelligence.
 
@@ -125,7 +125,7 @@ Fit labels: Excellent / Strong / Moderate / Low
 
 **Implementation:** Prompt engineering change in `insightSynthesis.ts`.
 
-### 1E. Fallback Stack
+### 1E. Fallback Stack ✅ DONE
 
 Current state: every external API failure returns `502`. Fix this.
 
@@ -137,11 +137,11 @@ Current state: every external API failure returns `502`. Fix this.
 
 Serve the best available data silently. Don't tell users which mode they're in — protects API quota.
 
-### 1F. Topic Guardrails
+### 1F. Topic Guardrails ✅ DONE
 
 Lightweight topic blocklist in `sanitize.ts` — regex patterns for illegal business ideas, harmful health advice, sexual exploitation, hate/extremism, plagiarism spam.
 
-### 1G. Staged Loading UX
+### 1G. Staged Loading UX ✅ DONE
 
 Show progress stages on frontend even if backend is one call. Perceived speed matters.
 
@@ -174,11 +174,28 @@ Only show after 3+ actions completed.
 
 ## Phase 3: Intelligence Moat
 
-### 3A. Google Trends Integration
-### 3B. Competitor Creator Intelligence
-### 3C. Trend Dashboard
-### 3D. Personalization Engine
-### 3E. Hook Intelligence
+### 3A. Google Trends Integration ✅ DONE
+- SerpAPI integration (Interest Over Time + Related Queries, geo: India)
+- 12-month interest timeline with recharts sparkline chart
+- Rising + top related search queries displayed as chips
+- Trending Now endpoint available (cached 24h) but not yet wired to UI
+- Fallback to RapidAPI Google Trends if SerpAPI unavailable
+- 7-day cache per keyword to conserve 250/month SerpAPI quota
+
+### 3B. Computed Signals Engine ✅ DONE (was not in original plan)
+- Replaced LLM-generated trend/competition/opportunity/audience scores with real math
+- Trend direction: computed from recent vs older video view performance ratios
+- Trend velocity: median views/day bucketed into high/medium/low
+- Trend score: 40% recency + 40% views/day + 20% upload frequency, boosted by Google Trends
+- Competition level: video count × channel diversity × dominance ratio
+- Opportunity score: 30% trend + 25% inverse competition + 25% view strength + 20% momentum
+- Audience fit score: 45% demand signal + 30% channel diversity + 25% view consistency
+- All scores force-overwritten after LLM response — LLM explains, math decides
+
+### 3C. Competitor Creator Intelligence
+### 3D. Trend Dashboard
+### 3E. Personalization Engine
+### 3F. Hook Intelligence
 
 ---
 
