@@ -97,8 +97,10 @@ export async function synthesizeInsights(params: {
   youtubeResults: YouTubeResult[];
   trendData: TrendData | null;
   signals: ComputedSignals;
+  marketType?: string;
+  discoveryDemand?: number;
 }): Promise<InsightReport> {
-  const { idea, niche, youtubeResults, trendData, signals } = params;
+  const { idea, niche, youtubeResults, trendData, signals, marketType, discoveryDemand } = params;
 
   // Build rich YouTube context with real numbers
   const hasYouTube = youtubeResults.length > 0;
@@ -135,6 +137,17 @@ ${trendData.relatedQueries.length > 0 ? `- Related searches: ${trendData.related
     : "No Google Trends data available.";
 
   // Pre-computed signals context — these are FACTS, not for the LLM to override
+  const marketContext = marketType
+    ? `\nMARKET CLASSIFICATION:
+- Market Type: ${marketType}
+- Discovery Demand: ${discoveryDemand ?? "N/A"}/100
+${marketType === "feed_driven" ? "- IMPORTANT: This is a feed-driven niche. People discover this content through Instagram/YouTube feeds, NOT through Google search. Low Google Trends interest does NOT mean low demand — it means the audience discovers content algorithmically. Do NOT describe this niche as 'declining' or 'low demand' based on search data alone. Focus on creator packaging, hooks, and visual appeal." : ""}
+${marketType === "search_driven" ? "- This is a search-driven niche. Google Trends and YouTube search data are strong demand indicators." : ""}
+${marketType === "hybrid" ? "- This is a hybrid niche with both search intent and feed discovery. Both signals matter." : ""}
+${marketType === "trend_driven" ? "- This is a trend-driven topic. Speed, timing, and momentum matter most. Evaluate freshness over evergreen potential." : ""}
+${marketType === "authority_driven" ? "- This is an authority-driven niche. Creator personality and trust drive engagement more than topic novelty." : ""}`
+    : "";
+
   const signalsContext = `
 COMPUTED SIGNALS (these are mathematically computed from the data above — use them as-is, do NOT override):
 - Trend Direction: ${signals.trend.direction} — ${signals.trend.explanation}
@@ -161,7 +174,7 @@ Here is the real data you have to work with:
 ${youtubeContext}
 
 ${trendsContext}
-
+${marketContext}
 ${signalsContext}
 
 Your job is to produce a comprehensive, data-driven validation report. Be brutally honest. Reference actual numbers from the YouTube data. Do not give generic advice — every insight must be specific to this idea and this data.
@@ -300,6 +313,7 @@ PLATFORM SCORING:
 - Base each rating on the available data: YouTube view counts, trend direction, competition level, niche fit, and audience behavior on that platform.
 - Each "reason" must be a single concise sentence that references specific data or niche characteristics — not a generic statement.
 - Include ONLY Instagram Reels and YouTube Shorts. Do NOT include TikTok or any other platform.
+- For Instagram Reels scoring, consider: visual appeal of the topic, shareability, save-worthiness, and hook potential. Topics with strong educational or listicle angles tend to perform well on Reels.
 
 IMPORTANT:
 - trendDirection MUST be "${signals.trend.direction}" — this is computed, not your opinion
@@ -314,7 +328,8 @@ IMPORTANT:
 - risks should have 3-4 items
 - recommendations should have 4-5 items
 - Reference actual view numbers from the YouTube data wherever possible
-- The contentBlueprint is NOT a script — it's a production guide with key points to hit`;
+- The contentBlueprint is NOT a script — it's a production guide with key points to hit
+- When writing the contentBlueprint openingHook, think Instagram Reels first: what would make someone stop scrolling in the first 1-2 seconds?`;
 
   const completion = await groqWithBackoff(groq, {
     model: "llama-3.3-70b-versatile",
@@ -326,6 +341,15 @@ IMPORTANT:
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(raw) as InsightReport;
+
+  // ── Sanitize text fields — ensure sentence-case capitalization ───────────
+  function capFirst(s: string | undefined): string {
+    if (!s) return s ?? "";
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  parsed.summary = capFirst(parsed.summary);
+  parsed.keyInsight = capFirst(parsed.keyInsight);
+  parsed.verdictReason = capFirst(parsed.verdictReason);
 
   // ── Override LLM values with computed signals (trust math, not LLM) ─────
   parsed.trendDirection = signals.trend.direction;

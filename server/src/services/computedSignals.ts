@@ -6,6 +6,8 @@
  */
 
 import type { YouTubeResult, TrendData } from "./insights";
+import type { MarketType } from "./marketClassifier";
+import { getWeights, computeMarketAwareOpportunity, getCompetitionContext } from "./scoringWeights";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -77,7 +79,9 @@ function median(arr: number[]): number {
 
 export function computeSignals(
   youtubeResults: YouTubeResult[],
-  trendData: TrendData | null
+  trendData: TrendData | null,
+  marketType: MarketType = "hybrid",
+  discoveryDemand: number = 50
 ): ComputedSignals {
   const hasYouTube = youtubeResults.length > 0;
 
@@ -135,16 +139,23 @@ export function computeSignals(
     directionExplanation = "Not enough data to determine trend direction.";
   }
 
-  // Override with Google Trends if available
+  // Override with Google Trends if available and significant
+  // Strength of override depends on market type — feed-driven niches barely care about search
+  const weights = getWeights(marketType);
   if (trendData && trendData.interest > 0) {
-    // Google Trends interest > 70 suggests strong current interest
     if (trendData.interest >= 70 && direction !== "rising") {
       direction = "rising";
       directionExplanation += ` Google Trends shows ${trendData.interest}/100 interest — confirming strong demand.`;
-    } else if (trendData.interest < 30 && direction !== "declining") {
-      direction = "declining";
-      directionExplanation += ` Google Trends shows only ${trendData.interest}/100 interest — low search demand.`;
+    } else if (trendData.interest < 15 && direction === "rising" && weights.trendOverrideStrength > 0.5) {
+      // Only downgrade from "rising" if Google Trends is a strong signal for this market type
+      // AND YouTube data was borderline
+      if (recent.length <= 2) {
+        direction = "stable";
+        directionExplanation += ` Google Trends shows only ${trendData.interest}/100 interest — tempering the rising signal.`;
+      }
     }
+    // For feed-driven niches: never downgrade based on low Google Trends
+    // People don't Google "skincare habits" — they discover it in feeds
   }
 
   // ── Trend Velocity ───────────────────────────────────────────────────────
@@ -176,9 +187,12 @@ export function computeSignals(
 
     trendScore = Math.round(recencyScore * 0.4 + vpdScore * 0.4 + freqScore * 0.2);
 
-    // Boost with Google Trends if available
-    if (trendData && trendData.interest > 0) {
-      trendScore = Math.round(trendScore * 0.7 + trendData.interest * 0.3);
+    // Boost with Google Trends if available and meaningful
+    // Blend strength depends on market type
+    const trendBlendThreshold = marketType === "feed_driven" ? 30 : 15;
+    if (trendData && trendData.interest >= trendBlendThreshold) {
+      const blendFactor = weights.trendOverrideStrength;
+      trendScore = Math.round(trendScore * (1 - blendFactor * 0.3) + trendData.interest * (blendFactor * 0.3));
     }
 
     trendScore = Math.max(0, Math.min(100, trendScore));
@@ -205,10 +219,12 @@ export function computeSignals(
 
     if (totalVideos >= 8 && uniqueChannels >= 5 && dominanceRatio < 0.4) {
       competitionLevel = "high";
-      competitionExplanation = `${totalVideos} videos across ${uniqueChannels} channels with no single dominant creator — crowded space.`;
+      const feedContext = getCompetitionContext("high", marketType);
+      competitionExplanation = feedContext || `${totalVideos} videos across ${uniqueChannels} channels with no single dominant creator — crowded space.`;
     } else if (totalVideos >= 4 || uniqueChannels >= 3) {
       competitionLevel = "medium";
-      competitionExplanation = `${totalVideos} videos from ${uniqueChannels} channels — moderate competition with room to differentiate.`;
+      const feedContext = getCompetitionContext("medium", marketType);
+      competitionExplanation = feedContext || `${totalVideos} videos from ${uniqueChannels} channels — moderate competition with room to differentiate.`;
     } else {
       competitionLevel = "low";
       competitionExplanation = `Only ${totalVideos} videos from ${uniqueChannels} channels — underserved topic with opportunity.`;
@@ -221,46 +237,28 @@ export function computeSignals(
   const recentWinners = recent.filter((v) => v.views > avgViews).length;
   const uploadFrequency = recent.length;
 
-  // ── Opportunity Score (0–100) ────────────────────────────────────────────
-  // Weighted: 30% trend score + 25% inverse competition + 25% views strength + 20% momentum
+  // ── Opportunity Score (0–100) — Market-Aware ──────────────────────────────
   let opportunityScore = 0;
   let opportunityExplanation = "";
   if (hasYouTube) {
-    // Inverse competition: low competition = high opportunity
-    const competitionScore = competitionLevel === "low" ? 90 : competitionLevel === "medium" ? 60 : 30;
-
-    // Views strength: log scale of avg views
     const viewsStrength = Math.min(100, (Math.log10(Math.max(1, avgViews)) / 6) * 100);
-
-    // Momentum: ratio of recent winners to total recent
     const momentumScore = recent.length > 0
       ? Math.min(100, (recentWinners / recent.length) * 100 * 1.5)
       : 0;
 
-    opportunityScore = Math.round(
-      trendScore * 0.30 +
-      competitionScore * 0.25 +
-      viewsStrength * 0.25 +
-      momentumScore * 0.20
-    );
+    const result = computeMarketAwareOpportunity({
+      marketType,
+      searchInterest: trendData?.interest ?? 0,
+      discoveryDemand,
+      trendScore,
+      competitionLevel,
+      viewsStrength,
+      momentumScore,
+      audienceFitScore: 50, // placeholder — will be computed below and re-applied
+    });
 
-    // Boost with Google Trends
-    if (trendData && trendData.interest > 0) {
-      opportunityScore = Math.round(opportunityScore * 0.8 + trendData.interest * 0.2);
-    }
-
-    opportunityScore = Math.max(0, Math.min(100, opportunityScore));
-
-    const parts: string[] = [];
-    if (trendScore >= 60) parts.push("strong trend");
-    else if (trendScore >= 30) parts.push("moderate trend");
-    else parts.push("weak trend");
-    if (competitionLevel === "low") parts.push("low competition");
-    else if (competitionLevel === "medium") parts.push("moderate competition");
-    else parts.push("high competition");
-    if (avgViews >= 100000) parts.push("high view potential");
-    else if (avgViews >= 10000) parts.push("decent view potential");
-    opportunityExplanation = `Score based on ${parts.join(", ")}. Top 5 videos average ${formatNum(avgViews)} views.`;
+    opportunityScore = result.score;
+    opportunityExplanation = result.explanation;
   } else {
     opportunityExplanation = "Not enough data to compute opportunity score.";
   }
@@ -287,14 +285,41 @@ export function computeSignals(
       consistencyScore * 0.25
     );
 
-    // Boost with Google Trends
-    if (trendData && trendData.interest > 0) {
-      audienceFitScore = Math.round(audienceFitScore * 0.8 + trendData.interest * 0.2);
+    // Boost with Google Trends if meaningful and market type warrants it
+    const audienceBlendThreshold = marketType === "feed_driven" ? 30 : 15;
+    if (trendData && trendData.interest >= audienceBlendThreshold) {
+      const blendStrength = weights.trendOverrideStrength * 0.2;
+      audienceFitScore = Math.round(audienceFitScore * (1 - blendStrength) + trendData.interest * blendStrength);
+    }
+
+    // For feed-driven niches, boost audience fit with discovery demand
+    if (marketType === "feed_driven" && discoveryDemand >= 60) {
+      audienceFitScore = Math.round(audienceFitScore * 0.8 + discoveryDemand * 0.2);
     }
 
     audienceFitScore = Math.max(0, Math.min(100, audienceFitScore));
 
     audienceFitExplanation = `${uniqueChannels} channels cover this topic with avg ${formatNum(avgViews)} views. ${viewSpread > 0.3 ? "Views are well-distributed — broad audience interest." : "Views are concentrated in top videos — niche but engaged audience."}`;
+
+    // Re-compute opportunity with real audience fit score (was placeholder above)
+    if (opportunityScore > 0) {
+      const viewsStrength = Math.min(100, (Math.log10(Math.max(1, avgViews)) / 6) * 100);
+      const momentumScore = recent.length > 0
+        ? Math.min(100, (recentWinners / recent.length) * 100 * 1.5)
+        : 0;
+      const finalOpp = computeMarketAwareOpportunity({
+        marketType,
+        searchInterest: trendData?.interest ?? 0,
+        discoveryDemand,
+        trendScore,
+        competitionLevel,
+        viewsStrength,
+        momentumScore,
+        audienceFitScore,
+      });
+      opportunityScore = finalOpp.score;
+      opportunityExplanation = finalOpp.explanation;
+    }
   } else {
     audienceFitExplanation = "Not enough data to compute audience fit.";
   }
@@ -304,8 +329,8 @@ export function computeSignals(
   if (trendData && trendData.interest > 0) {
     if (trendData.interest >= 70) googleDirection = "rising";
     else if (trendData.interest >= 40) googleDirection = "stable";
-    else if (trendData.interest >= 20) googleDirection = "peaked";
-    else googleDirection = "declining";
+    else if (trendData.interest >= 15) googleDirection = "peaked";
+    else googleDirection = "stable"; // Very low interest = insufficient signal, not "declining"
   }
 
   return {
@@ -343,7 +368,7 @@ export function computeSignals(
       olderVideoCount: older.length,     // older than 6 months
     },
     googleTrends: {
-      available: trendData !== null && trendData.interest > 0,
+      available: trendData !== null && (trendData.interest > 0 || (trendData.timeline?.length ?? 0) > 0),
       interest: trendData?.interest ?? null,
       avgInterest: trendData?.avgInterest ?? null,
       peakInterest: trendData?.peakInterest ?? null,

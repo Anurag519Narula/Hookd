@@ -156,6 +156,15 @@ IMPORTANT:
   const raw = completion.choices[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(raw) as InsightReport;
 
+  // ── Sanitize text fields — ensure sentence-case capitalization ───────────
+  function capFirst(s: string | undefined): string {
+    if (!s) return s ?? "";
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  parsed.summary = capFirst(parsed.summary);
+  parsed.keyInsight = capFirst(parsed.keyInsight);
+  parsed.verdictReason = capFirst(parsed.verdictReason);
+
   // Enforce invariants: no external data was used
   parsed.youtubeData = null;
   parsed.topVideos = [];

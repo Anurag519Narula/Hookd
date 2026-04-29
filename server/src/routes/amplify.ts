@@ -15,8 +15,8 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY ?? "" });
 
 router.post("/", async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.userId!;
-  const { prompt, conversation_id, platforms, caption_length } =
-    req.body as AmplifyRequest;
+  const { prompt, conversation_id, platforms, caption_length, instagram_context } =
+    req.body as AmplifyRequest & { instagram_context?: { bestFormat?: string; captionStyle?: string; hashtagPack?: string[]; hookTone?: string } };
 
   // ── Validate required fields ───────────────────────────────────────────────
   if (!prompt || typeof prompt !== "string" || prompt.trim() === "") {
@@ -102,6 +102,7 @@ router.post("/", async (req: AuthenticatedRequest, res: Response) => {
       caption_length,
       hashtag_data,
       per_platform_hashtags: hashtagIntel.perPlatform,
+      instagram_context: instagram_context ?? undefined,
     });
 
     // ── Build Groq messages array ──────────────────────────────────────────

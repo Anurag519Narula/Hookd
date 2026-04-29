@@ -1,8 +1,28 @@
 import type { InsightReport } from "../types/insights";
 import { authHeaders } from "./auth";
 
+export interface InstagramSignals {
+  reelPotential: { score: number; label: "High" | "Medium" | "Low" };
+  hookStrength: { score: number; label: "Strong" | "Moderate" | "Weak" };
+  saveability: { score: number; label: "High" | "Medium" | "Low" };
+  saturation: { score: number; label: "High" | "Medium" | "Low" };
+  bestFormat: string;
+  captionStyle: string;
+  hookIdeas: string[];
+  hashtagPack: string[];
+}
+
+export interface MarketContext {
+  type: "search_driven" | "feed_driven" | "hybrid" | "trend_driven" | "authority_driven";
+  label: string;
+  description: string;
+  discoveryDemand: number;
+}
+
 export interface InsightResponse {
   report: InsightReport;
+  instagram?: InstagramSignals;
+  marketContext?: MarketContext;
   signals?: {
     trend: {
       direction: string;

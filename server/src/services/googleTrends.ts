@@ -100,9 +100,14 @@ async function fetchInterestOverTime(keyword: string): Promise<{
   if (timeline.length === 0) return null;
 
   const values = timeline.map((p) => p.value);
-  const interest = values[values.length - 1] ?? 0;
+  const lastValue = values[values.length - 1] ?? 0;
   const avgInterest = Math.round(values.reduce((s, v) => s + v, 0) / values.length);
   const peakInterest = Math.max(...values);
+
+  // Use avgInterest as fallback when the most recent data point is 0.
+  // The last point can be 0 if the current week/period hasn't accumulated data yet,
+  // but the topic clearly has search interest across the timeline.
+  const interest = lastValue > 0 ? lastValue : avgInterest;
 
   return { timeline, interest, avgInterest, peakInterest };
 }

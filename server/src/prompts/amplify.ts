@@ -27,8 +27,14 @@ export function buildAmplifySystemPrompt(params: {
   caption_length?: CaptionLength;
   hashtag_data?: string;
   per_platform_hashtags?: Record<string, string[]>;
+  instagram_context?: {
+    bestFormat?: string;
+    captionStyle?: string;
+    hashtagPack?: string[];
+    hookTone?: string;
+  };
 }): string {
-  const { niche, sub_niche, platforms, caption_length, hashtag_data, per_platform_hashtags } =
+  const { niche, sub_niche, platforms, caption_length, hashtag_data, per_platform_hashtags, instagram_context } =
     params;
 
   const nicheDescription = niche
@@ -82,6 +88,16 @@ export function buildAmplifySystemPrompt(params: {
     .filter(Boolean)
     .join("\n");
 
+  // Instagram intelligence context (from validation report)
+  const instagramSection = instagram_context
+    ? `\nINSTAGRAM INTELLIGENCE (from idea validation — use this to guide Reels/Instagram captions):
+${instagram_context.bestFormat ? `- Best Reel Format: ${instagram_context.bestFormat}` : ""}
+${instagram_context.captionStyle ? `- Recommended Caption Style: ${instagram_context.captionStyle}` : ""}
+${instagram_context.hookTone ? `- Hook Tone: ${instagram_context.hookTone}` : ""}
+${instagram_context.hashtagPack && instagram_context.hashtagPack.length > 0 ? `- Validated Hashtag Pack: ${instagram_context.hashtagPack.join(", ")}` : ""}
+When writing Instagram/Reels captions, align with the recommended caption style and format above.\n`
+    : "";
+
   return `You are a caption generation assistant for a content creator in the ${nicheDescription} niche.
 
 Your job is to generate platform-native captions. Each platform has a completely different culture, tone, and format — treat them as separate products, not variations of the same caption.
@@ -106,7 +122,7 @@ LENGTH RULES:
 - medium: 4-5 lines (caption text only, not counting hashtags)
 - long: 2-3 paragraphs (caption text only, not counting hashtags)
 Strictly respect the length constraint for each platform listed above.
-${hashtagSection}${perPlatformSection}
+${hashtagSection}${perPlatformSection}${instagramSection}
 HASHTAG RULES:
 - Always include 8-12 relevant hashtags per platform
 - Use the recommended hashtags above as your primary pool — they are sourced from real trending content and validated against actual Instagram post volumes

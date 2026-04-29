@@ -63,6 +63,16 @@ Short-form video creators across all niches (tech, fitness, food, travel, busine
 4. Computed Signals Engine (`computedSignals.ts`): pure math from YouTube + Google Trends data. Computes trend direction, velocity, score, competition level, opportunity score, audience fit score. No LLM involved.
 5. Groq synthesis: receives real data + computed signals as facts. LLM explains and generates angles/blueprint/risks — but numeric scores are force-overwritten with computed values after response.
 
+**Fallback stack** (graceful degradation when external APIs fail):
+
+| Level | Condition | Behavior |
+|---|---|---|
+| Live Mode | All APIs respond | Normal report with full data |
+| Cached Mode | YouTube / Google Trends API fails | Serve from `api_cache` (exact hash or fuzzy keyword match) |
+| AI Estimate Mode | All external APIs fail | Groq receives niche + idea text only → generates estimated report (`aiEstimate.ts`) |
+
+The active mode is never exposed to the user — the best available data is served silently.
+
 **Validation report UI — dashboard layout (after clicking Validate):**
 
 The report renders in a premium dashboard layout with a hero bar, stat strip, and two-column grid:
@@ -188,6 +198,146 @@ The profile is stored server-side and injected into every Groq prompt.
 **Purpose:** Display a full InsightReport for a previously validated idea.
 
 Loads the idea by ID and renders its cached InsightReport with rich UI components (score bars, section headers, skeleton loading states). Provides a dedicated read-only view outside of the Studio flow.
+
+### 2.7 Instagram Intelligence Layer
+
+**Purpose:** Layer Instagram Reels-specific intelligence on top of the existing Studio validation, giving creators actionable signals for filming, hooking, captioning, and hashtagging — all without disrupting any existing flow.
+
+**Core type — `InstagramSignals`** (defined in `server/src/types/instagram.ts`, mirrored in `client/src/api/insights.ts`):
+
+```ts
+interface InstagramSignals {
+  reelPotential:  { score: number; label: "High" | "Medium" | "Low" }
+  hookStrength:   { score: number; label: "Strong" | "Moderate" | "Weak" }
+  saveability:    { score: number; label: "High" | "Medium" | "Low" }
+  saturation:     { score: number; label: "High" | "Medium" | "Low" }
+  bestFormat:     string
+  captionStyle:   string
+  hookIdeas:      string[]   // 3 scroll-stopping hooks
+  hashtagPack:    string[]   // 8–12 mixed tags
+}
+```
+
+**Signal computation** (all deterministic, in `server/src/services/instagramIntelligence.ts`):
+
+| Signal | Inputs | Formula / Logic |
+|---|---|---|
+| Reel Potential | opportunity, trend, audience fit, niche demand (Google Trends) | 40% opportunity + 30% trend + 20% audience fit + 10% niche demand. Labels: High ≥65, Medium ≥35, Low <35 |
+| Hook Strength | idea text regex matching | Strong triggers: curiosity, pain point, money, mistake, secret, transformation, controversy, numbers, specific claims. Weak triggers: daily vlog, random motivation, generic tips, grwm, storytime. Bonus for specificity (numbers, sweet-spot length) |
+| Saveability | idea text regex matching | High for educational / checklist / finance / tools / systems / mistakes / how-to / recipes / routines. Low for entertainment / vlog / comedy / prank / challenge / rant |
+| Saturation | competition level, totalVideos, channel dominance | Derived from existing computed signals. Boosted if top video views exceed 1M (dominant players) |
+
+**Hook Generator:** Single Groq LLM call produces 3 scroll-stopping hooks (under 15 words each, psychological triggers, Indian creator friendly, no filler). Deterministic template-based fallback if Groq fails.
+
+**Best Reel Format Engine** (deterministic keyword matching):
+
+| Keywords | Format |
+|---|---|
+| AI / tools / software | Screen Recording |
+| Transformation / before-after | Before / After Style |
+| Story / journey / experience | Voiceover Story |
+| Lists / tips / steps / comparisons | Carousel Reel |
+| Finance / money / data | Faceless B-roll |
+| News / controversy / opinion | Green Screen Commentary |
+| Default | Talking Head |
+
+**Caption Style Engine** (deterministic keyword matching): Returns one of Bold, Curious, Authority, Personal, Minimal, Storytelling.
+
+**Hashtag Pack:** Uses `hashtagBank.json` + idea keyword extraction. Returns 8–12 deduplicated tags: 3 broad (reels, reelsinstagram, explorepage) + 5 mid (niche-specific from hashtagBank) + 2–4 niche (extracted from idea keywords).
+
+**Route integration:** Instagram signals run in `Promise.all` alongside the existing synthesis pipeline in `server/src/routes/insights.ts`. Merged into the response payload as the `instagram` field. No sequential slowdown.
+
+**Prompt enhancement:** `server/src/prompts/insightSynthesis.ts` enhanced with Instagram Reels platform scoring guidance (save-worthiness, hook potential, visual appeal) and Reels-first content blueprint opening hooks. Existing metrics and computed signal overrides unchanged.
+
+**Frontend — Instagram Playbook card** (`client/src/components/InstagramPlaybook.tsx`):
+
+Inserted after `PlatformScorecard` in the Studio report. Contains:
+- **4-column stat grid** (responsive to 2-col on mobile): Reel Potential, Hook Strength, Saveability, Saturation — each with mini score ring + label badge.
+- **Hooks section:** 3 numbered hooks with copy button + lightning button (navigates to Develop with hook pre-selected).
+- **Format + Caption Style:** Side-by-side 2-column grid with VideoCamera and TextAa icons.
+- **Hashtag Pack:** Clickable copy tags + "Copy All" button.
+- Card styled with Instagram gradient header, Reels badge, matching existing design system.
+
+**Sidebar additions:** After "Top Channel Spotted" — Reel Potential (score/100 + label badge), Best Format, Caption Style.
+
+**Develop integration:** Lightning button on a hook navigates to `/develop` with `selectedHook` in navigation state. Develop screen displays the selected hook as a banner above the idea input. No hook selected = existing behavior unchanged.
+
+**Amplify integration:**
+- `server/src/prompts/amplify.ts` accepts optional `instagram_context` parameter — injects best format, caption style, hashtag pack, and hook tone into the system prompt.
+- `server/src/routes/amplify.ts` accepts `instagram_context` from request body and passes it through.
+
+**Files created:**
+- `server/src/types/instagram.ts`
+- `server/src/services/instagramIntelligence.ts`
+- `client/src/components/InstagramPlaybook.tsx`
+
+**Files modified:**
+- `server/src/routes/insights.ts` — parallel Instagram signals
+- `server/src/prompts/insightSynthesis.ts` — Reels scoring guidance
+- `server/src/prompts/amplify.ts` — instagram_context parameter
+- `server/src/routes/amplify.ts` — accepts instagram_context
+- `client/src/api/insights.ts` — InstagramSignals type + instagram field
+- `client/src/screens/StudioScreen.tsx` — Playbook card + sidebar items
+- `client/src/screens/DevelopScreen.tsx` — selectedHook display
+
+### 2.8 Market Intelligence Scoring
+
+**Purpose:** Fix false-negative scoring for feed-driven niches (skincare, beauty, fitness, fashion, lifestyle, food, motivation, relationships) where low Google Trends search volume was incorrectly penalizing strong creator categories. The scoring engine now classifies the market type first, then weights signals accordingly.
+
+**Market Type Classifier** (`server/src/services/marketClassifier.ts`):
+
+Every validation request classifies the idea into one of five market types using niche maps (30+ niches), keyword patterns, and idea text:
+
+| Market Type | Description | Examples |
+|---|---|---|
+| `search_driven` | People intentionally search for solutions | best mutual funds, coding roadmap, passport process |
+| `feed_driven` | People discover passively in reels/feed | skincare habits, gym glow up, room decor ideas |
+| `hybrid` | Both search + feed discovery | fat loss tips, personal finance habits, AI tools for creators |
+| `trend_driven` | Momentum / news based | IPL moments, celebrity controversy, viral meme trend |
+| `authority_driven` | Creator personality matters most | mindset lessons, founder advice, storytime |
+
+Falls back to `hybrid` if classification fails (safe default).
+
+**Discovery Demand Signal** (`server/src/services/discoverySignals.ts`):
+
+New internal metric `discoveryDemand: 0–100` measuring likelihood of succeeding through feed distribution. Uses niche creator volume, repeated successful formats, visual niche strength, save/share potential, emotional triggers, reel-native compatibility, and topic evergreenness. Computed via niche base scores + content signal bonuses from idea text.
+
+**Market-Aware Scoring Weights** (`server/src/services/scoringWeights.ts`):
+
+| Market Type | Search Demand | Discovery Demand | Competition | Audience Fit / Other |
+|---|---|---|---|---|
+| Search Driven | 50% | 20% | 20% | 10% Audience Fit |
+| Feed Driven | 20% | 50% | 20% | 10% Audience Fit |
+| Hybrid | 35% | 35% | 20% | 10% Audience Fit |
+| Trend Driven | 20% | 20% | — | 40% Momentum + 20% Speed Window |
+
+**Competition interpretation upgrade:** For feed-driven niches, high competition no longer heavily penalizes opportunity. Instead it signals "validated demand + differentiation required" — competitive but healthy.
+
+**Trend direction fix:** For feed-driven niches, low Google Trends maps to "Low search intent" rather than "Declining niche." Google Trends is a strong signal only for search-driven niches.
+
+**New internal labels** for feed-driven niches (injected via LLM prompt): Evergreen category, Strong creator demand, Mature niche, High replay potential, Packaging dependent, Competitive but healthy.
+
+**Prompt integration:** `insightSynthesis.ts` receives market type, discovery demand score, and scoring rationale. Prompt rules prevent over-indexing search volume for feed-driven niches and explain opportunity via creator demand + packaging.
+
+**UI:** Color-coded market type chip displayed in the hero bar (e.g., "Feed-Driven Market", "Hybrid Market"). No layout changes — existing report structure preserved.
+
+**Example — before vs after** for "7 skincare habits that make you look fresher":
+
+| | Before | After |
+|---|---|---|
+| Verdict | Proceed with caution | Strong recurring category |
+| Opportunity | 44 | 72 |
+| Trend | Declining | Search Intent Low, Reel Demand High |
+| Competition | — | Competitive but healthy |
+
+**Files created:**
+- `server/src/services/marketClassifier.ts` — market type classification (niche map + keyword patterns)
+- `server/src/services/discoverySignals.ts` — discovery demand scoring
+- `server/src/services/scoringWeights.ts` — market-aware weight engine
+
+**Files modified:**
+- `server/src/prompts/insightSynthesis.ts` — market type + discovery demand injection
+- `client/src/screens/StudioScreen.tsx` — market type chip in hero bar
 
 ---
 
@@ -401,7 +551,13 @@ All AI calls use Groq's `llama-3.3-70b-versatile` model.
 | `reels.ts` | Instagram Reels script prompt (beat map: Hook → Stakes → Build → Wait What → Payoff → Exit) | Structured script |
 | `youtubeShorts.ts` | YouTube Shorts script prompt (Hook → Core → Payoff → CTA → Hashtags) | Structured script |
 
-### Service Files (new)
+### Types Files
+| File | Purpose |
+|---|---|
+| `server/src/types/index.ts` | Core server types |
+| `server/src/types/instagram.ts` | `InstagramSignals` interface — reel potential, hook strength, saveability, saturation, best format, caption style, hook ideas, hashtag pack |
+
+### Service Files
 | File | Purpose |
 |---|---|
 | `computedSignals.ts` | Pure math engine: trend/competition/opportunity/audience scores from YouTube + Google Trends data |
@@ -410,6 +566,10 @@ All AI calls use Groq's `llama-3.3-70b-versatile` model.
 | `fuzzyCacheLookup.ts` | Fuzzy cache matcher by niche + keyword overlap (≥50% + ≥2 matches required) |
 | `aiEstimate.ts` | Groq-only fallback InsightReport when all external APIs fail |
 | `hookFallback.ts` | Deterministic template-based hook generation when Groq is rate-limited |
+| `instagramIntelligence.ts` | Instagram Reels intelligence engine: deterministic signal scoring (reel potential, hook strength, saveability, saturation) + LLM hook generation + format/caption/hashtag engines |
+| `marketClassifier.ts` | Market type classifier: categorizes ideas as search_driven, feed_driven, hybrid, trend_driven, or authority_driven using 30+ niche maps + keyword patterns |
+| `discoverySignals.ts` | Discovery demand scoring (0–100): measures feed distribution potential via niche base scores + content signal bonuses |
+| `scoringWeights.ts` | Market-aware scoring weight engine: adjusts opportunity formula weights based on market type |
 
 ### Psychological Triggers (used in hook generation)
 1. Curiosity Gap — tease something without revealing it
@@ -531,6 +691,7 @@ React Router v7 with navigation state for inter-page data passing.
 | Vault → Studio | `?ideaId=` query param |
 | Vault → Insights | `/insights/:ideaId` URL param |
 | Studio → Develop | `{ idea, ideaId, insights: InsightReport }` |
+| Studio (Instagram Playbook hook) → Develop | `{ idea, ideaId, insights, selectedHook }` |
 | Develop → Amplify | `{ idea, ideaId }` |
 
 ### Key Custom Hooks
@@ -568,6 +729,7 @@ React Router v7 with navigation state for inter-page data passing.
 | `SearchTrendsSection` | Google Trends: 12-month sparkline chart, interest stats, rising/top query chips |
 | `ClarifierInline` | Inline clarifying questions with chip options + free text |
 | `StagedLoader` | Sequential progress stages during validation (Phosphor icons) |
+| `InstagramPlaybook` | Instagram Intelligence card: 4 signal scores, 3 copyable hooks, best format, caption style, hashtag pack |
 
 ### Auth Context
 - `AuthProvider` wraps the entire app.
@@ -593,6 +755,7 @@ Defined in `src/types/index.ts`:
 - `Script` — full script object (format, selected_hook, hook_variants, beats, cta, word_count)
 - `AuthResponse` — `{ token, user }`
 - `Idea` — includes `selected_hook`, `insights`, and `insights_cached_at` fields
+- `InstagramSignals` — reel potential, hook strength, saveability, saturation scores + best format, caption style, hook ideas, hashtag pack (mirrored from server type)
 
 ---
 
@@ -641,6 +804,7 @@ NODE_ENV              — "production" or "development"
 11. **SerpAPI + RapidAPI complementary** — SerpAPI for rich Google Trends data (timeline, related queries), RapidAPI as fallback. Both cached aggressively.
 12. **Shared UI design system** — `ui.tsx` exports Badge, SectionLabel, ScoreBar, StatCell, color helpers. All report components import from single source of truth.
 13. **Answer → Action → Evidence** — Validation report ordered by user priority: verdict first, actionable angles second, raw data proof third.
+14. **Market-aware scoring** — Ideas are classified by market type (search-driven, feed-driven, hybrid, trend-driven, authority-driven) before scoring. Feed-driven niches weight discovery demand over search volume, preventing false negatives for strong creator categories like skincare, beauty, and fitness.
 
 ---
 

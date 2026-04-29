@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkle, CircleNotch, ArrowRight,
   CheckCircle, Robot, WarningCircle,
-  ArrowsClockwise, TrendUp, ShieldCheck,
+  ArrowsClockwise, TrendUp, TrendDown, ArrowRight as ArrowRightIcon, ShieldCheck,
   Trophy, Clock, Crown, Crosshair,
-  Lightning, Upload, MagnifyingGlass, Users,
+  Lightning, FilmStrip, Users,
+  FilmReel, VideoCamera, TextAa,
 } from "@phosphor-icons/react";
 import { Navbar } from "../components/Navbar";
 import { MarketResearchPanel } from "../components/MarketResearchPanel";
@@ -17,12 +18,37 @@ import { VerdictCard } from "../components/VerdictCard";
 import { PlatformScorecard } from "../components/PlatformScorecard";
 import { StagedLoader } from "../components/StagedLoader";
 import { SearchTrendsSection } from "../components/SearchTrendsSection";
+import { InstagramPlaybook } from "../components/InstagramPlaybook";
 import { useCreatorProfile } from "../hooks/useCreatorProfile";
 import { getIdea, createIdea } from "../api/ideas";
 import { fetchInsights, type InsightResponse, QuotaExceededError } from "../api/insights";
 import { clarifyIdea } from "../api/studio";
 import type { ClarityQuestion } from "../types/insights";
 import { scoreColor, compColor, SIGNAL_COLORS, Badge } from "../components/ui";
+
+// ── Reel volume estimate from real competition signals ────────────────────────
+// Derived from YouTube competition data + Instagram saturation score.
+// No LLM — pure math from existing API data.
+
+function reelVolumeEstimate(
+  sig: NonNullable<import("../api/insights").InsightResponse["signals"]>,
+  ig: import("../api/insights").InstagramSignals | undefined
+): string {
+  const satScore = ig?.saturation.score ?? 50;
+  const totalVideos = sig.competition.totalVideos;
+  const uniqueChannels = sig.competition.uniqueChannels;
+
+  // Combine saturation score (0–100) with channel breadth to bucket reel volume
+  // High saturation + many channels → massive reel pool
+  const breadthBoost = Math.min(30, uniqueChannels * 4);
+  const composite = satScore + breadthBoost;
+
+  if (composite >= 90 || totalVideos >= 12) return "50M+";
+  if (composite >= 75 || totalVideos >= 9) return "10M+";
+  if (composite >= 55 || totalVideos >= 6) return "1M+";
+  if (composite >= 35 || totalVideos >= 3) return "100K+";
+  return "10K+";
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -292,16 +318,31 @@ export function StudioScreen() {
     if (willOpen && !insightsFetched && !insightsLoading && idea.trim()) void handleGetInsights();
   }
 
-  function handlePlanScript() {
+  function handlePlanScript(selectedHook?: string) {
     navigate(`/develop`, {
-      state: { idea, ideaId: ideaId ?? savedIdeaIdRef.current ?? undefined, insights: insights?.report ?? null },
+      state: {
+        idea,
+        ideaId: ideaId ?? savedIdeaIdRef.current ?? undefined,
+        insights: insights?.report ?? null,
+        selectedHook: selectedHook ?? undefined,
+      },
     });
+  }
+
+  function handleSelectHookForDevelop(hook: string) {
+    handlePlanScript(hook);
+  }
+
+  function handlePlanScriptClick() {
+    handlePlanScript();
   }
 
   const canValidate = idea.trim().length > 0 && !insightsLoading && !clarifying;
   const canPlanScript = insightsFetched && insights !== null;
   const r = insights?.report;
   const sig = insights?.signals;
+  const ig = insights?.instagram;
+  const mc = insights?.marketContext;
 
   // Derive sidebar data
   const bestPlatform = r?.platform_scores?.[0];
@@ -452,6 +493,35 @@ export function StudioScreen() {
                       <SourceBadge label="Google Trends" icon={<CheckCircle size={12} weight="fill" />} />
                     )}
                     <SourceBadge label="AI Interpretation" icon={<Robot size={12} weight="duotone" />} muted />
+                    {mc && (
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "3px 10px", borderRadius: 6,
+                        fontSize: 12, fontWeight: 600,
+                        color: mc.type === "feed_driven" ? "#c13584"
+                          : mc.type === "search_driven" ? "#2563eb"
+                          : mc.type === "trend_driven" ? "#d97706"
+                          : mc.type === "authority_driven" ? "#7c3aed"
+                          : "#0d9488",
+                        background: mc.type === "feed_driven" ? "rgba(193,53,132,0.06)"
+                          : mc.type === "search_driven" ? "rgba(37,99,235,0.06)"
+                          : mc.type === "trend_driven" ? "rgba(217,119,6,0.06)"
+                          : mc.type === "authority_driven" ? "rgba(124,58,237,0.06)"
+                          : "rgba(13,148,136,0.06)",
+                        border: `1px solid ${
+                          mc.type === "feed_driven" ? "rgba(193,53,132,0.15)"
+                          : mc.type === "search_driven" ? "rgba(37,99,235,0.15)"
+                          : mc.type === "trend_driven" ? "rgba(217,119,6,0.15)"
+                          : mc.type === "authority_driven" ? "rgba(124,58,237,0.15)"
+                          : "rgba(13,148,136,0.15)"
+                        }`,
+                        letterSpacing: "0.01em",
+                      }}
+                      title={mc.description}
+                      >
+                        {mc.label}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -476,7 +546,7 @@ export function StudioScreen() {
                   </button>
                   {canPlanScript && (
                     <button
-                      onClick={handlePlanScript}
+                      onClick={handlePlanScriptClick}
                       className="btn-tactile"
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 8,
@@ -528,7 +598,13 @@ export function StudioScreen() {
                   valueColor={compColor(r.competitionLevel)}
                 />
                 <HeroStat
-                  icon={<TrendUp size={16} weight="duotone" color={SIGNAL_COLORS[r.trendDirection] ?? "var(--text-3)"} />}
+                  icon={
+                    r.trendDirection === "rising"
+                      ? <TrendUp size={16} weight="duotone" color={SIGNAL_COLORS[r.trendDirection]} />
+                      : r.trendDirection === "declining"
+                      ? <TrendDown size={16} weight="duotone" color={SIGNAL_COLORS[r.trendDirection]} />
+                      : <ArrowRightIcon size={16} weight="duotone" color={SIGNAL_COLORS[r.trendDirection] ?? "var(--text-3)"} />
+                  }
                   label="Trend"
                   value={r.trendDirection}
                   valueColor={SIGNAL_COLORS[r.trendDirection] ?? "var(--text-3)"}
@@ -542,20 +618,11 @@ export function StudioScreen() {
                       valueColor={SIGNAL_COLORS[sig.trend.velocity] ?? "var(--text-3)"}
                     />
                     <HeroStat
-                      icon={<Upload size={16} weight="duotone" color={sig.evidence.recentVideoCount > 0 ? "var(--text)" : "var(--text-4)"} />}
-                      label="Recent Uploads"
-                      value={sig.evidence.recentVideoCount > 0 ? `${sig.evidence.recentVideoCount} in 6mo` : "None in 6mo"}
-                      valueColor={sig.evidence.recentVideoCount > 0 ? "var(--text)" : "var(--text-4)"}
+                      icon={<FilmStrip size={16} weight="duotone" color={ig ? (ig.saturation.label === "Low" ? "#059669" : ig.saturation.label === "Medium" ? "#d97706" : "#dc2626") : "var(--text-3)"} />}
+                      label="Reels on Topic"
+                      value={reelVolumeEstimate(sig, ig)}
+                      valueColor={ig ? (ig.saturation.label === "Low" ? "#059669" : ig.saturation.label === "Medium" ? "#d97706" : "#dc2626") : "var(--text-3)"}
                     />
-                    {sig.googleTrends.available && (
-                      <HeroStat
-                        icon={<MagnifyingGlass size={16} weight="duotone" color={SIGNAL_COLORS[sig.googleTrends.direction ?? "unknown"] ?? "var(--text-3)"} />}
-                        label="Search Interest"
-                        value={`${sig.googleTrends.interest}`}
-                        valueColor={SIGNAL_COLORS[sig.googleTrends.direction ?? "unknown"] ?? "var(--text-3)"}
-                        sub="/100"
-                      />
-                    )}
                     <HeroStat
                       icon={<Users size={16} weight="duotone" color={scoreColor(r.audienceFit.score)} />}
                       label="Audience Fit"
@@ -584,6 +651,14 @@ export function StudioScreen() {
 
                   {/* Platform Scorecard */}
                   <PlatformScorecard scores={r.platform_scores ?? []} />
+
+                  {/* Instagram Playbook */}
+                  {ig && (
+                    <InstagramPlaybook
+                      instagram={ig}
+                      onSelectHook={handleSelectHookForDevelop}
+                    />
+                  )}
 
                   {/* Strategy & Angles */}
                   <MarketResearchPanel
@@ -675,6 +750,38 @@ export function StudioScreen() {
                     />
                   )}
 
+                  {/* Instagram sidebar items */}
+                  {ig && (
+                    <>
+                      <SidebarItem
+                        icon={<FilmReel size={15} weight="duotone" color={
+                          ig.reelPotential.label === "High" ? "#059669"
+                          : ig.reelPotential.label === "Medium" ? "#d97706" : "#dc2626"
+                        } />}
+                        label="Reel Potential"
+                        value={
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span>{ig.reelPotential.score}/100</span>
+                            <Badge label={ig.reelPotential.label} color={
+                              ig.reelPotential.label === "High" ? "#059669"
+                              : ig.reelPotential.label === "Medium" ? "#d97706" : "#dc2626"
+                            } />
+                          </div>
+                        }
+                      />
+                      <SidebarItem
+                        icon={<VideoCamera size={15} weight="duotone" color="var(--text-3)" />}
+                        label="Best Format"
+                        value={ig.bestFormat}
+                      />
+                      <SidebarItem
+                        icon={<TextAa size={15} weight="duotone" color="var(--text-3)" />}
+                        label="Caption Style"
+                        value={ig.captionStyle}
+                      />
+                    </>
+                  )}
+
                   {/* Opportunity + Audience Fit circle graphs */}
                   <div style={{
                     display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12,
@@ -688,7 +795,7 @@ export function StudioScreen() {
                   {/* Plan Script CTA in sidebar */}
                   {canPlanScript && (
                     <button
-                      onClick={handlePlanScript}
+                      onClick={handlePlanScriptClick}
                       className="btn-tactile"
                       style={{
                         display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
@@ -717,12 +824,14 @@ export function StudioScreen() {
           .dashboard-grid { grid-template-columns: 1fr !important; }
           .dashboard-sidebar { position: static !important; }
           .hero-stats { grid-template-columns: repeat(3, 1fr) !important; }
+          .ig-playbook-scores { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 640px) {
           .hero-stats { grid-template-columns: repeat(2, 1fr) !important; }
           .dashboard-hero-bar { flex-direction: column !important; align-items: stretch !important; }
           .dashboard-hero-ctas { justify-content: stretch !important; }
           .dashboard-hero-ctas button { flex: 1; justify-content: center; }
+          .ig-playbook-scores { grid-template-columns: repeat(2, 1fr) !important; }
         }
       `}</style>
     </div>

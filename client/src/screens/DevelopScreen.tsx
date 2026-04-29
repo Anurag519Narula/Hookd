@@ -31,10 +31,11 @@ export function DevelopScreen() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const stateData = (location.state as { idea?: string; ideaId?: string; insights?: any }) ?? {};
+  const stateData = (location.state as { idea?: string; ideaId?: string; insights?: any; selectedHook?: string }) ?? {};
   const ideaFromState = stateData.idea ?? "";
   const ideaIdFromState = stateData.ideaId ?? null;
   const insightsFromState = stateData.insights ?? null;
+  const selectedHookFromState = stateData.selectedHook ?? null;
   const hasBlueprint = !!insightsFromState?.contentBlueprint;
 
   const [idea, setIdea] = useState(ideaFromState);
@@ -324,6 +325,26 @@ export function DevelopScreen() {
 
           {/* Idea input */}
           <div style={{ marginBottom: 28 }}>
+            {/* Selected hook from Instagram Playbook */}
+            {selectedHookFromState && (
+              <div style={{
+                marginBottom: 12, padding: "12px 16px",
+                background: "rgba(193,53,132,0.04)",
+                border: "1px solid rgba(193,53,132,0.15)",
+                borderRadius: 8,
+                display: "flex", alignItems: "flex-start", gap: 10,
+              }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
+                  textTransform: "uppercase", color: "#c13584",
+                  flexShrink: 0, marginTop: 3,
+                }}>Hook</span>
+                <p style={{
+                  fontSize: 14, color: "var(--text)", fontWeight: 500,
+                  lineHeight: 1.5, margin: 0,
+                }}>"{selectedHookFromState}"</p>
+              </div>
+            )}
             <SectionHeader label="Your idea" status="done" />
             <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
               <textarea

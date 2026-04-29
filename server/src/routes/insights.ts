@@ -10,6 +10,9 @@ import { AuthenticatedRequest } from "../middleware/auth";
 import { fuzzyCacheLookup } from "../services/fuzzyCacheLookup";
 import { generateAIEstimate } from "../services/aiEstimate";
 import { computeSignals } from "../services/computedSignals";
+import { getInstagramSignals } from "../services/instagramIntelligence";
+import { classifyMarket, MARKET_TYPE_LABELS, MARKET_TYPE_DESCRIPTIONS } from "../services/marketClassifier";
+import { computeDiscoveryDemand } from "../services/discoverySignals";
 import type { YouTubeResult } from "../services/insights";
 import hashtagBank from "../data/hashtagBank.json";
 
@@ -230,20 +233,32 @@ router.get("/", async (req: AuthenticatedRequest, res: Response) => {
 
     const hasAnyData = youtubeResults.length > 0 || trendData !== null;
 
-    // Compute real signals from API data (pure math, no LLM)
-    const signals = computeSignals(youtubeResults, trendData);
+    // Classify market type (instant, no API call)
+    const marketType = classifyMarket(idea, nicheStr);
+    const discoveryDemand = computeDiscoveryDemand(idea, nicheStr, marketType);
+    console.log(`[Insights] Market: ${marketType}, Discovery Demand: ${discoveryDemand}`);
 
-    let report;
-    if (hasAnyData) {
-      report = await synthesizeInsights({ idea, niche: nicheStr, youtubeResults, trendData, signals });
-    } else {
-      // AI Estimate Mode — all external data failed
-      report = await generateAIEstimate(idea, nicheStr);
-    }
+    // Compute real signals from API data (pure math, no LLM) — now market-aware
+    const signals = computeSignals(youtubeResults, trendData, marketType, discoveryDemand);
+
+    // ── Run existing pipeline + Instagram intelligence in parallel ──────────
+    const [report, instagramSignals] = await Promise.all([
+      hasAnyData
+        ? synthesizeInsights({ idea, niche: nicheStr, youtubeResults, trendData, signals, marketType, discoveryDemand })
+        : generateAIEstimate(idea, nicheStr),
+      getInstagramSignals(idea, nicheStr, signals),
+    ]);
 
     const payload = {
       report,
       signals,
+      instagram: instagramSignals,
+      marketContext: {
+        type: marketType,
+        label: MARKET_TYPE_LABELS[marketType],
+        description: MARKET_TYPE_DESCRIPTIONS[marketType],
+        discoveryDemand,
+      },
       googleTrends: trendData ? {
         interest: trendData.interest,
         avgInterest: trendData.avgInterest ?? null,
