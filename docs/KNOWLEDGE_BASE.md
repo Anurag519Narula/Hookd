@@ -69,13 +69,13 @@ The report renders in a premium dashboard layout with a hero bar, stat strip, an
 
 **Hero bar:** Source badges (YouTube, Google Trends, AI Interpretation) on the left + Revalidate / Plan Your Script CTAs on the right.
 
-**4-column stat strip:** Verdict label, Opportunity score (/100), Competition level, Trend direction — all color-coded.
+**4-column stat strip:** Verdict label, Opportunity score (/100), Competition level, Trend direction — plus (when computed signals are available) Momentum, Recent Uploads, Search Interest (/100), and Audience Fit (/100). All color-coded as HeroStat cards in a unified grid. Up to 8 tiles in a 4-column layout.
 
 **Left column (main content):**
 1. **VerdictCard** — verdict label + reason + context badges (audience intent, competition, best days/times) + key insight
 2. **PlatformScorecard** — Instagram Reels + YouTube Shorts tier labels (Excellent/Strong/Moderate/Low) with reasons
 3. **Strategy & Angles** (tabbed panel) — Tabs: Angles / Untapped / Risks / Competitors / Action Plan. Only tabs with data are shown.
-4. **Evidence & Data** (ResearchPanel) — computed signal cards, YouTube stats grid, top channels, title patterns, video tiles with Watch → links
+4. **Evidence & Data** (ResearchPanel) — YouTube stats grid, top channels, title patterns, video tiles with Watch → links
 5. **Google Search Trends** (SearchTrendsSection) — 12-month sparkline chart, interest stats, rising/top query chips
 
 **Right column (sticky sidebar):**
@@ -555,7 +555,7 @@ React Router v7 with navigation state for inter-page data passing.
 - Dark theme: warm espresso blacks (#0F0D0B base, #1A1714 cards).
 - CSS variables for colors: `--bg`, `--bg-card`, `--bg-subtle`, `--bg-muted`, `--text`, `--text-2`, `--text-3`, `--text-4`, `--accent`, `--border`, `--error`, etc.
 - Navbar uses `var(--accent)` for all active states — no hardcoded colors.
-- Responsive breakpoints at 1100px (tablet collapse), 640px (mobile), and 680px (navbar).
+- Responsive breakpoints at 1100px (tablet collapse: dashboard to single column, stat strip to 3-col), 640px (mobile: stat strip to 2-col), and 680px (navbar).
 - Animations: `fade-up`, `breathe`, `barFill`, `spin` keyframes. Framer-motion for staggered reveals and accordion transitions.
 
 ### Validation Report Components
@@ -564,7 +564,7 @@ React Router v7 with navigation state for inter-page data passing.
 | `VerdictCard` | Verdict label + reason + context badges + key insight (always visible) |
 | `PlatformScorecard` | Platform tier labels (Excellent/Strong/Moderate/Low) with Phosphor icons |
 | `MarketResearchPanel` | Tabbed panel: Angles / Untapped / Risks / Competitors / Action Plan (tabs only show when data exists) |
-| `ResearchPanel` | Evidence: computed signals, YouTube stats, top channels, title patterns, video tiles |
+| `ResearchPanel` | Evidence: YouTube stats, top channels, title patterns, video tiles (computed signal cards moved to stat strip) |
 | `SearchTrendsSection` | Google Trends: 12-month sparkline chart, interest stats, rising/top query chips |
 | `ClarifierInline` | Inline clarifying questions with chip options + free text |
 | `StagedLoader` | Sequential progress stages during validation (Phosphor icons) |

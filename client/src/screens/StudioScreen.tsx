@@ -7,6 +7,7 @@ import {
   CheckCircle, Robot, WarningCircle,
   ArrowsClockwise, TrendUp, ShieldCheck,
   Trophy, Clock, Crown, Crosshair,
+  Lightning, Upload, MagnifyingGlass, Users,
 } from "@phosphor-icons/react";
 import { Navbar } from "../components/Navbar";
 import { MarketResearchPanel } from "../components/MarketResearchPanel";
@@ -494,7 +495,7 @@ export function StudioScreen() {
                 </div>
               </div>
 
-              {/* ── 4-COLUMN STAT STRIP ──────────────────────────────────── */}
+              {/* ── STAT STRIP ───────────────────────────────────────── */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -532,6 +533,38 @@ export function StudioScreen() {
                   value={r.trendDirection}
                   valueColor={SIGNAL_COLORS[r.trendDirection] ?? "var(--text-3)"}
                 />
+                {sig && (
+                  <>
+                    <HeroStat
+                      icon={<Lightning size={16} weight="duotone" color={SIGNAL_COLORS[sig.trend.velocity] ?? "var(--text-3)"} />}
+                      label="Momentum"
+                      value={sig.trend.velocity}
+                      valueColor={SIGNAL_COLORS[sig.trend.velocity] ?? "var(--text-3)"}
+                    />
+                    <HeroStat
+                      icon={<Upload size={16} weight="duotone" color={sig.evidence.recentVideoCount > 0 ? "var(--text)" : "var(--text-4)"} />}
+                      label="Recent Uploads"
+                      value={sig.evidence.recentVideoCount > 0 ? `${sig.evidence.recentVideoCount} in 6mo` : "None in 6mo"}
+                      valueColor={sig.evidence.recentVideoCount > 0 ? "var(--text)" : "var(--text-4)"}
+                    />
+                    {sig.googleTrends.available && (
+                      <HeroStat
+                        icon={<MagnifyingGlass size={16} weight="duotone" color={SIGNAL_COLORS[sig.googleTrends.direction ?? "unknown"] ?? "var(--text-3)"} />}
+                        label="Search Interest"
+                        value={`${sig.googleTrends.interest}`}
+                        valueColor={SIGNAL_COLORS[sig.googleTrends.direction ?? "unknown"] ?? "var(--text-3)"}
+                        sub="/100"
+                      />
+                    )}
+                    <HeroStat
+                      icon={<Users size={16} weight="duotone" color={scoreColor(r.audienceFit.score)} />}
+                      label="Audience Fit"
+                      value={`${r.audienceFit.score}`}
+                      valueColor={scoreColor(r.audienceFit.score)}
+                      sub="/100"
+                    />
+                  </>
+                )}
               </motion.div>
 
               {/* ── 12-COL GRID: LEFT 8 + RIGHT 4 ───────────────────────── */}
@@ -683,10 +716,10 @@ export function StudioScreen() {
         @media (max-width: 1100px) {
           .dashboard-grid { grid-template-columns: 1fr !important; }
           .dashboard-sidebar { position: static !important; }
-          .hero-stats { grid-template-columns: repeat(2, 1fr) !important; }
+          .hero-stats { grid-template-columns: repeat(3, 1fr) !important; }
         }
         @media (max-width: 640px) {
-          .hero-stats { grid-template-columns: 1fr !important; }
+          .hero-stats { grid-template-columns: repeat(2, 1fr) !important; }
           .dashboard-hero-bar { flex-direction: column !important; align-items: stretch !important; }
           .dashboard-hero-ctas { justify-content: stretch !important; }
           .dashboard-hero-ctas button { flex: 1; justify-content: center; }

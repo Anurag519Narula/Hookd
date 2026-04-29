@@ -4,7 +4,7 @@ import {
   ArrowSquareOut,
 } from "@phosphor-icons/react";
 import type { TopVideo, InsightReport, PlatformScore } from "../types/insights";
-import { SectionLabel, formatViews, SIGNAL_COLORS } from "./ui";
+import { SectionLabel, formatViews } from "./ui";
 
 interface ComputedSignals {
   trend: { direction: string; velocity: string; score: number; explanation: string };
@@ -29,7 +29,7 @@ interface ResearchPanelProps {
   };
 }
 
-export function ResearchPanel({ topVideos, youtubeData, signals }: ResearchPanelProps) {
+export function ResearchPanel({ topVideos, youtubeData }: ResearchPanelProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -54,32 +54,6 @@ export function ResearchPanel({ topVideos, youtubeData, signals }: ResearchPanel
       </div>
 
       <div style={{ padding: "0 24px 24px" }}>
-
-        {/* Computed signals row */}
-        {signals && (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-            gap: 1, background: "var(--border)", borderRadius: 10,
-            overflow: "hidden", marginBottom: 20,
-          }}>
-            <SignalCell label="Trend" value={signals.trend.direction} color={SIGNAL_COLORS[signals.trend.direction]} />
-            <SignalCell label="Momentum" value={signals.trend.velocity} color={SIGNAL_COLORS[signals.trend.velocity]} />
-            <SignalCell label="Competition" value={signals.competition.level} color={SIGNAL_COLORS[signals.competition.level]} />
-            <SignalCell
-              label="Recent uploads"
-              value={signals.evidence.recentVideoCount > 0 ? `${signals.evidence.recentVideoCount} in 6mo` : "None in 6mo"}
-              color={signals.evidence.recentVideoCount > 0 ? "var(--text)" : "var(--text-4)"}
-            />
-            {signals.googleTrends.available && (
-              <SignalCell
-                label="Search interest"
-                value={`${signals.googleTrends.interest}/100`}
-                color={SIGNAL_COLORS[signals.googleTrends.direction ?? "unknown"]}
-              />
-            )}
-          </div>
-        )}
 
         {/* YouTube stats grid */}
         {youtubeData && (
@@ -277,24 +251,3 @@ export function ResearchPanel({ topVideos, youtubeData, signals }: ResearchPanel
   );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-function SignalCell({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div style={{ padding: "16px 18px", background: "var(--bg-card)", textAlign: "center" }}>
-      <div style={{
-        fontSize: 10, fontWeight: 600, letterSpacing: "0.14em",
-        textTransform: "uppercase", color: "var(--text-4)",
-        marginBottom: 8, fontFamily: "var(--font-mono)",
-      }}>
-        {label}
-      </div>
-      <div style={{
-        fontSize: 15, fontWeight: 700, color, textTransform: "capitalize",
-        fontFamily: "var(--font-sans)", letterSpacing: "-0.01em",
-      }}>
-        {value}
-      </div>
-    </div>
-  );
-}
